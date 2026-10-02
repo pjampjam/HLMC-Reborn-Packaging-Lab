@@ -22,6 +22,8 @@ No shell script, Defender exception, protection change or executable obfuscation
 - A simulated 0.5.1 startup failure restored the real 0.5.0 executable and receipt, restarted it, and preserved the sentinel.
 - Both final packaged builds passed local Defender custom scans with real-time protection enabled and definitions 1.459.509.0. This does not verify browser download detection or other PCs.
 - The startup-check window was rendered and inspected with the dark launcher colors, centered logo and title, and a thin yellow progress line.
+- GitHub Actions could not start the verification job because GitHub reports an account billing lock. No cloud source tests ran; the local 23-group result is independent of that restriction.
+- Browser controls did not return a completed download. A manual normal-browser download remains required before making any claim about download-time detection.
 
 ## Release status
 
