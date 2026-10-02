@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "version": "1.5.2",
+  "version": "1.5.3",
   "minecraft": "26.3",
   "fabric": "0.19.5",
   "java": 25,
@@ -487,12 +487,22 @@
   ],
   "defaults": {
     "path": "defaults.zip",
-    "url": "https://github.com/pjampjam/HLMC-Reborn/releases/download/pack-v1.5.2/defaults.zip",
-    "size": 52845,
-    "sha256": "de24238f4eaa0dea36bed6d645b253f28ebe3c48b9399243f15811f72417156a",
+    "url": "https://github.com/pjampjam/HLMC-Reborn/releases/download/pack-v1.5.3/defaults.zip",
+    "size": 52868,
+    "sha256": "1f5f702d91aba4c2b3177dd8c116fe00451d6ef1dfb513b7a1dc06d5578623d4",
     "policy": "seed"
   },
   "history": [
+    {
+      "version": "1.5.3",
+      "date": "2026-10-02",
+      "summary": "Continuous crafting starts disabled in new profiles.",
+      "added": [],
+      "removed": [],
+      "updated": [
+        "Inventory Profiles Next default: continuous crafting off."
+      ]
+    },
     {
       "version": "1.5.2",
       "date": "2026-10-01",
