@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "holylois-auth-ui",
+  "version": "1.0.1",
+  "name": "Holy Lois Login",
+  "description": "A masked password form backed by the server EasyAuth status. No saved credentials.",
+  "environment": "client",
+  "license": "MIT",
+  "entrypoints": {
+    "client": [
+      "holylois.auth.HolyLoisAuthClient"
+    ]
+  },
+  "mixins": [
+    "holylois-auth-ui.mixins.json"
+  ],
+  "depends": {
+    "minecraft": "26.3",
+    "java": ">=25",
+    "fabricloader": ">=0.19.5",
+    "fabric-api": "*"
+  }
+}

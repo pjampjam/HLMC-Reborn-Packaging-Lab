@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "holylois-glint-preload",
+  "version": "1.0.0",
+  "name": "Holy Lois Glint Preload",
+  "description": "Preloads vanilla enchanted glint textures outside rendering as a narrow Iris 26.3 workaround.",
+  "environment": "client",
+  "license": "MIT",
+  "entrypoints": {
+    "client": [
+      "holylois.HolyLoisGlint"
+    ]
+  },
+  "depends": {
+    "minecraft": "26.3",
+    "java": ">=25",
+    "fabricloader": ">=0.19.5",
+    "fabric-api": "*",
+    "iris": "1.11.7"
+  }
+}

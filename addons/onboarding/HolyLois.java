@@ -1,0 +1,201 @@
+package holylois;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import net.fabricmc.fabric.api.message.v1.ServerMessageEvents;
+import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
+import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import holylois.auth.AuthStatus;
+import holylois.auth.AuthPolicy;
+import xyz.nikitacartes.easyauth.EasyAuth;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.contents.TranslatableContents;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.storage.LevelResource;
+import xyz.nikitacartes.easyauth.interfaces.PlayerAuth;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import java.nio.file.*;
+import java.util.*;
+
+/** Server-only onboarding for the installed Minecraft 26.3 / EasyAuth 3.4.4. */
+public final class HolyLois implements ModInitializer {
+    private static final Logger LOG = LoggerFactory.getLogger("HolyLois");
+    private static final Gson JSON = new GsonBuilder().setPrettyPrinting().create();
+    private State state;
+    private Path stateFile;
+    private final Map<UUID,Integer> authenticatedSamples = new HashMap<>();
+    private final Map<UUID,Integer> failures = new HashMap<>();
+    private final Set<UUID> welcomed = new HashSet<>();
+    private final Set<UUID> randomRespawns = new HashSet<>();
+    private final Map<UUID,Integer> placingUntil = new HashMap<>();
+    private final Map<UUID,Integer> protectedUntil = new HashMap<>();
+    private final Map<UUID,Integer> sentMode = new HashMap<>();
+    public static final class State {
+        public int version = 1;
+        public Set<UUID> completed = new HashSet<>();
+        public Set<UUID> pending = new HashSet<>();
+    }
+    @Override public void onInitialize() {
+        PayloadTypeRegistry.clientboundPlay().register(AuthStatus.TYPE, AuthStatus.CODEC);
+        ServerLifecycleEvents.SERVER_STARTED.register(this::load);
+        ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer,newPlayer,alive) -> {
+            // Vanilla clears the new player's spawn config if their bed/anchor is unusable.
+            if (AuthPolicy.randomRespawn(alive, newPlayer.getRespawnConfig() != null))
+                randomRespawns.add(newPlayer.getUUID());
+        });
+        ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity,source,amount) -> {
+            if (entity instanceof net.minecraft.server.level.ServerPlayer player) {
+                UUID id = player.getUUID();
+                if (state != null && state.pending.contains(id) && failures.getOrDefault(id,0) < 3) return false;
+                if (randomRespawns.contains(id)) return false;
+                return player.level().getServer().getTickCount() >= protectedUntil.getOrDefault(id,0);
+            }
+            return true;
+        });
+        ServerPlayConnectionEvents.JOIN.register((handler,sender,server) -> {
+            var id = handler.player.getUUID();
+            if (!state.completed.contains(id) && state.pending.add(id)) save();
+        });
+        ServerPlayConnectionEvents.DISCONNECT.register((handler,server) -> {
+            authenticatedSamples.remove(handler.player.getUUID());
+            failures.remove(handler.player.getUUID());
+            welcomed.remove(handler.player.getUUID());
+            randomRespawns.remove(handler.player.getUUID());
+            placingUntil.remove(handler.player.getUUID());
+            protectedUntil.remove(handler.player.getUUID());
+            sentMode.remove(handler.player.getUUID());
+        });
+        ServerMessageEvents.ALLOW_GAME_MESSAGE.register((server,message,overlay) ->
+            !(message.getContents() instanceof TranslatableContents t
+                && t.getKey().startsWith("multiplayer.player.joined")));
+        ServerTickEvents.END_SERVER_TICK.register(this::tick);
+        ServerTickEvents.END_SERVER_TICK.register(this::interfaceTick);
+    }
+    private void load(MinecraftServer server) {
+        stateFile = server.getWorldPath(LevelResource.ROOT).resolve("holylois/onboarding.json");
+        try {
+            if (Files.exists(stateFile)) {
+                state = JSON.fromJson(Files.readString(stateFile),State.class);
+                if (state == null || state.version != 1 || state.completed == null || state.pending == null)
+                    throw new IllegalStateException("Invalid onboarding state; refusing to reset returning players.");
+            } else {
+                state = new State();
+                var playerData = server.getWorldPath(LevelResource.PLAYER_DATA_DIR);
+                if (Files.isDirectory(playerData)) try (var files = Files.list(playerData)) {
+                    files.filter(p -> p.getFileName().toString().endsWith(".dat")).forEach(p -> {
+                        String name = p.getFileName().toString();
+                        try {state.completed.add(UUID.fromString(name.substring(0,name.length()-4)));}
+                        catch (IllegalArgumentException ignored) {}
+                    });
+                }
+                save();
+            }
+            LOG.info("First-join RTP ready: {} returning players protected, {} pending. Radius 1800 around 0,0.",state.completed.size(),state.pending.size());
+        } catch (Exception e) {throw new IllegalStateException("Cannot load Holy Lois onboarding state",e);}
+    }
+    private void save() {
+        try {
+            Files.createDirectories(stateFile.getParent());
+            var temporary = stateFile.resolveSibling("onboarding.json.tmp");
+            Files.writeString(temporary,JSON.toJson(state),StandardOpenOption.CREATE,StandardOpenOption.TRUNCATE_EXISTING);
+            Files.move(temporary,stateFile,StandardCopyOption.ATOMIC_MOVE,StandardCopyOption.REPLACE_EXISTING);
+        } catch (Exception e) {throw new IllegalStateException("Cannot persist Holy Lois onboarding state",e);}
+    }
+    static boolean ready(boolean pending, boolean authenticated, int samples, int failedAttempts) {
+        return pending && authenticated && samples >= 3 && failedAttempts < 3;
+    }
+    private void tick(MinecraftServer server) {
+        if (state == null || server.getTickCount()%20 != 0) return;
+        for (var player : server.getPlayerList().getPlayers()) {
+            var id = player.getUUID();
+            boolean auth = ((PlayerAuth)player).easyAuth$isAuthenticated();
+            int samples = auth ? authenticatedSamples.merge(id,1,Integer::sum) : 0;
+            if (!auth) authenticatedSamples.remove(id);
+            if (!state.pending.contains(id)) {
+                if (auth && samples >= 3) welcome(player);
+                continue;
+            }
+            if (!ready(state.pending.contains(id),auth,samples,failures.getOrDefault(id,0))) continue;
+            // Never move a returning character or teleport before EasyAuth restores their real location.
+            if (player.level().dimension() != Level.OVERWORLD) continue;
+            String name = player.getGameProfile().name();
+            if (!name.matches("[A-Za-z0-9_]{3,16}")) continue;
+            try {
+                // Vanilla spreadplayers finds a safe surface, rejecting fire and liquid. Its square
+                // radius stays 200 blocks inside the completed 2000-block Chunky area.
+                int result = server.getCommands().getDispatcher().execute(
+                    "spreadplayers 0 0 0 1800 false " + name,
+                    server.createCommandSourceStack().withLevel(server.overworld()).withSuppressedOutput());
+                if (result < 1) throw new IllegalStateException("spreadplayers did not teleport the player");
+                state.pending.remove(id);
+                state.completed.add(id);
+                arrivalProtection(server,id);
+                save();
+                welcome(player);
+                LOG.info("First-join RTP completed for {} at {},{},{}",name,player.getBlockX(),player.getBlockY(),player.getBlockZ());
+            } catch (Exception e) {
+                int count = failures.merge(id,1,Integer::sum);
+                LOG.warn("First-join RTP attempt {} failed for {}",count,name,e);
+                if (count >= 3) player.sendSystemMessage(Component.literal("Automatic placement failed. You can use /rtp; contact pjampjam if it keeps failing."));
+            }
+        }
+    }
+    private void arrivalProtection(MinecraftServer server, UUID id) {
+        placingUntil.put(id,server.getTickCount()+30);
+        protectedUntil.put(id,server.getTickCount()+100);
+    }
+    private void interfaceTick(MinecraftServer server) {
+        if (state == null) return;
+        int now = server.getTickCount();
+        for (var player : server.getPlayerList().getPlayers()) {
+            UUID id = player.getUUID();
+            var auth = (PlayerAuth)player;
+            boolean authenticated = auth.easyAuth$isAuthenticated();
+            if (authenticated && randomRespawns.contains(id)) {
+                try {
+                    int result = server.getCommands().getDispatcher().execute(
+                        "spreadplayers 0 0 0 1800 false " + player.getGameProfile().name(),
+                        server.createCommandSourceStack().withLevel(server.overworld()).withSuppressedOutput());
+                    if (result < 1) throw new IllegalStateException("No safe respawn location");
+                    randomRespawns.remove(id);
+                    arrivalProtection(server,id);
+                } catch (Exception error) {
+                    randomRespawns.remove(id);
+                    player.sendSystemMessage(Component.literal("Random respawn failed. Use /rtp or contact pjampjam."));
+                    LOG.warn("Random respawn failed for {}",player.getGameProfile().name(),error);
+                }
+            }
+            var entry = auth.easyAuth$getPlayerEntryV1();
+            boolean registered = entry != null && !entry.password.isEmpty();
+            boolean placing = (state.pending.contains(id) && failures.getOrDefault(id,0) < 3)
+                || randomRespawns.contains(id) || now < placingUntil.getOrDefault(id,0);
+            int mode = AuthPolicy.mode(authenticated,registered,placing);
+            if (ServerPlayNetworking.canSend(player,AuthStatus.TYPE)
+                && (sentMode.getOrDefault(id,-1) != mode || now % 20 == 0)) {
+                ServerPlayNetworking.send(player,new AuthStatus(mode,(int)EasyAuth.extendedConfig.minPasswordLength));
+                sentMode.put(id,mode);
+            }
+        }
+        protectedUntil.entrySet().removeIf(entry -> now >= entry.getValue());
+        placingUntil.entrySet().removeIf(entry -> now >= entry.getValue());
+    }
+    private void welcome(net.minecraft.server.level.ServerPlayer player) {
+        if (player.level().getServer().getTickCount() < placingUntil.getOrDefault(player.getUUID(),0)) return;
+        if (!welcomed.add(player.getUUID())) return;
+        player.sendSystemMessage(Component.literal("Welcome to Holy Lois: Reborn!")
+            .withStyle(ChatFormatting.GOLD,ChatFormatting.BOLD)
+            .append(Component.literal("\n/home set base | /home tp base | /rtp")
+                .withStyle(style -> style.withColor(ChatFormatting.YELLOW).withBold(false)))
+            .append(Component.literal("\n/tpa NAME | /tpaccept NAME | V: voice | Caps Lock: talk")
+                .withStyle(style -> style.withColor(ChatFormatting.AQUA).withBold(false))));
+    }
+}

@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "holylois-onboarding",
+  "version": "1.2.0",
+  "name": "Holy Lois Onboarding",
+  "description": "EasyAuth-backed login UI, safe first placement and bedless respawns for Holy Lois: Reborn",
+  "environment": "server",
+  "license": "MIT",
+  "entrypoints": {
+    "main": [
+      "holylois.HolyLois"
+    ]
+  },
+  "depends": {
+    "minecraft": "26.3",
+    "java": ">=25",
+    "fabricloader": ">=0.19.5",
+    "fabric-api": "*",
+    "easyauth": "3.4.4"
+  }
+}
