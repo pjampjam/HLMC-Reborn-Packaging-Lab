@@ -99,7 +99,7 @@ public sealed class ClientContext
         Settings = Settings with { LauncherExe = Path.GetFullPath(path) }; AtomicFiles.WriteJson(SettingsPath, Settings);
     }
     public void RebuildSkImport()
-    { Settings = Settings with { SkInstance = null }; RecoveredDeletedInstance = true; AtomicFiles.WriteJson(SettingsPath, Settings); }
+    { newSkInstance = null; Settings = Settings with { SkInstance = null }; RecoveredDeletedInstance = true; AtomicFiles.WriteJson(SettingsPath, Settings); }
     public void LinkSkInstance(string path)
     {
         ValidateSkInstance(path); Settings = Settings with { SkInstance = Path.GetFullPath(path) }; AtomicFiles.WriteJson(SettingsPath, Settings);
@@ -110,22 +110,35 @@ public sealed class ClientContext
             _ = Installer.ReadReceipt();
         }
     }
-    private static void ValidateSkInstance(string path)
+    private void ValidateSkInstance(string path)
     {
+        SkLauncherProfiles.ValidateNativeDirectory(SkLauncherRoot, path);
         SafePaths.RejectLinks(path);
         var marker = SafePaths.Resolve(path, "holylois-instance.json");
         if (!File.Exists(marker) || File.ReadAllText(marker) != "{\"instance\":\"holylois-reborn-26.3\"}")
             throw new IOException("Choose the game folder of the imported Holy Lois instance. Other modpacks cannot be linked.");
     }
     private PackInstaller Installer => new(Instance, StatePath, downloader);
-    public InstalledReceipt? Receipt => Installer.ReadReceipt();
+    public InstalledReceipt? Receipt
+    {
+        get { try { return Installer.ReadReceipt(); } catch (Exception ex) when (ex is IOException or JsonException) { return null; } }
+    }
     public bool CanPlay => (Settings.Launcher != "sk" || SkLauncherProfiles.IsRegistered(SkLauncherRoot, Instance))
         && Directory.Exists(Instance) && File.Exists(SafePaths.Resolve(Instance, "holylois-instance.json")) && Receipt?.Version == Manifest.Version && File.Exists(SafePaths.Resolve(StatePath, "ready.txt"))
         && File.ReadAllText(SafePaths.Resolve(StatePath, "ready.txt")) == Manifest.Version;
     public async Task InstallAsync(IProgress<InstallProgress>? progress, CancellationToken token)
     {
         if (!IsIsolated && IsGameOrLauncherRunning()) throw new IOException("Close Minecraft and your Minecraft launcher before updating, then try again.");
-        if (Settings.Launcher == "sk" && Settings.SkInstance is null) newSkInstance = SkLauncherProfiles.InstallDirectory(SkLauncherRoot);
+        if (Settings.Launcher == "sk")
+        {
+            // A library move or a pre-hotfix saved link must be recovered before downloading into it.
+            if (Settings.SkInstance is not null)
+            {
+                try { ValidateSkInstance(Settings.SkInstance); }
+                catch (IOException) { RebuildSkImport(); DiscoverSkInstance(); }
+            }
+            if (Settings.SkInstance is null) newSkInstance = SkLauncherProfiles.InstallDirectory(SkLauncherRoot);
+        }
         var defaultsBytes = Asset("defaults.zip");
         if (Manifest.Defaults is { } bundle && (defaultsBytes.LongLength != bundle.Size
             || !Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(defaultsBytes)).Equals(bundle.Sha256, StringComparison.OrdinalIgnoreCase)))
@@ -151,7 +164,20 @@ public sealed class ClientContext
         AtomicFiles.Write(SafePaths.Resolve(StatePath, "ready.txt"), Encoding.ASCII.GetBytes(Manifest.Version));
         // Active files and the last transaction contain recovery copies; obsolete downloads need not accumulate.
         downloader.Prune(Manifest.Files.Concat(Manifest.LoaderFiles).Concat(Manifest.Defaults is { } retained ? [retained] : []));
+        _ = CleanInstalledDownloads();
         progress?.Report(new("Holy Lois is ready. Select its profile in your launcher.", 1, 1, Manifest.Files.Length, Manifest.Files.Length));
+    }
+    public StorageCleanupResult CleanInstalledDownloads()
+    {
+        try
+        {
+            if (!CanPlay) return StorageCleanupResult.Empty;
+            using var cleanupLock = new FileStream(SafePaths.Resolve(StatePath, "update.lock"), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
+            var result = downloader.RemoveInstalledCopies(Manifest.Files, Instance);
+            result += downloader.RemoveInstalledCopies(Manifest.LoaderFiles, Settings.Launcher == "sk" ? SkLauncherProfiles.DataRoot(SkLauncherRoot) : MinecraftRoot);
+            return result;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { return StorageCleanupResult.Empty; }
     }
     public static bool IsGameOrLauncherRunning(bool includeLauncher = true)
     {

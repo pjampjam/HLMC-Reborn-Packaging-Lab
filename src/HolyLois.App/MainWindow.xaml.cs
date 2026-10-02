@@ -24,7 +24,7 @@ public partial class MainWindow : ThemedWindow
         LanguageChoice.SelectedIndex = context.Settings.Language == "en" ? 1 : context.Settings.Language == "lv" ? 2 : 0;
         Closing += OnClosing; 
         UpdateStatus.Text = T("AutoCheck"); StatusText.Text = AppUpdates.Notice ?? T("StartHint"); Refresh();
-        Loaded += async (_, _) => { await LauncherDiscovery.WarmAsync(); if (IsClosed || Dispatcher.HasShutdownStarted) return; Refresh(); if (!context.IsIsolated) { await CheckUpdates(); if (!IsClosed) updateTimer.Start(); } };
+        Loaded += async (_, _) => { await LauncherDiscovery.WarmAsync(); if (IsClosed || Dispatcher.HasShutdownStarted) return; Refresh(); if (!context.IsIsolated) { await Task.Run(context.CleanInstalledDownloads); if (IsClosed || Dispatcher.HasShutdownStarted) return; await CheckUpdates(); if (!IsClosed) updateTimer.Start(); } };
         updateTimer.Tick += async (_, _) => await CheckUpdates(); Closed += (_, _) => { updateTimer.Stop(); progressClock.Stop(); };
     }
     private static string T(string key) => Localize.Text(key);

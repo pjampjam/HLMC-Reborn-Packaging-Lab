@@ -32,6 +32,10 @@ public final class HolyLois implements ModInitializer {
     private static final Gson JSON = new GsonBuilder().setPrettyPrinting().create();
     private State state;
     private Path stateFile;
+    private int rtpRadius = 1800;
+    private long rulesStamp = -1;
+    private final Path rulesFile = Path.of("config", "holylois-server.json");
+    public static final class Rules { public int rtpRadius = 1800; }
     private final Map<UUID,Integer> authenticatedSamples = new HashMap<>();
     private final Map<UUID,Integer> failures = new HashMap<>();
     private final Set<UUID> welcomed = new HashSet<>();
@@ -81,6 +85,7 @@ public final class HolyLois implements ModInitializer {
         ServerTickEvents.END_SERVER_TICK.register(this::interfaceTick);
     }
     private void load(MinecraftServer server) {
+        loadRules();
         stateFile = server.getWorldPath(LevelResource.ROOT).resolve("holylois/onboarding.json");
         try {
             if (Files.exists(stateFile)) {
@@ -99,8 +104,23 @@ public final class HolyLois implements ModInitializer {
                 }
                 save();
             }
-            LOG.info("First-join RTP ready: {} returning players protected, {} pending. Radius 1800 around 0,0.",state.completed.size(),state.pending.size());
+            LOG.info("First-join RTP ready: {} returning players protected, {} pending. Radius {} around 0,0.",state.completed.size(),state.pending.size(),rtpRadius);
         } catch (Exception e) {throw new IllegalStateException("Cannot load Holy Lois onboarding state",e);}
+    }
+    private void loadRules() {
+        try {
+            if (!Files.exists(rulesFile)) {
+                Files.createDirectories(rulesFile.getParent());
+                Files.writeString(rulesFile, JSON.toJson(new Rules()), StandardOpenOption.CREATE_NEW);
+            }
+            long stamp = Files.getLastModifiedTime(rulesFile).toMillis();
+            if (stamp == rulesStamp) return;
+            Rules rules = JSON.fromJson(Files.readString(rulesFile), Rules.class);
+            if (rules == null || rules.rtpRadius < 250 || rules.rtpRadius > 10000)
+                throw new IllegalArgumentException("RTP radius must be between 250 and 10000 blocks.");
+            rtpRadius = rules.rtpRadius; rulesStamp = stamp;
+            LOG.info("Holy Lois random placement radius: {} blocks", rtpRadius);
+        } catch (Exception error) { LOG.warn("Keeping the last valid random placement radius", error); }
     }
     private void save() {
         try {
@@ -115,6 +135,7 @@ public final class HolyLois implements ModInitializer {
     }
     private void tick(MinecraftServer server) {
         if (state == null || server.getTickCount()%20 != 0) return;
+        if (server.getTickCount()%200 == 0) loadRules();
         for (var player : server.getPlayerList().getPlayers()) {
             var id = player.getUUID();
             boolean auth = ((PlayerAuth)player).easyAuth$isAuthenticated();
@@ -130,10 +151,10 @@ public final class HolyLois implements ModInitializer {
             String name = player.getGameProfile().name();
             if (!name.matches("[A-Za-z0-9_]{3,16}")) continue;
             try {
-                // Vanilla spreadplayers finds a safe surface, rejecting fire and liquid. Its square
-                // radius stays 200 blocks inside the completed 2000-block Chunky area.
+                // Vanilla spreadplayers finds a safe surface, rejecting fire and liquid.
+                // The maintenance job expands this radius only after disk verification.
                 int result = server.getCommands().getDispatcher().execute(
-                    "spreadplayers 0 0 0 1800 false " + name,
+                    "spreadplayers 0 0 0 " + rtpRadius + " false " + name,
                     server.createCommandSourceStack().withLevel(server.overworld()).withSuppressedOutput());
                 if (result < 1) throw new IllegalStateException("spreadplayers did not teleport the player");
                 state.pending.remove(id);
@@ -163,7 +184,7 @@ public final class HolyLois implements ModInitializer {
             if (authenticated && randomRespawns.contains(id)) {
                 try {
                     int result = server.getCommands().getDispatcher().execute(
-                        "spreadplayers 0 0 0 1800 false " + player.getGameProfile().name(),
+                        "spreadplayers 0 0 0 " + rtpRadius + " false " + player.getGameProfile().name(),
                         server.createCommandSourceStack().withLevel(server.overworld()).withSuppressedOutput());
                     if (result < 1) throw new IllegalStateException("No safe respawn location");
                     randomRespawns.remove(id);

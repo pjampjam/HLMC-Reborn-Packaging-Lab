@@ -5,8 +5,13 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
+import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.component.TooltipDisplay;
 
 public final class HolyLoisAuthClient implements ClientModInitializer {
     static AuthStatus status;
@@ -16,6 +21,15 @@ public final class HolyLoisAuthClient implements ClientModInitializer {
             (server.ip.equalsIgnoreCase("79.76.40.155:25565") || server.ip.equals("79.76.40.155"));
     }
     @Override public void onInitializeClient() {
+        ItemTooltipCallback.EVENT.register((stack, tooltipContext, tooltipFlag, lines) -> {
+            if (!stack.isDamageableItem() || lines.isEmpty()) return;
+            if (!stack.getOrDefault(DataComponents.TOOLTIP_DISPLAY, TooltipDisplay.DEFAULT).shows(DataComponents.DAMAGE)) return;
+            // Vanilla already provides this line for damaged items with advanced tooltips.
+            if (tooltipFlag.isAdvanced() && stack.isDamaged()) return;
+            int maximum = stack.getMaxDamage();
+            int remaining = Math.max(0, maximum - stack.getDamageValue());
+            lines.add(Component.translatable("item.durability", remaining, maximum).withStyle(ChatFormatting.GRAY));
+        });
         PayloadTypeRegistry.clientboundPlay().register(AuthStatus.TYPE, AuthStatus.CODEC);
         ClientPlayNetworking.registerGlobalReceiver(AuthStatus.TYPE, (payload, context) -> {
             status = payload;

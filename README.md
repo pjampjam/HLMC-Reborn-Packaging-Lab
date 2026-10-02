@@ -4,7 +4,7 @@ A Windows launcher and updater for the Holy Lois modpack. Choose Minecraft Launc
 
 ## Download
 
-[Download HolyLoisReborn.exe 1.0.3](https://github.com/pjampjam/HLMC-Reborn-Packaging-Lab/releases/download/v1.0.3/HolyLoisReborn.exe) - about 67 MB. Windows x64, with its .NET runtime included.
+[Download HolyLoisReborn.exe 1.1.0](https://github.com/pjampjam/HLMC-Reborn-Packaging-Lab/releases/download/v1.1.0/HolyLoisReborn.exe) - about 67 MB. Windows x64, with its .NET runtime included.
 
 This is the full release. Existing preview installations move to the standard HolyLoisReborn folder, and owned launcher profiles and shortcuts lose their Preview names. The original small installers in HLMC-Reborn remain withdrawn. Do not download those older installers.
 
@@ -12,32 +12,18 @@ This is the full release. Existing preview installations move to the standard Ho
 2. Close Minecraft, then click Install Holy Lois.
 3. Click Play beneath the logo. In Minecraft Launcher, select Holy Lois: Reborn. In SKlauncher, open Library and select Holy Lois: Reborn. Click Install there once to prepare Minecraft and Java, then Play.
 
-Already using Holy Lois? Close and reopen your installed app or its shortcut. Its signed app-stable channel updates it to 1.0.3 before showing the main window. You do not need another installer. An old downloaded copy hands off to the newer installed version after its verified update.
+Already using Holy Lois? Close and reopen your installed app or its shortcut. Its signed app-stable channel updates it to 1.1.0 before showing the main window. You do not need another installer. An old downloaded copy hands off to the newer installed version after its verified update.
 
 The app is unsigned by a Windows publisher certificate. SmartScreen may show Unknown publisher. Local scans and previous user download tests do not guarantee every antivirus result. If Defender detects a threat, stop and report the detection rather than adding an exclusion.
 
-## Version 1.0.3
+## Version 1.1.0
 
-- SKlauncher 4 setup registers the pack automatically, with the correct Fabric version and icon. Manual import is no longer needed.
-- Repair recreates a deleted Library entry. Existing owned instances are discovered, and unrelated modpacks and personal settings are preserved.
-- Play stays disabled until the chosen launcher has a registered, verified pack.
-- Fixed a .NET crash when Settings restarted or removed the app.
-
-
-- Public source and documentation use portable paths. Local build paths are omitted from executable debug metadata.
-- Older executable assets containing local build paths have been retired.
-
-- A legacy installer shortcut occupying the final shortcut name is retargeted safely, removing the redundant Preview shortcut.
-
-
-
-- Standard HolyLoisReborn installation folder, clean shortcut and Minecraft profile names, and a one-time migration preserving your data and any older installation.
-
-- A larger Play button beneath the logo names your chosen launcher. It becomes green only when that launcher is found and the pack is ready.
-- Mouse interaction clears keyboard focus outlines, including after closing dialogs. Tab navigation retains visible focus.
-- Consistent rounded controls, stronger action colors and no logo slogan.
-- Signed app updates, byte-based download progress and safe rollback remain in place.
-- Optional shortcuts stay deleted when you delete them. Settings can explicitly create them again.
+- Recover stale SKlauncher folder links before copying files, including moved libraries and older external instances.
+- Clear verified duplicate app downloads and stages after updates. Keep the working app and one rollback copy.
+- Remove completed mod downloads only when the installed file and cache both match the approved hash. Worlds, personal settings and extra mods stay.
+- Settings > Clear completed downloads shows progress and the space recovered.
+- Matched launcher image frames, brief accessible transitions, clearer text and updated EN/RU/LV play guides.
+- Pack 1.5.4 removes inventory profile overlays and matching-item highlights, adds quiet durability tooltips, restores shader-aware DH overdraw and offers Page Down for body view.
 
 [Setup, reset and testing guide](RESET-AND-TEST.md) | [Signing options](SIGNING-OPTIONS.md) | [Modpack admin guide](https://github.com/pjampjam/HLMC-Reborn/blob/main/ADMIN-GUIDE.md)
 
@@ -47,7 +33,7 @@ The app installs into `%LOCALAPPDATA%\HolyLoisReborn`. Game files and preference
 
 App updates use this repository's signed app-stable channel. Modpack updates use the existing separate signed HLMC-Reborn pack channel. Direct release-file checks do not use the GitHub REST API quota; hosting and download failures can still occur. The working installed app remains available when the network check fails.
 
-Updates replace only pack-managed files. Worlds, personal voice-device choices and extra client mods or shaders are preserved. Shared defaults are merged once per pack version while unrelated preferences remain. Settings > Remove launcher app removes the app and its matching shortcuts while keeping game data.
+Updates replace only pack-managed files. Worlds, personal voice-device choices and extra client mods or shaders are preserved. Shared defaults are merged once per pack version while unrelated preferences remain. Settings > Clear completed downloads removes proven duplicate downloads while keeping rollback and game data. Settings > Remove launcher app removes the app and its matching shortcuts while keeping game data.
 
 ## Build and verification
 

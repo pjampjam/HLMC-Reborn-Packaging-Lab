@@ -7,6 +7,23 @@ public interface IFileDownloader
 
 public sealed class DownloadCache(string root, HttpClient client) : IFileDownloader
 {
+    public StorageCleanupResult RemoveInstalledCopies(IEnumerable<PackFile> approved, string instanceRoot)
+    {
+        var result = StorageCleanupResult.Empty;
+        if (!Directory.Exists(root)) return result;
+        foreach (var file in approved)
+        {
+            try
+            {
+                var cached = SafePaths.Resolve(root, file.Sha256.ToLowerInvariant() + ".verified");
+                var installed = SafePaths.Resolve(instanceRoot, file.Path);
+                if (!AtomicFiles.Matches(installed, file) || !AtomicFiles.Matches(cached, file)) continue;
+                File.Delete(cached); result += new StorageCleanupResult(1, file.Size);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
+        }
+        return result;
+    }
     public void Prune(IEnumerable<PackFile> approved)
     {
         if (!Directory.Exists(root)) return;

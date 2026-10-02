@@ -8,6 +8,18 @@ var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "test-output"
 Directory.CreateDirectory(root);
 var tests = new List<(string Name, Func<Task> Run)>();
 var passed = 0;
+tests.Add(("Body toggle migrates legacy defaults without stealing custom controls", () => {
+    const string key = "key_key.firstperson.toggle";
+    var old = Encoding.UTF8.GetBytes(key + ":key.keyboard.295\n");
+    var next = Encoding.UTF8.GetBytes(key + ":key.keyboard.page.down\n");
+    string Merge(string current, byte[] previous) => Encoding.UTF8.GetString(SharedDefaults.Merge("options.txt", Encoding.UTF8.GetBytes(current), previous, next));
+    Check(Merge(key + ":key.keyboard.295\n", old).Contains(":key.keyboard.page.down"), "Legacy F6 was not migrated.");
+    Check(Merge(key + ":key.keyboard.unknown\n", old).Contains(":key.keyboard.page.down"), "Unbound toggle was not migrated.");
+    Check(Merge(key + ":key.keyboard.b\n", old).Contains(":key.keyboard.b"), "Personal body control changed.");
+    Check(Merge(key + ":key.keyboard.295\nkey_custom:key.keyboard.page.down\n", old).Contains(key + ":key.keyboard.295"), "Another Page Down control was stolen.");
+    Check(Merge(key + ":key.keyboard.295\n", next).Contains(key + ":key.keyboard.295"), "Repair reset a later preference.");
+    return Task.CompletedTask;
+}));
 void Check(bool value, string message) { if (!value) throw new Exception(message); }
 async Task Throws(Func<Task> action) { try { await action(); } catch (Exception ex) when (ex is IOException or InvalidDataException or OperationCanceledException or CryptographicException) { return; } throw new Exception("Expected a rejected operation."); }
 string Dir(string test) { var d = Path.Combine(root, test); Directory.CreateDirectory(d); return d; }
@@ -370,6 +382,20 @@ tests.Add(("SK registration installs natively, preserves unrelated instances and
     await Throws(()=>{SkLauncherProfiles.DataRoot(home);return Task.CompletedTask;});
 }));
 
+tests.Add(("Installed download cleanup proves both copies and preserves personal and damaged files", () => {
+    var d=Dir("installed-cache-cleanup");var cache=Path.Combine(d,"cache");var game=Path.Combine(d,"game");Directory.CreateDirectory(cache);Directory.CreateDirectory(Path.Combine(game,"mods"));
+    var okay=FileSpec("mods/okay.jar","valid");var changed=FileSpec("mods/changed.jar","original");var corrupt=FileSpec("mods/corrupt.jar","expected");
+    File.WriteAllText(Path.Combine(game,okay.Path),"valid");File.WriteAllText(Path.Combine(cache,okay.Sha256+".verified"),"valid");
+    File.WriteAllText(Path.Combine(game,changed.Path),"personal");File.WriteAllText(Path.Combine(cache,changed.Sha256+".verified"),"original");
+    File.WriteAllText(Path.Combine(game,corrupt.Path),"expected");File.WriteAllText(Path.Combine(cache,corrupt.Sha256+".verified"),"damaged");
+    File.WriteAllText(Path.Combine(cache,"personal.txt"),"keep");using var http=new System.Net.Http.HttpClient();
+    var result=new DownloadCache(cache,http).RemoveInstalledCopies([okay,changed,corrupt],game);
+    Check(result.Files==1 && result.Bytes==okay.Size && !File.Exists(Path.Combine(cache,okay.Sha256+".verified")),"Verified duplicate was not reclaimed.");
+    Check(File.Exists(Path.Combine(cache,changed.Sha256+".verified")) && File.Exists(Path.Combine(cache,corrupt.Sha256+".verified")),"Unverified or needed repair copy was deleted.");
+    Check(File.ReadAllText(Path.Combine(game,changed.Path))=="personal" && File.ReadAllText(Path.Combine(cache,"personal.txt"))=="keep","Personal content changed.");return Task.CompletedTask;
+}));
+
+tests.AddRange(SkPathTests.Create(root));
 foreach (var test in tests)
 {
     try { await test.Run(); Console.WriteLine("PASS " + test.Name); passed++; }

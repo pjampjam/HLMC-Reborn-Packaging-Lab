@@ -29,6 +29,21 @@ public sealed class SettingsWindow : ThemedWindow
         Action(Localize.Text("CreateStart"), () => LauncherStartup.CreateShortcut(LauncherStartup.InstallRoot,false), !context.IsIsolated);
         Text(Localize.Text("SetupShortcutHint"),12);
         Text(Localize.Text("Maintenance"),14,true);
+        var cleanupStatus = new TextBlock { TextWrapping = TextWrapping.Wrap, Foreground = (Brush)Application.Current.Resources["Muted"], Margin = new Thickness(0,8,0,0) };
+        Action(Localize.Text("CleanDownloads"), () => { _ = CleanDownloads(); }, !context.IsIsolated);
+        panel.Children.Add(cleanupStatus);
+        async Task CleanDownloads()
+        {
+            var busy = new AppUpdateWindow(Localize.Text("CleanDownloads"),false) { Owner = this };
+            using var shade = DimForModal(); IsEnabled = false; busy.Show(); busy.SetStatus(Localize.Text("CleaningDownloads"));
+            try
+            {
+                var result = await Task.Run(() => WorkerCleanup.CompletedLauncherFiles() + context.CleanInstalledDownloads());
+                cleanupStatus.Text = string.Format(Localize.Text("CleanedDownloads"), result.Bytes / 1048576.0);
+            }
+            catch (Exception ex) { cleanupStatus.Text = Localize.Error(ex); }
+            finally { busy.FinishAndClose(); if (!IsClosed) IsEnabled = true; }
+        }
         Action(Localize.Text("ResetSetup"), () => {
             if (!AppDialog.Show(this,Localize.Text("ResetSetup"),Localize.Text("ResetSetupInfo"),Localize.Text("ResetSetup"))) return;
             var receipt = SafePaths.Resolve(LauncherStartup.InstallRoot,"setup-completed.json");

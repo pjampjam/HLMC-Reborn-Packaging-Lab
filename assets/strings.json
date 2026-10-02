@@ -51,7 +51,7 @@
     "Disabled": "Shaders disabled. Other graphics settings are unchanged.",
     "ChooseExe": "Choose your launcher EXE or shortcut",
     "ChooseFolder": "Choose the Holy Lois game folder imported by SKlauncher",
-    "HelpText": "1. Choose a launcher and install Holy Lois.\n2. Open your launcher and choose Holy Lois: Reborn.\n3. Multiplayer already has our server.\n\nOffline players: /register PASSWORD PASSWORD once, /login PASSWORD later. At least five characters, no spaces.\nV: voice setup. /home set base: save a home. /home tp base: go home. /tpa NAME: ask to teleport. /rtp: find a new place.",
+    "HelpText": "1. Choose your launcher and install Holy Lois.\n2. Open your launcher and select Holy Lois: Reborn.\n3. Open Multiplayer and join our server.\n\nJoining\nOffline accounts use the centered registration/login form. Use at least five characters, no spaces. Premium accounts skip the form. Your login is remembered for 24 hours on the same IP.\n\nHomes\n/home set base - save your current location.\n/home tp base - return to it.\n/home list - show your homes.\n/home delete base - remove the saved home.\nReplace base with your own home name.\n\nTeleporting\n/tpa NAME - ask to visit a player.\n/tpaccept NAME - accept their request.\n/tpdeny NAME - decline it.\n/rtp - find a safe new place (five-minute cooldown).\nReplace NAME with the player's name.\n\nControls\nV - choose your microphone and voice settings.\nHold Caps Lock - talk.\nPage Down - show or hide your body in first person.\n\nClaims and shops\nUse a golden hoe to mark two corners of your land, then /flan menu to manage it.\nCraft a Trade Shop with 4 planks, 1 wool and 1 iron ingot. Place it against a chest, choose the stock and price, then fill the chest.\n\nAfter death\nYour drops stay owner-protected for 30 minutes of loaded-world time. Fire, lava and the void can still destroy them.\n\nBody view\nPage Down keeps your animated arms and lets you switch to a simpler view if the body clips.",
     "Progress": "Checking and downloading files...",
     "Error": "Could not complete this step. Details:",
     "Version": "Pack",
@@ -96,7 +96,10 @@
     "Play": "Play",
     "PlayReadyHint": "Opens your selected Minecraft launcher.",
     "PlayInstallHint": "Install or update the pack to play.",
-    "PlayMissingLauncher": "Find or install your Minecraft launcher."
+    "PlayMissingLauncher": "Find or install your Minecraft launcher.",
+    "CleanDownloads": "Clear completed downloads",
+    "CleaningDownloads": "Clearing verified download copies...",
+    "CleanedDownloads": "Cleared {0:N0} MB. Game files, settings and the rollback copy were kept."
   },
   "ru": {
     "PlayTitle": "Играть в Holy Lois",
@@ -150,7 +153,7 @@
     "Disabled": "Шейдеры выключены. Остальные настройки графики сохранены.",
     "ChooseExe": "Выбери EXE лаунчера или ярлык",
     "ChooseFolder": "Выбери папку игры Holy Lois, импортированной в SKlauncher",
-    "HelpText": "1. Выбери лаунчер и установи Holy Lois.\n2. Открой лаунчер и выбери Holy Lois: Reborn.\n3. Наш сервер уже добавлен в Multiplayer.\n\nОфлайн-игрокам: /register ПАРОЛЬ ПАРОЛЬ при первом входе, затем /login ПАРОЛЬ. Минимум пять символов, без пробелов.\nV: настройка голоса. /home set base: сохранить дом. /home tp base: вернуться домой. /tpa ИМЯ: запрос телепорта. /rtp: найти новое место.",
+    "HelpText": "1. Выбери лаунчер и установи Holy Lois.\n2. Открой лаунчер и выбери Holy Lois: Reborn.\n3. Открой Multiplayer и подключись к нашему серверу.\n\nВход\nДля офлайн-аккаунтов форма регистрации или входа появляется в центре экрана. Пароль: минимум пять символов, без пробелов. Премиум-аккаунты пропускают форму. Вход запоминается на 24 часа с того же IP.\n\nДома\n/home set base - сохранить текущее место.\n/home tp base - вернуться туда.\n/home list - показать твои дома.\n/home delete base - удалить сохранённый дом.\nВместо base можно использовать своё название дома.\n\nТелепортация\n/tpa NAME - запросить телепорт к игроку.\n/tpaccept NAME - принять его запрос.\n/tpdeny NAME - отклонить его запрос.\n/rtp - найти безопасное новое место (раз в пять минут).\nВместо NAME укажи имя игрока.\n\nУправление\nV - выбрать микрофон и настроить голос.\nУдерживай Caps Lock, чтобы говорить.\nPage Down - показать или скрыть тело от первого лица.\n\nУчастки и магазины\nОтметь два угла участка золотой мотыгой. /flan menu открывает управление участком.\nСоздай Trade Shop из 4 досок, 1 шерсти и 1 железного слитка. Поставь его у сундука, выбери товар и цену, затем заполни сундук.\n\nПосле смерти\nВыпавшие вещи защищены для владельца и сохраняются 30 минут, пока область загружена. Огонь, лава и пустота всё ещё могут их уничтожить.\n\nВид тела\nPage Down сохраняет анимацию рук и позволяет скрыть тело, если оно перекрывает камеру.",
     "Progress": "Проверяем и загружаем файлы...",
     "Error": "Не удалось выполнить действие. Подробнее:",
     "Version": "Сборка",
@@ -195,7 +198,10 @@
     "Play": "Играть",
     "PlayReadyHint": "Откроет выбранный лаунчер Minecraft.",
     "PlayInstallHint": "Установите или обновите сборку.",
-    "PlayMissingLauncher": "Найдите или установите лаунчер Minecraft."
+    "PlayMissingLauncher": "Найдите или установите лаунчер Minecraft.",
+    "CleanDownloads": "Очистить завершённые загрузки",
+    "CleaningDownloads": "Очистка проверенных копий загрузок...",
+    "CleanedDownloads": "Освобождено {0:N0} МБ. Файлы игры, настройки и копия для восстановления сохранены."
   },
   "lv": {
     "PlayTitle": "Spēlēt Holy Lois",
@@ -249,7 +255,7 @@
     "Disabled": "Ēnotāji izslēgti. Pārējie grafikas iestatījumi saglabāti.",
     "ChooseExe": "Izvēlies palaidēja EXE vai saīsni",
     "ChooseFolder": "Izvēlies SKlauncher importēto Holy Lois spēles mapi",
-    "HelpText": "1. Izvēlies palaidēju un instalē Holy Lois.\n2. Atver palaidēju un izvēlies Holy Lois: Reborn.\n3. Mūsu serveris jau ir pievienots Multiplayer.\n\nBezsaistes spēlētājiem: pirmajā reizē /register PAROLE PAROLE, vēlāk /login PAROLE. Vismaz piecas rakstzīmes, bez atstarpēm.\nV: balss iestatījumi. /home set base: saglabā mājas. /home tp base: dodies mājās. /tpa VĀRDS: pieprasi teleportu. /rtp: atrodi jaunu vietu.",
+    "HelpText": "1. Izvēlies palaidēju un instalē Holy Lois.\n2. Atver palaidēju un izvēlies Holy Lois: Reborn.\n3. Atver Multiplayer un pievienojies mūsu serverim.\n\nPievienošanās\nBezsaistes kontiem reģistrācijas vai pieteikšanās forma parādās ekrāna centrā. Parolei vajag vismaz piecas rakstzīmes bez atstarpēm. Premium kontiem forma nav jāaizpilda. Pieteikšanās tiek atcerēta 24 stundas no tās pašas IP adreses.\n\nMājas\n/home set base - saglabā pašreizējo vietu.\n/home tp base - atgriezies tajā.\n/home list - parādi savas mājas.\n/home delete base - dzēs saglabāto māju vietu.\nbase vietā vari izmantot savu māju nosaukumu.\n\nTeleportēšanās\n/tpa NAME - lūdz teleportēties pie spēlētāja.\n/tpaccept NAME - pieņem viņa pieprasījumu.\n/tpdeny NAME - noraidi viņa pieprasījumu.\n/rtp - atrodi drošu jaunu vietu (reizi piecās minūtēs).\nNAME vietā ieraksti spēlētāja vārdu.\n\nVadība\nV - izvēlies mikrofonu un balss iestatījumus.\nTuri Caps Lock, lai runātu.\nPage Down - parādi vai paslēp savu ķermeni pirmās personas skatā.\n\nZeme un veikali\nAtzīmē divus zemes stūrus ar zelta kapli. /flan menu atver zemes pārvaldību.\nIzgatavo Trade Shop no 4 dēļiem, 1 vilnas un 1 dzelzs stieņa. Novieto to pie lādes, izvēlies preci un cenu, tad piepildi lādi.\n\nPēc nāves\nTavas nomestās mantas ir aizsargātas īpašniekam un saglabājas 30 minūtes, kamēr apgabals ir ielādēts. Uguns, lava un tukšums tās joprojām var iznīcināt.\n\nĶermeņa skats\nPage Down saglabā roku animācijas un ļauj paslēpt ķermeni, ja tas aizsedz kameru.",
     "Progress": "Pārbauda un lejupielādē failus...",
     "Error": "Neizdevās pabeigt šo darbību. Informācija:",
     "Version": "Pakotne",
@@ -294,6 +300,9 @@
     "Play": "Spēlēt",
     "PlayReadyHint": "Atver izvēlēto Minecraft palaidēju.",
     "PlayInstallHint": "Instalējiet vai atjauniniet modpaku.",
-    "PlayMissingLauncher": "Atrodiet vai instalējiet Minecraft palaidēju."
+    "PlayMissingLauncher": "Atrodiet vai instalējiet Minecraft palaidēju.",
+    "CleanDownloads": "Notīrīt pabeigtās lejupielādes",
+    "CleaningDownloads": "Tiek notīrītas pārbaudīto lejupielāžu kopijas...",
+    "CleanedDownloads": "Atbrīvoti {0:N0} MB. Spēles faili, iestatījumi un atkopšanas kopija ir saglabāti."
   }
 }

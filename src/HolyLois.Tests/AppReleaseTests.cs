@@ -60,6 +60,70 @@ internal static class AppReleaseTests
         dir = Folder("app-fresh"); deployment = new(dir,pub); nonce = deployment.Prepare(signed,Candidate(dir),new Version(0,5,0));
         deployment.Commit(nonce); deployment.Rollback(nonce); Check(!File.Exists(deployment.Target),"Failed fresh update left an active app.");
         Console.WriteLine("PASS Failed first installation removes only its own uncommitted executable");
+
+        dir = Folder("app-storage-pending"); deployment = new(dir,pub); File.WriteAllBytes(deployment.Target,old);
+        nonce = deployment.Prepare(signed,Candidate(dir),new Version(0,5,0));
+        var cache = Path.Combine(dir,"app-downloads",release.Sha256 + ".verified");
+        Directory.CreateDirectory(Path.GetDirectoryName(cache)!); File.WriteAllBytes(cache,next);
+        Check(deployment.PruneCompleted().Files == 0 && File.Exists(cache) && File.Exists(deployment.Stage(release)),"Pending update files were pruned.");
+        deployment.Commit(nonce); deployment.Acknowledge(nonce,deployment.Target); deployment.Finalize(nonce);
+        File.WriteAllBytes(cache,next);
+        Directory.CreateDirectory(Path.GetDirectoryName(deployment.Stage(release))!); File.WriteAllBytes(deployment.Stage(release),next);
+        var unknown = Path.Combine(dir,"app-downloads","personal-note.txt"); File.WriteAllText(unknown,"keep");
+        var unknownStage = Path.Combine(dir,"updates","custom-files"); Directory.CreateDirectory(unknownStage); File.WriteAllText(Path.Combine(unknownStage,"keep.txt"),"keep");
+        var corruptCache = Path.Combine(dir,"app-downloads",new string('a',64) + ".verified"); File.WriteAllBytes(corruptCache,old);
+        var removed = deployment.PruneCompleted([deployment.Stage(release)]);
+        Check(removed.Files == 1 && removed.Bytes == next.Length && !File.Exists(cache),"Completed app download was not removed.");
+        Check(File.Exists(deployment.Stage(release)) && File.Exists(unknown) && File.Exists(corruptCache)
+            && Directory.Exists(unknownStage) && File.Exists(Path.Combine(dir,"rollback/HolyLoisReborn.exe")),"Active worker, rollback or unknown file was removed.");
+        Check(deployment.PruneCompleted().Files == 1 && !File.Exists(deployment.Stage(release)),"Exited worker stage was not pruned.");
+        var oldPartial = cache + "." + Guid.NewGuid().ToString("N") + ".part"; File.WriteAllBytes(oldPartial,old); File.SetLastWriteTimeUtc(oldPartial,DateTime.UtcNow.AddDays(-2));
+        var newPartial = cache + "." + Guid.NewGuid().ToString("N") + ".part"; File.WriteAllBytes(newPartial,old);
+        Check(deployment.PruneCompleted().Files == 1 && !File.Exists(oldPartial) && File.Exists(newPartial),"Partial download cleanup did not preserve recent work.");
+        var migrationCopy = Path.Combine(dir,"rollback/before-name-migration.exe"); File.WriteAllBytes(migrationCopy,old);
+        Check(deployment.PruneCompleted().Files == 1 && !File.Exists(migrationCopy),"Duplicate migration rollback was retained.");
+        File.WriteAllBytes(migrationCopy,next);
+        Check(deployment.PruneCompleted().Files == 0 && File.Exists(migrationCopy),"Distinct migration recovery copy was removed.");
+        Console.WriteLine("PASS Completed update copies are reclaimed while pending, active, rollback and unknown files are preserved");
+
+        dir = Folder("app-storage-no-receipt"); deployment = new(dir,pub); File.WriteAllBytes(deployment.Target,old);
+        cache = Path.Combine(dir,"app-downloads",release.Sha256 + ".verified"); Directory.CreateDirectory(Path.GetDirectoryName(cache)!); File.WriteAllBytes(cache,next);
+        Check(deployment.PruneCompleted().Files == 0 && File.Exists(cache),"Unverified installation authorized cleanup.");
+        Console.WriteLine("PASS Storage cleanup requires a signed receipt and matching installed app");
+
+        dir = Folder("worker-storage/HolyLoisReborn-Maintenance");
+        var cutoff = DateTime.UtcNow.AddDays(-1);
+        string Worker(string label, DateTime modified)
+        {
+            var folder = Path.Combine(dir,label); Directory.CreateDirectory(folder);
+            var file = Path.Combine(folder,"HolyLoisReborn.exe"); File.WriteAllBytes(file,old); File.SetLastWriteTimeUtc(file,modified); return file;
+        }
+        var exited = Worker(Guid.NewGuid().ToString("N"),cutoff.AddDays(-1));
+        var active = Worker(Guid.NewGuid().ToString("N"),cutoff.AddDays(-1));
+        var recent = Worker(Guid.NewGuid().ToString("N"),DateTime.UtcNow);
+        var userFolder = Worker(Guid.NewGuid().ToString("N"),cutoff.AddDays(-1)); File.WriteAllText(Path.Combine(Path.GetDirectoryName(userFolder)!,"personal.txt"),"keep");
+        var unrecognized = Worker("my-folder",cutoff.AddDays(-1));
+        removed = AppStorageCleanup.TemporaryWorkers(dir,[active],cutoff);
+        Check(removed.Files == 1 && !File.Exists(exited) && File.Exists(active) && File.Exists(recent) && File.Exists(userFolder) && File.Exists(unrecognized),"Worker cleanup did not respect lifetime or ownership boundaries.");
+        Reject(() => AppStorageCleanup.TemporaryWorkers(Folder("unowned-worker-root"),[],cutoff));
+        Console.WriteLine("PASS Old temporary workers are reclaimed without touching running, recent or user folders");
+
+        dir = Folder("runtime-storage/.net/HolyLoisReborn");
+        var nativeNames = new[] { "D3DCompiler_47_cor3.dll", "PenImc_cor3.dll", "PresentationNative_cor3.dll", "vcruntime140_cor3.dll", "wpfgfx_cor3.dll" };
+        string Runtime(string label, DateTime modified)
+        {
+            var folder = Path.Combine(dir,label); Directory.CreateDirectory(folder);
+            foreach(var name in nativeNames) { var file = Path.Combine(folder,name); File.WriteAllBytes(file,old); File.SetLastWriteTimeUtc(file,modified); }
+            return folder;
+        }
+        var oldRuntime = Runtime("old-runtime-cache",cutoff.AddDays(-1));
+        var currentRuntime = Runtime("active-runtime-cache",cutoff.AddDays(-1));
+        var newRuntime = Runtime("new-runtime-cache",DateTime.UtcNow);
+        var unknownRuntime = Runtime("user-runtime-cache",cutoff.AddDays(-1)); File.WriteAllText(Path.Combine(unknownRuntime,"personal.txt"),"keep");
+        removed = AppStorageCleanup.NativeRuntime(dir,[Path.Combine(currentRuntime,nativeNames[0])],cutoff);
+        Check(removed.Files == 5 && !Directory.Exists(oldRuntime) && Directory.Exists(currentRuntime) && Directory.Exists(newRuntime) && Directory.Exists(unknownRuntime),"Native cleanup removed an active, recent or unknown runtime folder.");
+        Reject(() => AppStorageCleanup.NativeRuntime(Folder("unowned-native-root"),[],cutoff));
+        Console.WriteLine("PASS Stale native extractions are bounded to the launcher cache and preserve loaded modules");
         return Task.CompletedTask;
     }
 }

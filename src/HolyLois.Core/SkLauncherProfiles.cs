@@ -41,6 +41,16 @@ public static class SkLauncherProfiles
         return id is not null && System.Text.RegularExpressions.Regex.IsMatch(id, @"^[a-zA-Z0-9_-]{1,128}$")
             ? SafePaths.Resolve(DataRoot(home), "instances/" + id) : null;
     }
+    public static void ValidateNativeDirectory(string home, string gameDirectory)
+    {
+        if (!Path.IsPathFullyQualified(gameDirectory))
+            throw new IOException("Choose Holy Lois from SKlauncher's current game library.");
+        var full = Path.TrimEndingDirectorySeparator(Path.GetFullPath(gameDirectory));
+        var id = Path.GetFileName(full);
+        if (!System.Text.RegularExpressions.Regex.IsMatch(id, @"^[a-zA-Z0-9_-]{1,128}$")
+            || !SamePath(full, SafePaths.Resolve(DataRoot(home), "instances/" + id)))
+            throw new IOException("Holy Lois must be installed in SKlauncher's current native instance folder.");
+    }
     public static string InstallDirectory(string home)
     {
         var existing = FindOwnedInstance(home);
@@ -92,7 +102,7 @@ public static class SkLauncherProfiles
         if (entry is null)
         {
             var id = Path.GetFileName(Path.GetFullPath(gameDirectory));
-            if (!System.Text.RegularExpressions.Regex.IsMatch(id, @"^holy-lois-reborn(-[0-9]+)?$")
+            if (!System.Text.RegularExpressions.Regex.IsMatch(id, @"^[a-zA-Z0-9_-]{1,128}$")
                 || instances.OfType<JsonObject>().Any(item => (string?)item["id"] == id))
                 throw new IOException("This SKlauncher instance identifier is already in use. Existing instances were preserved.");
             entry = new JsonObject { ["id"] = id, ["createdAt"] = DateTime.UtcNow.ToString("O"), ["playTime"] = 0,
@@ -110,8 +120,8 @@ public static class SkLauncherProfiles
     public static void Register(string home, string gameDirectory, PackManifest manifest, byte[] icon)
     {
         SafePaths.RejectLinks(home);
-        if (!SamePath(gameDirectory, SafePaths.Resolve(DataRoot(home), "instances/" + Path.GetFileName(gameDirectory))))
-            throw new IOException("Holy Lois must be installed in SKlauncher's native instance folder.");
+        ValidateNativeDirectory(home, gameDirectory);
+        gameDirectory = Path.TrimEndingDirectorySeparator(Path.GetFullPath(gameDirectory));
         var path = SafePaths.Resolve(home, "instances.json");
         var existing = File.Exists(path) ? File.ReadAllBytes(path) : null;
         var hash = Convert.ToHexStringLower(SHA1.HashData(icon));

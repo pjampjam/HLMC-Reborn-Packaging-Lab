@@ -20,6 +20,8 @@ The repository name stays Packaging Lab because older apps trust that update add
 
 ## Settings and removal
 
+Settings > Clear completed downloads shows progress and removes only verified duplicate app/mod downloads. The active app, one rollback, worlds and personal extras are kept. Unknown or changed files stay.
+
 Settings > Run setup again repeats launcher and shortcut choices without deleting game data. Settings can also create shortcuts explicitly, choose a launcher file, or open the app folder.
 
 Settings > Remove launcher app removes its installed EXE and matching shortcuts. Game files, worlds, settings and download caches stay. The copy in Downloads is separate. Other launchers and modpacks are untouched.

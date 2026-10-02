@@ -102,17 +102,22 @@ public sealed class AppDeployment(string root, string publicKey)
         if (!IsAcknowledged(nonce)) throw new IOException("The updated app has not completed startup.");
         AtomicFiles.WriteJson(Receipt, pending.Release);
         File.Delete(JournalPath); File.Delete(ReadyPath(nonce));
-        // Keep one known previous app for rollback; only our older staging files are pruned.
-        var current = AppReleasePolicy.Parse(pending.Release, publicKey).Sha256;
-        var updates = SafePaths.Resolve(root, "updates");
-        foreach (var dir in Directory.GetDirectories(updates))
+        // The staged worker remains protected while executing. A later normal startup removes it.
+        _ = PruneCompleted();
+    }
+
+    public StorageCleanupResult PruneCompleted(IEnumerable<string>? activeExecutables = null)
+    {
+        // A pending journal owns both the download and worker until acknowledgement or rollback.
+        // No cleanup is authorized by an absent receipt or an unverified installed executable.
+        try
         {
-            var name = Path.GetFileName(dir);
-            if (name.Length != 64 || name.Any(c => !char.IsAsciiHexDigit(c)) || name == current) continue;
-            var file = SafePaths.Resolve(root, "updates/" + name + "/HolyLoisReborn.exe");
-            try { if (File.Exists(file)) File.Delete(file); if (!Directory.EnumerateFileSystemEntries(dir).Any()) Directory.Delete(dir); }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { /* An old worker may still be exiting; a later update retries cleanup. */ }
+            if (Pending is not null || Installed is not { } installed || !AtomicFiles.Matches(Target, installed.File))
+                return StorageCleanupResult.Empty;
+            return AppStorageCleanup.CompletedCopies(root, activeExecutables ?? []);
         }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException or System.Security.Cryptography.CryptographicException)
+        { return StorageCleanupResult.Empty; }
     }
 
     public void Rollback(string nonce)

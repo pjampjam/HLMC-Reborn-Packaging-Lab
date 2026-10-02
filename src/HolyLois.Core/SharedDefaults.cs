@@ -40,10 +40,24 @@ public static class SharedDefaults
                 var i = lines.FindIndex(line => line.StartsWith(key + delimiter, StringComparison.Ordinal));
                 if (i >= 0) lines[i] = key + delimiter + value; else lines.Add(key + delimiter + value);
             }
+            if (target == "options.txt") MigrateBodyToggle(lines, oldKeys, newKeys);
             return Encoding.UTF8.GetBytes(string.Join("\n", lines).TrimEnd('\n') + "\n");
         }
         // TOML and other formats use the reviewed complete shared file when its bytes change.
         return previous is not null && previous.SequenceEqual(next) ? personal : next;
+    }
+
+    private static void MigrateBodyToggle(List<string> lines, Dictionary<string, string> oldKeys, Dictionary<string, string> newKeys)
+    {
+        const string key = "key_key.firstperson.toggle", binding = "key.keyboard.page.down";
+        if (!newKeys.TryGetValue(key, out var next) || next != binding
+            || oldKeys.TryGetValue(key, out var previous) && previous == next) return;
+        var index = lines.FindIndex(line => line.StartsWith(key + ":", StringComparison.Ordinal));
+        // Only replace the former bundled F6 default or an unbound toggle, and never steal another control.
+        if (index < 0 || lines[index][(key.Length + 1)..] is not ("key.keyboard.295" or "key.keyboard.f6" or "key.keyboard.unknown")) return;
+        if (lines.Any(line => line.StartsWith("key_", StringComparison.Ordinal)
+            && !line.StartsWith(key + ":", StringComparison.Ordinal) && line.EndsWith(":" + binding, StringComparison.Ordinal))) return;
+        lines[index] = key + ":" + binding;
     }
 
     private static Dictionary<string, string> Lines(byte[]? bytes, char delimiter) => bytes is null ? [] :

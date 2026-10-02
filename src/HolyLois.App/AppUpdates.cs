@@ -42,6 +42,8 @@ public static class AppUpdates
                 deployment.Rollback(interrupted.Nonce); Notice = "An interrupted launcher update was rolled back.";
             }
         }
+        window.SetStatus("Checking the launcher and clearing completed update files...");
+        await Task.Run(WorkerCleanup.CompletedLauncherFiles);
         using var http = new HttpClient(new HttpClientHandler { AllowAutoRedirect = true }) { Timeout = TimeSpan.FromSeconds(20) };
         http.DefaultRequestHeaders.UserAgent.ParseAdd("HolyLoisReborn/" + RunningVersion.ToString(3));
         try

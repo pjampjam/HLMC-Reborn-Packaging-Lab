@@ -64,6 +64,7 @@ public class ThemedWindow : Window
         if (chromeFrame is null) throw new InvalidOperationException("Window content is not ready.");
         var shade = new Border { Background = new SolidColorBrush(Color.FromArgb(155,0,0,0)), IsHitTestVisible = false };
         Grid.SetRowSpan(shade,2); chromeFrame.Children.Add(shade); modalShade = shade;
+        UiMotion.FadeIn(shade, 0);
         return new ShadeLease(() => { chromeFrame.Children.Remove(shade); if (modalShade == shade) modalShade = null; });
     }
     private sealed class ShadeLease(Action restore) : IDisposable { public void Dispose() => restore(); }

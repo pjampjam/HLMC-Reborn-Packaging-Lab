@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
   "id": "holylois-auth-ui",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "name": "Holy Lois Login",
-  "description": "A masked password form backed by the server EasyAuth status. No saved credentials.",
+  "description": "A masked password form backed by server EasyAuth and simple durability tooltips. No saved credentials.",
   "environment": "client",
   "license": "MIT",
   "entrypoints": {

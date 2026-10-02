@@ -68,6 +68,29 @@ public partial class App : Application
                 focusWindow.Close();
                 File.WriteAllText(Path.Combine(data,"ui-verification.txt"),"Action text contrast passed. Keyboard focus stays visible; pointer interaction clears its ring without disabling focus."); Shutdown(0); return;
             }
+            if (args.Contains("--verify-ui-polish")) {
+                if (data is null || !context.IsIsolated) throw new ArgumentException("UI polish verification requires an isolated folder.");
+                var setup = new SetupWindow(context, data); setup.EnsureChrome();
+                var content = (FrameworkElement)setup.Content; content.Measure(new Size(780,780)); content.Arrange(new Rect(0,0,780,780)); content.UpdateLayout();
+                IEnumerable<System.Windows.Controls.Border> Pictures(DependencyObject parent) {
+                    for (var n=0;n<VisualTreeHelper.GetChildrenCount(parent);n++) {
+                        var child=VisualTreeHelper.GetChild(parent,n);
+                        if (child is System.Windows.Controls.Border border && border.Background is ImageBrush) yield return border;
+                        foreach (var nested in Pictures(child)) yield return nested;
+                    }
+                }
+                var pictures = Pictures(content).ToArray();
+                if (pictures.Length != 2 || pictures.Any(p => p.Height != 155 || p.CornerRadius != new CornerRadius(6) || ((ImageBrush)p.Background).Stretch != Stretch.UniformToFill)
+                    || Math.Abs(pictures[0].ActualWidth-pictures[1].ActualWidth) > 0.1) throw new IOException("Launcher picture frames no longer match or preserve crop proportions.");
+                var marker = new System.Windows.Controls.Border { Width=40,Height=40,Background=Brushes.White };
+                var motionWindow = new ThemedWindow { Content=marker,Width=120,Height=120 }; motionWindow.Show();
+                UiMotion.FadeIn(marker,0,true);
+                if (!marker.HasAnimatedProperties) throw new IOException("Reveal feedback did not animate.");
+                UiMotion.FadeIn(marker,0,false);
+                if (marker.HasAnimatedProperties || marker.Opacity != 1) throw new IOException("Reduced motion did not stop the fade immediately.");
+                motionWindow.Close();
+                File.WriteAllText(Path.Combine(data,"ui-polish-result.txt"),"Matching rounded 155px picture frames preserve proportions. Reveal feedback animates and reduced motion disables it immediately."); Shutdown(0); return;
+            }
             if (args.Contains("--verify-modal-shutdown")) {
                 if (data is null || !context.IsIsolated) throw new ArgumentException("Modal shutdown verification requires an isolated folder.");
                 var main = new MainWindow(context); MainWindow = main; main.Show();

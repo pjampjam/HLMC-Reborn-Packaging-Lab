@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "version": "1.5.3",
+  "version": "1.5.4",
   "minecraft": "26.3",
   "fabric": "0.19.5",
   "java": 25,
@@ -168,10 +168,10 @@
       "policy": "managed"
     },
     {
-      "path": "mods/holylois-auth-ui-1.0.1+26.3.jar",
-      "url": "https://github.com/pjampjam/HLMC-Reborn/releases/download/pack-v1.5.2/holylois-auth-ui-1.0.1+26.3.jar",
-      "size": 20361,
-      "sha256": "97a882592574d5f9b57decaf922b6f582e0d062296e5e5704a3db69fe189468c",
+      "path": "mods/holylois-auth-ui-1.0.2+26.3.jar",
+      "url": "https://github.com/pjampjam/HLMC-Reborn/releases/download/pack-v1.5.4/holylois-auth-ui-1.0.2+26.3.jar",
+      "size": 21486,
+      "sha256": "15b03cc38c8db43c5f9ff83e659bf8c76930cf16071656fdcc350c9033afa782",
       "policy": "managed"
     },
     {
@@ -487,12 +487,25 @@
   ],
   "defaults": {
     "path": "defaults.zip",
-    "url": "https://github.com/pjampjam/HLMC-Reborn/releases/download/pack-v1.5.3/defaults.zip",
-    "size": 52868,
-    "sha256": "1f5f702d91aba4c2b3177dd8c116fe00451d6ef1dfb513b7a1dc06d5578623d4",
+    "url": "https://github.com/pjampjam/HLMC-Reborn/releases/download/pack-v1.5.4/defaults.zip",
+    "size": 52934,
+    "sha256": "c88f6a24d6308699485081c40175726c3aac06773a40e4327386a3341b562940",
     "policy": "seed"
   },
   "history": [
+    {
+      "version": "1.5.4",
+      "date": "2026-10-03",
+      "summary": "Shader-aware distant terrain, consistent first-person controls and quieter inventory defaults.",
+      "added": [],
+      "removed": [],
+      "updated": [
+        "Distant Horizons uses automatic shader-aware overdraw prevention.",
+        "PageDown switches between the visible first-person body and the normal hand view.",
+        "Inventory profile selectors and matching-item highlights are hidden; sorting stays available.",
+        "Durability tooltips show remaining/max without enabling advanced tooltips."
+      ]
+    },
     {
       "version": "1.5.3",
       "date": "2026-10-02",
