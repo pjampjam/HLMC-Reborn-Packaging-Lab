@@ -10,7 +10,7 @@ This is the full release. Existing preview installations move to the standard Ho
 
 1. Open the downloaded EXE. Choose your Minecraft launcher and optional shortcuts.
 2. Close Minecraft, then click Install Holy Lois.
-3. Click Play beneath the logo. In Minecraft Launcher, select Holy Lois: Reborn. In SKlauncher, open Library and select Holy Lois: Reborn. Its first Play downloads Minecraft and Java automatically.
+3. Click Play beneath the logo. In Minecraft Launcher, select Holy Lois: Reborn. In SKlauncher, open Library and select Holy Lois: Reborn. Click Install there once to prepare Minecraft and Java, then Play.
 
 Already using Holy Lois? Close and reopen your installed app or its shortcut. Its signed app-stable channel updates it to 1.0.3 before showing the main window. You do not need another installer. An old downloaded copy hands off to the newer installed version after its verified update.
 

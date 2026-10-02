@@ -35,6 +35,30 @@ public static class SkLauncherProfiles
     }
     private static bool SamePath(string? first, string second) => first is not null && Path.IsPathFullyQualified(first)
         && Path.GetFullPath(first).Equals(Path.GetFullPath(second), StringComparison.OrdinalIgnoreCase);
+    private static string? NativeDirectory(string home, JsonObject entry)
+    {
+        var id = (string?)entry["id"];
+        return id is not null && System.Text.RegularExpressions.Regex.IsMatch(id, @"^[a-zA-Z0-9_-]{1,128}$")
+            ? SafePaths.Resolve(DataRoot(home), "instances/" + id) : null;
+    }
+    public static string InstallDirectory(string home)
+    {
+        var existing = FindOwnedInstance(home);
+        if (existing is not null) return existing;
+        var registry = SafePaths.Resolve(home, "instances.json");
+        var entries = File.Exists(registry) ? Instances(ReadObject(File.ReadAllBytes(registry))).OfType<JsonObject>().ToArray() : [];
+        for (var suffix = 1; ; suffix++)
+        {
+            var id = suffix == 1 ? "holy-lois-reborn" : "holy-lois-reborn-" + suffix;
+            var target = SafePaths.Resolve(DataRoot(home), "instances/" + id);
+            var occupant = entries.FirstOrDefault(entry => (string?)entry["id"] == id);
+            var empty = !Directory.Exists(target) || !Directory.EnumerateFileSystemEntries(target).Any();
+            if (occupant is null && (empty || IsOwned(target))) return target;
+            // A deleted owned pack can be recreated without replacing another instance's files.
+            if (empty && occupant is not null && (string?)occupant["name"] == "Holy Lois: Reborn"
+                && (string?)occupant["versionId"] == LauncherProfiles.VersionId) return target;
+        }
+    }
     public static bool IsOwned(string path)
     {
         try { return File.Exists(SafePaths.Resolve(path, "holylois-instance.json")) && File.ReadAllText(SafePaths.Resolve(path, "holylois-instance.json")) == Marker; }
@@ -45,8 +69,7 @@ public static class SkLauncherProfiles
         var path = SafePaths.Resolve(home, "instances.json");
         if (!File.Exists(path)) return null;
         foreach (var entry in Instances(ReadObject(File.ReadAllBytes(path))).OfType<JsonObject>())
-            if ((string?)entry["versionId"] == LauncherProfiles.VersionId && entry["directory"] is JsonValue directory
-                && directory.TryGetValue<string>(out var value) && Path.IsPathFullyQualified(value) && IsOwned(value)) return Path.GetFullPath(value);
+            if ((string?)entry["versionId"] == LauncherProfiles.VersionId && NativeDirectory(home, entry) is { } directory && IsOwned(directory)) return directory;
         return null;
     }
     public static bool IsRegistered(string home, string gameDirectory)
@@ -54,7 +77,7 @@ public static class SkLauncherProfiles
         try {
             var path = SafePaths.Resolve(home, "instances.json");
             return File.Exists(path) && Instances(ReadObject(File.ReadAllBytes(path))).OfType<JsonObject>().Any(entry =>
-                (string?)entry["versionId"] == LauncherProfiles.VersionId && SamePath((string?)entry["directory"], gameDirectory));
+                (string?)entry["versionId"] == LauncherProfiles.VersionId && SamePath(NativeDirectory(home,entry), gameDirectory));
         }
         catch (Exception ex) when (ex is IOException or ArgumentException) { return false; }
     }
@@ -63,13 +86,15 @@ public static class SkLauncherProfiles
         if (!IsOwned(gameDirectory)) throw new IOException("Only a verified Holy Lois game folder can be registered.");
         var root = existing is null ? new JsonObject() : ReadObject(existing);
         var instances = Instances(root);
-        var entry = instances.OfType<JsonObject>().FirstOrDefault(item => SamePath((string?)item["directory"], gameDirectory)
+        var nativeId = Path.GetFileName(Path.GetFullPath(gameDirectory));
+        var entry = instances.OfType<JsonObject>().FirstOrDefault(item => (string?)item["id"] == nativeId
             && (string?)item["versionId"] == LauncherProfiles.VersionId);
         if (entry is null)
         {
-            var ids = instances.OfType<JsonObject>().Select(item => (string?)item["id"]).ToHashSet();
-            var id = "holy-lois-reborn";
-            for (var suffix = 2; ids.Contains(id); suffix++) id = "holy-lois-reborn-" + suffix;
+            var id = Path.GetFileName(Path.GetFullPath(gameDirectory));
+            if (!System.Text.RegularExpressions.Regex.IsMatch(id, @"^holy-lois-reborn(-[0-9]+)?$")
+                || instances.OfType<JsonObject>().Any(item => (string?)item["id"] == id))
+                throw new IOException("This SKlauncher instance identifier is already in use. Existing instances were preserved.");
             entry = new JsonObject { ["id"] = id, ["createdAt"] = DateTime.UtcNow.ToString("O"), ["playTime"] = 0,
                 ["sessionCount"] = 0, ["memoryMax"] = 4096, ["installComplete"] = false };
             instances.Add(entry);
@@ -85,6 +110,8 @@ public static class SkLauncherProfiles
     public static void Register(string home, string gameDirectory, PackManifest manifest, byte[] icon)
     {
         SafePaths.RejectLinks(home);
+        if (!SamePath(gameDirectory, SafePaths.Resolve(DataRoot(home), "instances/" + Path.GetFileName(gameDirectory))))
+            throw new IOException("Holy Lois must be installed in SKlauncher's native instance folder.");
         var path = SafePaths.Resolve(home, "instances.json");
         var existing = File.Exists(path) ? File.ReadAllBytes(path) : null;
         var hash = Convert.ToHexStringLower(SHA1.HashData(icon));

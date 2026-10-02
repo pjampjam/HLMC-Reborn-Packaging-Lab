@@ -20,10 +20,16 @@ public sealed class ClientContext
     public string MinecraftRoot { get; }
     public string SkLauncherRoot { get; }
     public string PreparedInstance { get; }
-    public string Instance => Settings.Launcher == "sk" && Settings.SkInstance is not null ? Settings.SkInstance : PreparedInstance;
+    private string? newSkInstance;
+    public string Instance => Settings.Launcher == "sk" ? Settings.SkInstance ?? (newSkInstance ??= SkInstallDirectory()) : PreparedInstance;
+    private string SkInstallDirectory()
+    {
+        try { return SkLauncherProfiles.InstallDirectory(SkLauncherRoot); }
+        catch (IOException) { return SafePaths.Resolve(SkLauncherRoot, "instances/holy-lois-reborn"); }
+    }
     public UserSettings Settings { get; private set; }
     private string SettingsPath => SafePaths.Resolve(Root, "launcher-settings.json");
-    private string StatePath => SafePaths.Resolve(Root, Settings.SkInstance is not null && Settings.Launcher == "sk" ? "state/sk-instance" : "state/prepared-instance");
+    private string StatePath => SafePaths.Resolve(Root, Settings.Launcher == "sk" ? "state/sk-instance" : "state/prepared-instance");
     public bool IsIsolated { get; }
     public bool RecoveredDeletedInstance { get; private set; }
 
@@ -83,7 +89,7 @@ public sealed class ClientContext
         if (Settings.Launcher != "sk" || Settings.SkInstance is not null) return;
         try {
             var path = SkLauncherProfiles.FindOwnedInstance(SkLauncherRoot);
-            if (path is not null && !path.Equals(PreparedInstance, StringComparison.OrdinalIgnoreCase)) LinkSkInstance(path);
+            if (path is not null) LinkSkInstance(path);
         }
         catch (IOException) { /* Repair reports unreadable registry details; startup remains available. */ }
     }
@@ -119,6 +125,7 @@ public sealed class ClientContext
     public async Task InstallAsync(IProgress<InstallProgress>? progress, CancellationToken token)
     {
         if (!IsIsolated && IsGameOrLauncherRunning()) throw new IOException("Close Minecraft and your Minecraft launcher before updating, then try again.");
+        if (Settings.Launcher == "sk" && Settings.SkInstance is null) newSkInstance = SkLauncherProfiles.InstallDirectory(SkLauncherRoot);
         var defaultsBytes = Asset("defaults.zip");
         if (Manifest.Defaults is { } bundle && (defaultsBytes.LongLength != bundle.Size
             || !Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(defaultsBytes)).Equals(bundle.Sha256, StringComparison.OrdinalIgnoreCase)))

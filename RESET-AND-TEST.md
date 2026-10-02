@@ -8,7 +8,7 @@
 4. Click Install Holy Lois. When the pack is ready, Play beneath the logo becomes green.
 5. Play opens your selected launcher. Select Holy Lois: Reborn, then play inside that launcher.
 
-For SKlauncher 4, installation adds Holy Lois: Reborn to Library automatically. Click Play in SKlauncher; on the first launch it downloads the base game and Java. If you delete the Library entry, close SKlauncher and click Repair / check files in Holy Lois to restore it. Existing imported Holy Lois folders are discovered automatically. Other modpacks stay untouched.
+For SKlauncher 4, installation adds Holy Lois: Reborn to Library automatically. Click Install once in SKlauncher to download the base game and Java, then Play. If you delete the Library entry, close SKlauncher and click Repair / check files in Holy Lois to restore it. Existing imported Holy Lois folders are discovered automatically. Other modpacks stay untouched.
 
 ## Existing installations
 

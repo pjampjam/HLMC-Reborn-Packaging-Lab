@@ -344,7 +344,7 @@ tests.Add(("An old downloaded copy cannot replace an existing full installation 
 }));
 
 tests.Add(("SK registration installs natively, preserves unrelated instances and recovers deletion", async () => {
-    var d=Dir("sk-registration");var home=Path.Combine(d,"sk");var game=Path.Combine(d,"game");Directory.CreateDirectory(game);Directory.CreateDirectory(home);
+    var d=Dir("sk-registration");var home=Path.Combine(d,"sk");var game=Path.Combine(home,"instances","holy-lois-reborn-2");Directory.CreateDirectory(game);Directory.CreateDirectory(home);
     File.WriteAllText(Path.Combine(game,"holylois-instance.json"),SkLauncherProfiles.Marker);
     var other=new JsonObject { ["id"]="holy-lois-reborn",["name"]="Personal pack",["directory"]=Path.Combine(d,"personal"),["memoryMax"]=8192 };
     var registry=new JsonObject { ["futureField"]="keep",["instances"]=new JsonArray(other.DeepClone()) };
