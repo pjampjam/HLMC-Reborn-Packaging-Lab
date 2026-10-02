@@ -5,7 +5,7 @@ using System.Windows.Media.Imaging;
 
 namespace HolyLois.App;
 
-public sealed class AppUpdateWindow : Window
+public sealed class AppUpdateWindow : ThemedWindow
 {
     private readonly TextBlock status;
     public CancellationTokenSource Cancellation { get; } = new();
@@ -25,7 +25,6 @@ public sealed class AppUpdateWindow : Window
         Grid.SetRow(status,1); grid.Children.Add(status);
         var bar = new ProgressBar { IsIndeterminate = true, Height = 3, Foreground = new SolidColorBrush(Color.FromRgb(245,239,66)), Background = Brushes.Black, BorderThickness = new Thickness(0) };
         Grid.SetRow(bar,2); grid.Children.Add(bar); Content = grid;
-        SourceInitialized += (_,_) => WindowCaption.Apply(this);
         Closing += (_,_) => Cancellation.Cancel();
     }
     public void SetStatus(string text) => status.Text = text;

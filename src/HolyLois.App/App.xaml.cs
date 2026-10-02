@@ -17,6 +17,7 @@ public partial class App : Application
             var args = e.Args;
             var development = args.Contains("--data-dir") || args.Any(a => a.StartsWith("--render-", StringComparison.Ordinal) || a.StartsWith("--verify-", StringComparison.Ordinal)) || args.Contains("--publish-prepared");
             ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            if (args.Contains("--remove-app")) { await AppMaintenance.RemoveAsync(args); Shutdown(0); return; }
             if (args.Contains("--apply-app-update") || args.Contains("--recover-app-update")) { Shutdown(await AppUpdates.ApplyAsync(args)); return; }
             if (!development && !AppUpdates.AcquireLock()) { Shutdown(0); return; }
             Exit += (_,_) => AppUpdates.ReleaseLock();
@@ -51,13 +52,14 @@ public partial class App : Application
                     throw new InvalidDataException("The old checker remains embedded.");
                 AtomicFiles.Write(SafePaths.Resolve(root,"first-run-result.txt"),"Self-install verified; no embedded checker; optional shortcuts remain off after repeated setup."u8.ToArray()); Shutdown(0); return;
             }
+            if (args.Contains("--render-settings-preview")) { Render(new SettingsWindow(context),data!,"settings-preview.png",610,650); Shutdown(0); return; }
             if (args.Contains("--render-update-preview")) {
                 if (data is null) throw new ArgumentException("Rendering requires an isolated folder.");
                 Render(new AppUpdateWindow(),data,"update-preview.png",504,201); Shutdown(0); return;
             }
             if (args.Contains("--render-setup-preview")) {
                 if (data is null) throw new ArgumentException("Rendering requires an isolated folder.");
-                foreach (var language in new[] { "en", "ru", "lv" }) { context.SetLanguage(language); var setup = new SetupWindow(context, data); Render(setup,data,"setup-"+language+".png",764,721); }
+                foreach (var language in new[] { "en", "ru", "lv" }) { context.SetLanguage(language); var setup = new SetupWindow(context, data); Render(setup,data,"setup-"+language+".png",780,780); }
                 Shutdown(0); return;
             }
             if (args.Contains("--verify-recovery")) {
@@ -82,6 +84,17 @@ public partial class App : Application
                 Render(window, data, "launcher-design-sk.png", 1020, 708);
                 context.SetLanguage("ru"); window = new MainWindow(context); Render(window,data,"launcher-design-ru.png",1060,748);
                 context.SetLanguage("lv"); window = new MainWindow(context); Render(window,data,"launcher-design-lv.png",1060,748);
+                Shutdown(0); return;
+            }
+            if (args.Contains("--verify-responsive"))
+            {
+                if (data is null || !context.IsIsolated) throw new ArgumentException("Responsiveness verification requires an isolated folder.");
+                var window = new MainWindow(context); MainWindow = window; window.Show();
+                int ticks = 0; var pulse = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(10) };
+                pulse.Tick += (_, _) => ticks++; pulse.Start();
+                await window.VerifyInstallAsync(); pulse.Stop();
+                if (!context.CanPlay || ticks < 5) throw new IOException("Repair failed or the window dispatcher did not remain responsive.");
+                File.WriteAllText(Path.Combine(data,"responsiveness-result.txt"),"Real pack install/repair succeeded with " + ticks + " window dispatcher ticks.");
                 Shutdown(0); return;
             }
             if (args.Contains("--verify-install"))
@@ -116,7 +129,7 @@ public partial class App : Application
                     Shutdown(0); return;
                 }
                 var root = LauncherStartup.InstallRoot;
-                if (LauncherSetup.NeedsSetup(root, File.Exists(Path.Combine(context.Root,"launcher-settings.json"))))
+                if (args.Contains("--show-setup") || LauncherSetup.NeedsSetup(root, File.Exists(Path.Combine(context.Root,"launcher-settings.json"))))
                 {
                     var setup = new SetupWindow(context,root); MainWindow = setup;
                     if (readyNonce is not null) setup.ContentRendered += (_,_) => Ready();
@@ -152,15 +165,16 @@ public partial class App : Application
                 if(preparedIndex>=0 && preparedIndex+1<e.Args.Length) File.WriteAllText(Path.Combine(e.Args[preparedIndex+1],"publish-error.txt"),ex.Message);
                 Shutdown(1); return;
             }
-            if (e.Args.Contains("--apply-app-update") || e.Args.Contains("--recover-app-update") || e.Args.Contains("--app-update-smoke") || e.Args.Contains("--app-update-smoke-fail")) {
+            if (e.Args.Contains("--remove-app") || e.Args.Contains("--apply-app-update") || e.Args.Contains("--recover-app-update") || e.Args.Contains("--app-update-smoke") || e.Args.Contains("--app-update-smoke-fail")) {
                 AtomicFiles.Write(SafePaths.Resolve(LauncherStartup.InstallRoot,"app-update-error.txt"),System.Text.Encoding.UTF8.GetBytes(ex.ToString())); Shutdown(1); return;
             }
-            MessageBox.Show(ex.Message, "Holy Lois: Reborn - setup could not start", MessageBoxButton.OK, MessageBoxImage.Warning);
+            AppDialog.Show(null,"Holy Lois could not start",ex.Message);
             Shutdown(1);
         }
     }
     private static void Render(Window window, string root, string name, int width, int height)
     {
+        if (window is ThemedWindow themed) themed.EnsureChrome();
         var content = (FrameworkElement)window.Content;
         content.Measure(new Size(width, height)); content.Arrange(new Rect(0, 0, width, height)); content.UpdateLayout();
         var bitmap = new RenderTargetBitmap(width, height, 96, 96, PixelFormats.Pbgra32);

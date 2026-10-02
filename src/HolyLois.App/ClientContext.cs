@@ -73,7 +73,7 @@ public sealed class ClientContext
     public void SetLanguage(string language)
     { Settings = Settings with { Language = language is "ru" or "lv" ? language : "en" }; AtomicFiles.WriteJson(SettingsPath, Settings); }
     public void SelectLauncher(string launcher)
-    { Settings = Settings with { Launcher = launcher, LauncherExe = null }; AtomicFiles.WriteJson(SettingsPath, Settings); }
+    { if (Settings.Launcher == launcher) return; Settings = Settings with { Launcher = launcher, LauncherExe = null }; AtomicFiles.WriteJson(SettingsPath, Settings); }
     public void SetLauncher(string path)
     {
         if (!File.Exists(path) || !(Path.GetExtension(path).Equals(".exe", StringComparison.OrdinalIgnoreCase) || Path.GetExtension(path).Equals(".lnk", StringComparison.OrdinalIgnoreCase))) throw new IOException("Choose an installed launcher executable.");
@@ -115,8 +115,8 @@ public sealed class ClientContext
         AtomicFiles.Write(SafePaths.Resolve(Instance, "holylois-instance.json"), Encoding.ASCII.GetBytes("{\"instance\":\"holylois-reborn-26.3\"}"));
         if (Settings.Launcher != "sk" || Settings.SkInstance is null)
         {
-            progress?.Report(new("Preparing Fabric launcher profileâ€¦", 1, 1, Manifest.Files.Length, Manifest.Files.Length));
-            await LauncherProfiles.PrepareAsync(MinecraftRoot, Instance, Manifest, Asset("fabric-profile.json"), Asset("profile-icon.png"), downloader, token, Asset("vanilla-profile.json"));
+            progress?.Report(new("Preparing Fabric launcher profile...", 1, 1, Manifest.Files.Length, Manifest.Files.Length));
+            await LauncherProfiles.PrepareAsync(MinecraftRoot, Instance, Manifest, Asset("fabric-profile.json"), Asset("profile-icon.png"), downloader, token, Asset("vanilla-profile.json"), LauncherProfiles.PreviewProfileId, "Holy Lois: Reborn (Preview)");
         }
         AtomicFiles.WriteJson(SafePaths.Resolve(Instance, "holylois-pack-receipt.json"), Installer.ReadReceipt());
         AtomicFiles.Write(SafePaths.Resolve(StatePath, "ready.txt"), Encoding.ASCII.GetBytes(Manifest.Version));
@@ -146,7 +146,7 @@ public sealed class ClientContext
     {
         if (!CanPlay) throw new IOException("Finish Verify & update before opening your launcher.");
         if (IsIsolated) throw new IOException("Preview setup is ready. Opening Minecraft is disabled in this development build.");
-        var exe = DetectLauncher() ?? throw new IOException("Choose your installed launcher using â€˜Locate launcherâ€™. Microsoft Store launcher users can open it from Start after setup.");
+        var exe = DetectLauncher() ?? throw new IOException("Choose your installed launcher using 'Locate launcher'. Microsoft Store launcher users can open it from Start after setup.");
         var launch = new ProcessStartInfo(exe.StartsWith("shell:", StringComparison.Ordinal) ? "explorer.exe" : exe) { UseShellExecute = true };
         if (exe.StartsWith("shell:", StringComparison.Ordinal)) launch.ArgumentList.Add(exe);
         if (Settings.Launcher == "official" && exe.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)) { launch.ArgumentList.Add("--workDir"); launch.ArgumentList.Add(MinecraftRoot); }

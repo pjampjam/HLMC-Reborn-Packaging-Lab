@@ -21,7 +21,7 @@ public static class LauncherStartup
     public static bool IsInstalled => Path.GetFullPath(Environment.ProcessPath!).Equals(InstalledExe,StringComparison.OrdinalIgnoreCase);
     public static void InstallCurrent()
     {
-        if (IsInstalled) return;
+        if (IsInstalled) { AtomicFiles.Write(SafePaths.Resolve(InstallRoot,"holylois-app.txt"),System.Text.Encoding.ASCII.GetBytes(ApplicationRemoval.Marker)); return; }
         var self = Environment.ProcessPath ?? throw new IOException("Application path unavailable.");
         Directory.CreateDirectory(InstallRoot);
         if (File.Exists(InstalledExe))
@@ -37,6 +37,7 @@ public static class LauncherStartup
             File.Copy(self,temp,true);
             if (new FileInfo(temp).Length != new FileInfo(self).Length || AtomicFiles.Hash(temp) != AtomicFiles.Hash(self)) throw new IOException("Application copy verification failed.");
             File.Move(temp,InstalledExe);
+            AtomicFiles.Write(SafePaths.Resolve(InstallRoot,"holylois-app.txt"),System.Text.Encoding.ASCII.GetBytes(ApplicationRemoval.Marker));
         }
         finally { if (File.Exists(temp)) File.Delete(temp); }
     }

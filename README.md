@@ -15,6 +15,8 @@ An experimental one-file Windows launcher for the Holy Lois modpack. This reposi
 
 ## Current status
 
+Preview 0.6.0 adds a clean caption, proportional launcher artwork, themed dialogs and settings, background file repair, an isolated official-launcher profile and app-only removal. Read RESET-AND-TEST.md for a short owner test and reset guide. The Company file metadata says pjampjam; the app remains unsigned by an Authenticode certificate.
+
 Prototype only. Public binary distribution is not enabled. Any draft release is for owner review and is not a clearance claim. A local Defender scan does not establish that browser downloads or other PCs will be clear. Do not disable protection, add exclusions or allow detected threats to complete these tests.
 
 The stable app update channel has not been promoted. Until it exists, the prototype keeps its working installed version and reports that its launcher update check did not complete. It can still check the existing signed modpack channel independently.

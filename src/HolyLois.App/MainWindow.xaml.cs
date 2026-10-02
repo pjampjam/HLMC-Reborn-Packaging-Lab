@@ -8,7 +8,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
 namespace HolyLois.App;
-public partial class MainWindow : Window
+public partial class MainWindow : ThemedWindow
 {
     private readonly ClientContext context;
     private CancellationTokenSource? cancellation;
@@ -18,7 +18,7 @@ public partial class MainWindow : Window
     {
         this.context = context; InitializeComponent(); Localize.Apply(this, context.Settings.Language);
         LanguageChoice.SelectedIndex = context.Settings.Language == "en" ? 1 : context.Settings.Language == "lv" ? 2 : 0;
-        Closing += OnClosing; SourceInitialized += (_, _) => WindowCaption.Apply(this);
+        Closing += OnClosing; 
         UpdateStatus.Text = T("AutoCheck"); StatusText.Text = AppUpdates.Notice ?? T("StartHint"); Refresh();
         Loaded += async (_, _) => { await LauncherDiscovery.WarmAsync(); Refresh(); if (!context.IsIsolated) { await CheckUpdates(); updateTimer.Start(); } };
         updateTimer.Tick += async (_, _) => await CheckUpdates(); Closed += (_, _) => updateTimer.Stop();
@@ -29,17 +29,19 @@ public partial class MainWindow : Window
         var sk = context.Settings.Launcher == "sk";
         AppVersion.Text = T("App") + " " + AppUpdates.RunningVersion.ToString(3) + " preview";
         ReleaseLabel.Text = "Minecraft 26.3 / Fabric 0.19.5 / " + T("Version") + " " + context.Manifest.Version;
-        SizeLabel.Text = $"{context.Manifest.Files.Count(f => f.Path.StartsWith("mods/"))} {T("Mods")} Â· {context.Manifest.Files.Sum(f => f.Size) / 1048576:N0} MB";
+        SizeLabel.Text = $"{context.Manifest.Files.Count(f => f.Path.StartsWith("mods/"))} {T("Mods")}  -  {context.Manifest.Files.Sum(f => f.Size) / 1048576:N0} MB";
         OfficialSelected.Visibility = sk ? Visibility.Hidden : Visibility.Visible; SkSelected.Visibility = sk ? Visibility.Visible : Visibility.Hidden;
-        var neutral = new SolidColorBrush(Color.FromRgb(132, 134, 122)); var accent = (Brush)FindResource("Gold");
+        var neutral = (Brush)FindResource("Line"); var accent = (Brush)FindResource("Gold");
         OfficialCard.BorderBrush = sk ? neutral : accent; SkCard.BorderBrush = sk ? accent : neutral;
-        LinkSkButton.Visibility = RebuildSkButton.Visibility = sk ? Visibility.Visible : Visibility.Collapsed;
+        LinkSkButton.Visibility = sk && context.Settings.SkInstance is null ? Visibility.Visible : Visibility.Collapsed; RebuildSkButton.Visibility = Visibility.Collapsed;
         LauncherHint.Text = T(sk ? context.Settings.SkInstance is null ? context.RecoveredDeletedInstance ? "SkMissing" : "SkFirst" : "SkLinked" : "OfficialHint");
         var detected = context.DetectLauncher();
+        LauncherActions.Visibility = detected is null ? Visibility.Visible : Visibility.Collapsed;
+        DetectionPanel.BorderBrush = detected is null ? (Brush)FindResource("Line") : (Brush)FindResource("Success");
         DetectionHint.Text = !LauncherDiscovery.Ready ? T("Detecting") : detected is null ? T("NotDetected") : !sk && detected.StartsWith("shell:") ? T("DetectedStore") : T("Detected") + ": " + (sk ? "SKlauncher" : "Minecraft Launcher");
         var receipt = Directory.Exists(context.Instance) ? context.Receipt : null;
         var available = receipt is not null && receipt.Version != context.Manifest.Version;
-        PackStatus.Text = context.CanPlay ? T("Ready") : receipt is null ? T("NoPack") : T("NewPack");
+        PackStatus.Text = context.CanPlay ? T("Ready") : receipt is null ? T("NoPack") : T(available ? "NewPack" : "NeedsRepair");
         InstallLabel.Text = receipt is null ? T("Install") : available ? T("Update") : T("Verify");
         PlayButton.IsEnabled = context.CanPlay && cancellation is null;
         var ready = context.CanPlay;
@@ -52,7 +54,7 @@ public partial class MainWindow : Window
         HistoryPanel.Children.Clear();
         foreach (var item in context.Manifest.History ?? [])
         {
-            HistoryPanel.Children.Add(new TextBlock { Text = item.Version + " Â· " + item.Date, FontWeight = FontWeights.SemiBold, Margin = new Thickness(0, 10, 0, 5) });
+            HistoryPanel.Children.Add(new TextBlock { Text = item.Version + "  -  " + item.Date, FontWeight = FontWeights.SemiBold, Margin = new Thickness(0, 10, 0, 5) });
             HistoryPanel.Children.Add(new TextBlock { Text = item.Summary, FontSize = 12 });
             foreach (var group in new[] { ("Added", item.Added), ("Removed", item.Removed), ("Updated", item.Updated) })
                 if (group.Item2.Length > 0) HistoryPanel.Children.Add(new TextBlock { Text = T(group.Item1) + ": " + string.Join(", ", group.Item2), FontSize = 12, Margin = new Thickness(0, 5, 0, 0) });
@@ -81,27 +83,30 @@ public partial class MainWindow : Window
         catch { UpdateStatus.Text = T("BadCheck"); }
         finally { checking = false; CheckUpdatesButton.IsEnabled = cancellation is null; }
     }
-    private async void Install_Click(object sender, RoutedEventArgs e)
+    private async void Install_Click(object sender, RoutedEventArgs e) => await RunInstallAsync();
+    public Task VerifyInstallAsync() => RunInstallAsync(false);
+    private async Task RunInstallAsync(bool checkOnline = true)
     {
         cancellation = new(); SetBusy(true);
         try
         {
             if (checking) throw new IOException("Wait for the release check to finish.");
-            if (!context.IsIsolated)
+            if (checkOnline && !context.IsIsolated)
             {
                 using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellation.Token); timeout.CancelAfter(TimeSpan.FromSeconds(25));
                 try { await context.CheckUpdatesAsync(timeout.Token); }
                 catch (System.Net.Http.HttpRequestException) { UpdateStatus.Text = T("OfflineCheck"); }
                 catch (OperationCanceledException) when (!cancellation.IsCancellationRequested) { UpdateStatus.Text = T("OfflineCheck"); }
             }
-            await context.InstallAsync(new Progress<InstallProgress>(p => { StatusText.Text = T("Progress") + $" {p.CompletedFiles}/{p.TotalFiles}"; Progress.Value = p.TotalBytes == 0 ? 0 : 100.0 * p.CompletedBytes / p.TotalBytes; }), cancellation.Token);
+            var installProgress = new Progress<InstallProgress>(p => { StatusText.Text = p.Message.StartsWith("Preparing") ? T("Preparing") : p.Message.StartsWith("Holy Lois") ? T("Installed") : T("Progress") + $" {p.CompletedFiles}/{p.TotalFiles}"; Progress.IsIndeterminate = p.Message.StartsWith("Preparing"); Progress.Value = p.TotalBytes == 0 ? 0 : 100.0 * p.CompletedBytes / p.TotalBytes; });
+            await Task.Run(() => context.InstallAsync(installProgress, cancellation.Token), cancellation.Token);
             StatusText.Text = T("Installed"); Progress.Value = 100;
         }
         catch (OperationCanceledException) { StatusText.Text = T("Cancelled"); }
         catch (Exception ex) { StatusText.Text = Localize.Error(ex); }
         finally { cancellation.Dispose(); cancellation = null; SetBusy(false); Refresh(); }
     }
-    private void SetBusy(bool busy) { InstallButton.IsEnabled = OfficialCard.IsEnabled = SkCard.IsEnabled = LanguageChoice.IsEnabled = !busy; CheckUpdatesButton.IsEnabled = !busy && !checking; PlayButton.IsEnabled = !busy && context.CanPlay; CancelButton.Visibility = busy ? Visibility.Visible : Visibility.Collapsed; }
+    private void SetBusy(bool busy) { Progress.IsIndeterminate = busy; SettingsButton.IsEnabled = !busy; LauncherActions.IsEnabled = !busy; LinkSkButton.IsEnabled = RebuildSkButton.IsEnabled = InstallButton.IsEnabled = OfficialCard.IsEnabled = SkCard.IsEnabled = LanguageChoice.IsEnabled = !busy; CheckUpdatesButton.IsEnabled = !busy && !checking; PlayButton.IsEnabled = !busy && context.CanPlay; CancelButton.Visibility = busy ? Visibility.Visible : Visibility.Collapsed; }
     private void Cancel_Click(object sender, RoutedEventArgs e) => cancellation?.Cancel();
     private void Play_Click(object sender, RoutedEventArgs e) { try { context.OpenLauncher(); StatusText.Text = T(context.Settings.Launcher == "sk" ? "SkLinked" : "OfficialHint"); } catch (Exception ex) { StatusText.Text = Localize.Error(ex); } }
     private async void Locate_Click(object sender, RoutedEventArgs e)
@@ -121,6 +126,7 @@ public partial class MainWindow : Window
     private void RebuildSk_Click(object sender, RoutedEventArgs e)
     { if (cancellation is not null) return; context.RebuildSkImport(); Refresh(); StatusText.Text = T("SkMissing"); }
     private void GetLauncher_Click(object sender, RoutedEventArgs e) => ClientContext.OpenUrl(context.Settings.Launcher == "sk" ? "https://next.skmedix.pl/downloads" : "https://www.minecraft.net/download");
+    private void Settings_Click(object sender, RoutedEventArgs e) { if (cancellation is null) new SettingsWindow(context) { Owner = this }.ShowDialog(); Refresh(); }
     private void GameFolder_Click(object sender, RoutedEventArgs e) { Directory.CreateDirectory(context.Instance); Process.Start(new ProcessStartInfo("explorer.exe") { UseShellExecute = true, ArgumentList = { context.Instance } }); }
     private void CopyAddress_Click(object sender, RoutedEventArgs e) { Clipboard.SetText(context.Manifest.Server); StatusText.Text = T("Copied"); }
     private void DisableShaders_Click(object sender, RoutedEventArgs e) { if (cancellation is not null) return; try { context.DisableShaders(); StatusText.Text = T("Disabled"); } catch (Exception ex) { StatusText.Text = Localize.Error(ex); } }

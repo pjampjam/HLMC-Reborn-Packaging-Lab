@@ -5,7 +5,7 @@ using System.Windows.Media;
 
 namespace HolyLois.App;
 
-public partial class SetupWindow : Window
+public partial class SetupWindow : ThemedWindow
 {
     private readonly ClientContext context;
     private readonly string root;
@@ -17,11 +17,11 @@ public partial class SetupWindow : Window
         this.context = context; this.root = root; launcher = context.Settings.Launcher;
         InitializeComponent(); Localize.Apply(this, context.Settings.Language);
         LanguageChoice.SelectedIndex = context.Settings.Language == "ru" ? 1 : context.Settings.Language == "lv" ? 2 : 0;
-        SourceInitialized += (_, _) => WindowCaption.Apply(this); Refresh();
+        Refresh();
     }
     private void Refresh()
     {
-        var sk = launcher == "sk"; var accent = (Brush)FindResource("Gold"); var neutral = new SolidColorBrush(Color.FromRgb(132,134,122));
+        var sk = launcher == "sk"; var accent = (Brush)FindResource("Gold"); var neutral = (Brush)FindResource("Line");
         OfficialSelected.Visibility = sk ? Visibility.Hidden : Visibility.Visible;
         SkSelected.Visibility = sk ? Visibility.Visible : Visibility.Hidden;
         OfficialCard.BorderBrush = sk ? neutral : accent; SkCard.BorderBrush = sk ? accent : neutral;

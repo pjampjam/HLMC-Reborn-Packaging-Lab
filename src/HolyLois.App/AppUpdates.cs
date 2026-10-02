@@ -70,7 +70,9 @@ public static class AppUpdates
         }
         catch (Exception ex) when (ex is HttpRequestException or OperationCanceledException or IOException or InvalidDataException or System.Security.Cryptography.CryptographicException)
         {
-            Notice = "Launcher update check did not complete. Your current app was kept. " + ex.Message;
+            Notice = ex is HttpRequestException { StatusCode: System.Net.HttpStatusCode.NotFound }
+                ? "Preview app updates are not published yet. Your installed app remains available."
+                : "Launcher updates are unavailable right now. Your installed app remains available.";
             return false;
         }
     }

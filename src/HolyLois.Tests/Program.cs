@@ -245,6 +245,23 @@ tests.Add(("Private default files remain excluded", async () => {
 
 tests.Add(("One-app release safety and rollback", () => AppReleaseTests.RunAsync(Dir("app-release"))));
 
+tests.Add(("Preview profile preserves an existing production installation and personal profiles", () => {
+    var d=Dir("preview-profile"); var original=new JsonObject { ["profiles"] = new JsonObject { [LauncherProfiles.ProfileId] = new JsonObject { ["gameDir"]=Path.Combine(d,"production"), ["name"]="Holy Lois: Reborn", ["javaArgs"]="personal" }, ["other"] = new JsonObject { ["name"]="Personal world" } }, ["authenticationDatabase"] = new JsonObject { ["opaque"]="keep" } };
+    var next=JsonNode.Parse(LauncherProfiles.Upsert(Encoding.UTF8.GetBytes(original.ToJsonString()),Path.Combine(d,"preview"),[1],LauncherProfiles.PreviewProfileId,"Holy Lois: Reborn (Preview)"))!;
+    Check(next["profiles"]![LauncherProfiles.ProfileId]!.ToJsonString()==original["profiles"]![LauncherProfiles.ProfileId]!.ToJsonString(),"Production profile was replaced.");
+    Check(next["profiles"]!["other"]!.ToJsonString()==original["profiles"]!["other"]!.ToJsonString() && next["authenticationDatabase"]!.ToJsonString()==original["authenticationDatabase"]!.ToJsonString(),"Personal profile or opaque account metadata changed.");
+    Check((string?)next["profiles"]![LauncherProfiles.PreviewProfileId]!["gameDir"]==Path.Combine(d,"preview"),"Preview profile was not created."); return Task.CompletedTask;
+}));
+tests.Add(("App-only removal rejects unowned folders and preserves worlds, extras and settings", async () => {
+    var d=Dir("remove-app"); File.WriteAllText(Path.Combine(d,"HolyLoisReborn.exe"),"app"); var hash=AtomicFiles.Hash(Path.Combine(d,"HolyLoisReborn.exe"));
+    await Throws(()=> { ApplicationRemoval.RemoveOwnedApp(d,hash); return Task.CompletedTask; });
+    File.WriteAllText(Path.Combine(d,"holylois-app.txt"),ApplicationRemoval.Marker); Directory.CreateDirectory(Path.Combine(d,"data/saves")); File.WriteAllText(Path.Combine(d,"data/saves/world.txt"),"world"); File.WriteAllText(Path.Combine(d,"personal.txt"),"keep"); File.WriteAllText(Path.Combine(d,"setup-completed.json"),"settings");
+    await Throws(()=> { ApplicationRemoval.RemoveOwnedApp(d,new string('0',64)); return Task.CompletedTask; });
+    Check(File.Exists(Path.Combine(d,"setup-completed.json")),"Failed removal changed app settings.");
+    ApplicationRemoval.RemoveOwnedApp(d,hash);
+    Check(!File.Exists(Path.Combine(d,"HolyLoisReborn.exe")) && File.ReadAllText(Path.Combine(d,"data/saves/world.txt"))=="world" && File.ReadAllText(Path.Combine(d,"personal.txt"))=="keep","Removal touched personal files or left the installed executable.");
+}));
+
 foreach (var test in tests)
 {
     try { await test.Run(); Console.WriteLine("PASS " + test.Name); passed++; }
