@@ -20,9 +20,7 @@ The app is unsigned by a Windows publisher certificate. SmartScreen may show Unk
 
 - A legacy installer shortcut occupying the final shortcut name is retargeted safely, removing the redundant Preview shortcut.
 
-- A legacy installer shortcut occupying the final shortcut name is retargeted safely, removing the redundant Preview shortcut.
 
-- A legacy installer shortcut occupying the final shortcut name is retargeted safely, removing the redundant Preview shortcut.
 
 - Standard HolyLoisReborn installation folder, clean shortcut and Minecraft profile names, and a one-time migration preserving your data and any older installation.
 
