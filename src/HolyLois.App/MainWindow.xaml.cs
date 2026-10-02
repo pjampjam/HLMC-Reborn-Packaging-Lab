@@ -24,12 +24,14 @@ public partial class MainWindow : ThemedWindow
         LanguageChoice.SelectedIndex = context.Settings.Language == "en" ? 1 : context.Settings.Language == "lv" ? 2 : 0;
         Closing += OnClosing; 
         UpdateStatus.Text = T("AutoCheck"); StatusText.Text = AppUpdates.Notice ?? T("StartHint"); Refresh();
-        Loaded += async (_, _) => { await LauncherDiscovery.WarmAsync(); Refresh(); if (!context.IsIsolated) { await CheckUpdates(); updateTimer.Start(); } };
-        updateTimer.Tick += async (_, _) => await CheckUpdates(); Closed += (_, _) => updateTimer.Stop();
+        Loaded += async (_, _) => { await LauncherDiscovery.WarmAsync(); if (IsClosed || Dispatcher.HasShutdownStarted) return; Refresh(); if (!context.IsIsolated) { await CheckUpdates(); if (!IsClosed) updateTimer.Start(); } };
+        updateTimer.Tick += async (_, _) => await CheckUpdates(); Closed += (_, _) => { updateTimer.Stop(); progressClock.Stop(); };
     }
     private static string T(string key) => Localize.Text(key);
     private void Refresh()
     {
+        // A settings action can shut down the app before its modal dialog returns.
+        if (IsClosed || Dispatcher.HasShutdownStarted || Dispatcher.HasShutdownFinished) return;
         var sk = context.Settings.Launcher == "sk";
         AppVersion.Text = T("App") + " " + AppUpdates.RunningVersion.ToString(3) + "";
         ReleaseLabel.Text = "Minecraft 26.3 / Fabric 0.19.5 / " + T("Version") + " " + context.Manifest.Version;
@@ -37,8 +39,8 @@ public partial class MainWindow : ThemedWindow
         OfficialSelected.Visibility = sk ? Visibility.Hidden : Visibility.Visible; SkSelected.Visibility = sk ? Visibility.Visible : Visibility.Hidden;
         var neutral = (Brush)FindResource("Line"); var accent = (Brush)FindResource("Gold");
         OfficialCard.BorderBrush = sk ? neutral : accent; SkCard.BorderBrush = sk ? accent : neutral;
-        LinkSkButton.Visibility = sk && context.Settings.SkInstance is null ? Visibility.Visible : Visibility.Collapsed; RebuildSkButton.Visibility = Visibility.Collapsed;
-        LauncherHint.Text = T(sk ? context.Settings.SkInstance is null ? context.RecoveredDeletedInstance ? "SkMissing" : "SkFirst" : "SkLinked" : "OfficialHint");
+        LinkSkButton.Visibility = Visibility.Collapsed; RebuildSkButton.Visibility = Visibility.Collapsed;
+        LauncherHint.Text = T(sk ? context.CanPlay ? "SkLinked" : context.RecoveredDeletedInstance ? "SkMissing" : "SkFirst" : "OfficialHint");
         var detected = context.DetectLauncher();
         LauncherActions.Visibility = detected is null ? Visibility.Visible : Visibility.Collapsed;
         DetectionPanel.BorderBrush = detected is null ? (Brush)FindResource("Line") : (Brush)FindResource("Success");

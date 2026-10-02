@@ -343,6 +343,33 @@ tests.Add(("An old downloaded copy cannot replace an existing full installation 
     Check(File.ReadAllText(Path.Combine(target,"personal.txt"))=="current-data","Current installation data changed.");return Task.CompletedTask;
 }));
 
+tests.Add(("SK registration installs natively, preserves unrelated instances and recovers deletion", async () => {
+    var d=Dir("sk-registration");var home=Path.Combine(d,"sk");var game=Path.Combine(d,"game");Directory.CreateDirectory(game);Directory.CreateDirectory(home);
+    File.WriteAllText(Path.Combine(game,"holylois-instance.json"),SkLauncherProfiles.Marker);
+    var other=new JsonObject { ["id"]="holy-lois-reborn",["name"]="Personal pack",["directory"]=Path.Combine(d,"personal"),["memoryMax"]=8192 };
+    var registry=new JsonObject { ["futureField"]="keep",["instances"]=new JsonArray(other.DeepClone()) };
+    var original=Encoding.UTF8.GetBytes(registry.ToJsonString());File.WriteAllBytes(Path.Combine(home,"instances.json"),original);
+    SkLauncherProfiles.Register(home,game,Manifest(),[1,2,3]);
+    var first=JsonNode.Parse(File.ReadAllBytes(Path.Combine(home,"instances.json")))!;var entry=first["instances"]![1]!;
+    Check(first["instances"]![0]!.ToJsonString()==other.ToJsonString() && (string?)first["futureField"]=="keep","Unrelated metadata was changed.");
+    Check((string?)entry["id"]=="holy-lois-reborn-2" && (bool?)entry["installComplete"]==false,"Native first Play install was not enabled.");
+    Check((string?)entry["gameType"]=="fabric" && (string?)entry["loaderVersion"]=="0.19.5","Fabric instance metadata is wrong.");
+    Check(SkLauncherProfiles.FindOwnedInstance(home)==Path.GetFullPath(game) && SkLauncherProfiles.IsRegistered(home,game),"SK pack discovery failed.");
+    Check(File.ReadAllBytes(Path.Combine(home,"instances.holylois-backup.json")).SequenceEqual(original),"Registry backup was not preserved.");
+    entry["memoryMax"]=6144;entry["installComplete"]=true;File.WriteAllText(Path.Combine(home,"instances.json"),first.ToJsonString());
+    SkLauncherProfiles.Register(home,game,Manifest(),[1,2,3]);var second=JsonNode.Parse(File.ReadAllBytes(Path.Combine(home,"instances.json")))!;
+    Check(second["instances"]!.AsArray().Count==2 && (int?)second["instances"]![1]!["memoryMax"]==6144 && (bool?)second["instances"]![1]!["installComplete"]==true,"Repair duplicated the instance or reset user settings.");
+    second["instances"]!.AsArray().RemoveAt(1);File.WriteAllText(Path.Combine(home,"instances.json"),second.ToJsonString());
+    Check(!SkLauncherProfiles.IsRegistered(home,game),"Deleted library entry still appears ready.");
+    SkLauncherProfiles.Register(home,game,Manifest(),[1,2,3]);Check(SkLauncherProfiles.IsRegistered(home,game),"Deleted SK entry was not rebuilt.");
+    File.WriteAllText(Path.Combine(home,"instances.json"),"broken");await Throws(()=>{SkLauncherProfiles.Register(home,game,Manifest(),[1,2,3]);return Task.CompletedTask;});
+    Check(File.ReadAllText(Path.Combine(home,"instances.json"))=="broken","Malformed registry was overwritten.");
+    var data=Path.Combine(d,"moved");File.WriteAllText(Path.Combine(home,"location.json"),new JsonObject { ["dataDir"]=data }.ToJsonString());
+    Check(SkLauncherProfiles.DataRoot(home)==data,"Moved game library was ignored.");
+    File.WriteAllText(Path.Combine(home,"location.json"),new JsonObject { ["dataDir"]=data,["prevDataDir"]=home }.ToJsonString());
+    await Throws(()=>{SkLauncherProfiles.DataRoot(home);return Task.CompletedTask;});
+}));
+
 foreach (var test in tests)
 {
     try { await test.Run(); Console.WriteLine("PASS " + test.Name); passed++; }

@@ -18,6 +18,7 @@ public sealed class ClientContext
     private readonly PackFeed feed;
     public string Root { get; }
     public string MinecraftRoot { get; }
+    public string SkLauncherRoot { get; }
     public string PreparedInstance { get; }
     public string Instance => Settings.Launcher == "sk" && Settings.SkInstance is not null ? Settings.SkInstance : PreparedInstance;
     public UserSettings Settings { get; private set; }
@@ -33,6 +34,8 @@ public sealed class ClientContext
         PreparedInstance = SafePaths.Resolve(Root, "instances/Holy Lois Reborn");
         MinecraftRoot = launcherTestRoot is not null ? Path.GetFullPath(launcherTestRoot) : isolatedRoot is not null ? SafePaths.Resolve(Root, "minecraft")
             : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), ".minecraft");
+        SkLauncherRoot = isolatedRoot is not null ? SafePaths.Resolve(Root, "sklauncher")
+            : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), ".sklauncher");
         Directory.CreateDirectory(Root);
         Settings = File.Exists(SettingsPath) ? JsonSerializer.Deserialize<UserSettings>(File.ReadAllBytes(SettingsPath), JsonSettings.Options) ?? new() : new();
         if (Settings.Launcher is not ("official" or "sk")) throw new InvalidDataException("Saved launcher selection is invalid.");
@@ -54,6 +57,7 @@ public sealed class ClientContext
             var cachedManifest = ManifestSecurity.Parse(release.Json, release.Signature, Encoding.ASCII.GetString(Asset("release-public.pem")));
             if (new Version(cachedManifest.Version) >= new Version(Manifest.Version)) Manifest = feed.Accept(release, Manifest);
         }
+        DiscoverSkInstance();
     }
     public async Task<bool> CheckUpdatesAsync(CancellationToken token)
     {
@@ -73,7 +77,16 @@ public sealed class ClientContext
     public void SetLanguage(string language)
     { Settings = Settings with { Language = language is "ru" or "lv" ? language : "en" }; AtomicFiles.WriteJson(SettingsPath, Settings); }
     public void SelectLauncher(string launcher)
-    { if (Settings.Launcher == launcher) return; Settings = Settings with { Launcher = launcher, LauncherExe = null }; AtomicFiles.WriteJson(SettingsPath, Settings); }
+    { if (Settings.Launcher == launcher) return; Settings = Settings with { Launcher = launcher, LauncherExe = null }; AtomicFiles.WriteJson(SettingsPath, Settings); DiscoverSkInstance(); }
+    private void DiscoverSkInstance()
+    {
+        if (Settings.Launcher != "sk" || Settings.SkInstance is not null) return;
+        try {
+            var path = SkLauncherProfiles.FindOwnedInstance(SkLauncherRoot);
+            if (path is not null && !path.Equals(PreparedInstance, StringComparison.OrdinalIgnoreCase)) LinkSkInstance(path);
+        }
+        catch (IOException) { /* Repair reports unreadable registry details; startup remains available. */ }
+    }
     public void SetLauncher(string path)
     {
         if (!File.Exists(path) || !(Path.GetExtension(path).Equals(".exe", StringComparison.OrdinalIgnoreCase) || Path.GetExtension(path).Equals(".lnk", StringComparison.OrdinalIgnoreCase))) throw new IOException("Choose an installed launcher executable.");
@@ -100,7 +113,8 @@ public sealed class ClientContext
     }
     private PackInstaller Installer => new(Instance, StatePath, downloader);
     public InstalledReceipt? Receipt => Installer.ReadReceipt();
-    public bool CanPlay => Directory.Exists(Instance) && File.Exists(SafePaths.Resolve(Instance, "holylois-instance.json")) && Receipt?.Version == Manifest.Version && File.Exists(SafePaths.Resolve(StatePath, "ready.txt"))
+    public bool CanPlay => (Settings.Launcher != "sk" || SkLauncherProfiles.IsRegistered(SkLauncherRoot, Instance))
+        && Directory.Exists(Instance) && File.Exists(SafePaths.Resolve(Instance, "holylois-instance.json")) && Receipt?.Version == Manifest.Version && File.Exists(SafePaths.Resolve(StatePath, "ready.txt"))
         && File.ReadAllText(SafePaths.Resolve(StatePath, "ready.txt")) == Manifest.Version;
     public async Task InstallAsync(IProgress<InstallProgress>? progress, CancellationToken token)
     {
@@ -113,7 +127,15 @@ public sealed class ClientContext
         await Installer.InstallAsync(Manifest, defaults, progress, token);
         ServerList.Ensure(Instance, Manifest.Server, Asset("server-icon.png"));
         AtomicFiles.Write(SafePaths.Resolve(Instance, "holylois-instance.json"), Encoding.ASCII.GetBytes("{\"instance\":\"holylois-reborn-26.3\"}"));
-        if (Settings.Launcher != "sk" || Settings.SkInstance is null)
+        if (Settings.Launcher == "sk")
+        {
+            progress?.Report(new("Preparing SKlauncher library...", 1, 1, Manifest.Files.Length, Manifest.Files.Length));
+            await LauncherProfiles.PrepareVersionAsync(SkLauncherProfiles.DataRoot(SkLauncherRoot), Manifest,
+                Asset("fabric-profile.json"), downloader, token, Asset("vanilla-profile.json"));
+            if (!IsIsolated && IsGameOrLauncherRunning()) throw new IOException("Close SKlauncher, then click Repair / check files to finish adding Holy Lois.");
+            SkLauncherProfiles.Register(SkLauncherRoot, Instance, Manifest, Asset("profile-icon.png"));
+        }
+        else
         {
             progress?.Report(new("Preparing Fabric launcher profile...", 1, 1, Manifest.Files.Length, Manifest.Files.Length));
             await LauncherProfiles.PrepareAsync(MinecraftRoot, Instance, Manifest, Asset("fabric-profile.json"), Asset("profile-icon.png"), downloader, token, Asset("vanilla-profile.json"), LauncherProfiles.ReleaseProfileId, "Holy Lois: Reborn");

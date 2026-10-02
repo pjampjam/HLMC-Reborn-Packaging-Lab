@@ -4,19 +4,25 @@ A Windows launcher and updater for the Holy Lois modpack. Choose Minecraft Launc
 
 ## Download
 
-[Download HolyLoisReborn.exe 1.0.2](https://github.com/pjampjam/HLMC-Reborn-Packaging-Lab/releases/download/v1.0.2/HolyLoisReborn.exe) - about 67 MB. Windows x64, with its .NET runtime included.
+[Download HolyLoisReborn.exe 1.0.3](https://github.com/pjampjam/HLMC-Reborn-Packaging-Lab/releases/download/v1.0.3/HolyLoisReborn.exe) - about 67 MB. Windows x64, with its .NET runtime included.
 
 This is the full release. Existing preview installations move to the standard HolyLoisReborn folder, and owned launcher profiles and shortcuts lose their Preview names. The original small installers in HLMC-Reborn remain withdrawn. Do not download those older installers.
 
 1. Open the downloaded EXE. Choose your Minecraft launcher and optional shortcuts.
 2. Close Minecraft, then click Install Holy Lois.
-3. Click Play beneath the logo. In Minecraft Launcher, select Holy Lois: Reborn. For SKlauncher, follow the app's import step and link the imported Holy Lois game folder.
+3. Click Play beneath the logo. In Minecraft Launcher, select Holy Lois: Reborn. In SKlauncher, open Library and select Holy Lois: Reborn. Its first Play downloads Minecraft and Java automatically.
 
-Already using Holy Lois? Close and reopen your installed app or its shortcut. Its signed app-stable channel updates it to 1.0.2 before showing the main window. You do not need another installer. An old downloaded copy hands off to the newer installed version after its verified update.
+Already using Holy Lois? Close and reopen your installed app or its shortcut. Its signed app-stable channel updates it to 1.0.3 before showing the main window. You do not need another installer. An old downloaded copy hands off to the newer installed version after its verified update.
 
 The app is unsigned by a Windows publisher certificate. SmartScreen may show Unknown publisher. Local scans and previous user download tests do not guarantee every antivirus result. If Defender detects a threat, stop and report the detection rather than adding an exclusion.
 
-## Version 1.0.2
+## Version 1.0.3
+
+- SKlauncher 4 setup registers the pack automatically, with the correct Fabric version and icon. Manual import is no longer needed.
+- Repair recreates a deleted Library entry. Existing owned instances are discovered, and unrelated modpacks and personal settings are preserved.
+- Play stays disabled until the chosen launcher has a registered, verified pack.
+- Fixed a .NET crash when Settings restarted or removed the app.
+
 
 - Public source and documentation use portable paths. Local build paths are omitted from executable debug metadata.
 - Older executable assets containing local build paths have been retired.

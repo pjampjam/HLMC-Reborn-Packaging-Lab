@@ -76,6 +76,17 @@ public static class LauncherProfiles
     public static async Task PrepareAsync(string minecraftRoot, string instanceRoot, PackManifest manifest,
         byte[] versionJson, byte[] icon, IFileDownloader downloader, CancellationToken cancellationToken, byte[]? vanillaJson = null, string profileId = ProfileId, string displayName = "Holy Lois: Reborn")
     {
+        await PrepareVersionAsync(minecraftRoot, manifest, versionJson, downloader, cancellationToken, vanillaJson);
+        var profilesPath = SafePaths.Resolve(minecraftRoot, "launcher_profiles.json");
+        var existing = File.Exists(profilesPath) ? File.ReadAllBytes(profilesPath) : null;
+        var next = Upsert(existing, instanceRoot, icon, profileId, displayName);
+        if (existing is not null) AtomicFiles.Write(SafePaths.Resolve(minecraftRoot, "launcher_profiles.holylois-backup.json"), existing);
+        AtomicFiles.Write(profilesPath, next);
+    }
+
+    public static async Task PrepareVersionAsync(string minecraftRoot, PackManifest manifest,
+        byte[] versionJson, IFileDownloader downloader, CancellationToken cancellationToken, byte[]? vanillaJson = null)
+    {
         SafePaths.RejectLinks(minecraftRoot);
         var version = JsonNode.Parse(versionJson) as JsonObject ?? throw new InvalidDataException("Fabric profile is invalid.");
         if ((string?)version["id"] != VersionId || (string?)version["inheritsFrom"] != manifest.Minecraft)
@@ -101,11 +112,6 @@ public static class LauncherProfiles
             if (File.Exists(target)) throw new IOException("An existing Fabric library differs from the tested release: " + file.Path);
             AtomicFiles.Write(target, File.ReadAllBytes(staged));
         }
-        var profilesPath = SafePaths.Resolve(minecraftRoot, "launcher_profiles.json");
-        var existing = File.Exists(profilesPath) ? File.ReadAllBytes(profilesPath) : null;
-        var next = Upsert(existing, instanceRoot, icon, profileId, displayName);
         AtomicFiles.Write(SafePaths.Resolve(minecraftRoot, "versions/" + VersionId + "/" + VersionId + ".json"), versionJson);
-        if (existing is not null) AtomicFiles.Write(SafePaths.Resolve(minecraftRoot, "launcher_profiles.holylois-backup.json"), existing);
-        AtomicFiles.Write(profilesPath, next);
     }
 }

@@ -68,6 +68,20 @@ public partial class App : Application
                 focusWindow.Close();
                 File.WriteAllText(Path.Combine(data,"ui-verification.txt"),"Action text contrast passed. Keyboard focus stays visible; pointer interaction clears its ring without disabling focus."); Shutdown(0); return;
             }
+            if (args.Contains("--verify-modal-shutdown")) {
+                if (data is null || !context.IsIsolated) throw new ArgumentException("Modal shutdown verification requires an isolated folder.");
+                var main = new MainWindow(context); MainWindow = main; main.Show();
+                var shutdown = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(10) };
+                shutdown.Tick += (_,_) => {
+                    if (!Windows.OfType<SettingsWindow>().Any()) return;
+                    shutdown.Stop(); Shutdown(0);
+                };
+                shutdown.Start();
+                ((System.Windows.Controls.Button)main.FindName("SettingsButton")).RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
+                shutdown.Stop();
+                File.WriteAllText(Path.Combine(data,"modal-shutdown-result.txt"),"Settings modal returned cleanly after application shutdown.");
+                return;
+            }
             if (args.Contains("--render-modal-preview")) {
                 if (data is null) throw new ArgumentException("Rendering requires an isolated folder.");
                 await LauncherDiscovery.WarmAsync();
@@ -150,6 +164,7 @@ public partial class App : Application
             if (args.Contains("--verify-install"))
             {
                 if (data is null) throw new ArgumentException("Verification requires an explicit isolated --data-dir.");
+                if (args.Contains("--sk-launcher")) context.SelectLauncher("sk");
                 var skIndex = Array.IndexOf(args, "--link-sk-instance");
                 if (skIndex >= 0)
                 {
@@ -159,6 +174,7 @@ public partial class App : Application
                 }
                 if (args.Contains("--check-online")) await context.CheckUpdatesAsync(CancellationToken.None);
                 await context.InstallAsync(null, CancellationToken.None);
+                if (!context.CanPlay) throw new IOException("The pack is installed but its launcher registration is not ready.");
                 File.WriteAllText(Path.Combine(data, "verification-result.txt"), "Verified downloads, installed pack, server list and Fabric profile. Pack " + context.Manifest.Version);
                 Shutdown(0); return;
             }

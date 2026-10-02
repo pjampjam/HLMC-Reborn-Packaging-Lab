@@ -11,6 +11,7 @@ public class ThemedWindow : Window
     private bool prepared;
     private Grid? chromeFrame;
     private Border? modalShade;
+    public bool IsClosed { get; private set; }
     public ThemedWindow()
     {
         Foreground = new SolidColorBrush(Color.FromRgb(244,244,239));
@@ -19,6 +20,7 @@ public class ThemedWindow : Window
         WindowChrome.SetWindowChrome(this, new WindowChrome { CaptionHeight = 32, ResizeBorderThickness = new Thickness(6), GlassFrameThickness = new Thickness(0), CornerRadius = new CornerRadius(0), UseAeroCaptionButtons = false });
         SourceInitialized += (_, _) => WindowCaption.Apply(this);
         Loaded += (_, _) => EnsureChrome();
+        Closed += (_, _) => IsClosed = true;
         PreviewMouseDown += (_,_) => InputModality.SetKeyboardFocusVisible(this,false);
         PreviewKeyDown += (_,e) => { if (e.Key is Key.Tab or Key.Up or Key.Down or Key.Left or Key.Right or Key.Space or Key.Enter or Key.Escape) InputModality.SetKeyboardFocusVisible(this,true); };
         PreviewKeyDown += (_, e) => { if (e.Key == Key.Escape && Owner is not null) { Close(); e.Handled = true; } };
