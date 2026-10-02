@@ -162,7 +162,11 @@ public static class AppPromotion
                 if (File.Exists(next))
                 {
                     dynamic existing = shell.CreateShortcut(next);
-                    try { if (!Path.GetFullPath((string)existing.TargetPath).Equals(Path.Combine(target,"HolyLoisReborn.exe"),StringComparison.OrdinalIgnoreCase)) return; }
+                    try {
+                        var existingPath = Path.GetFullPath((string)existing.TargetPath);
+                        if (!existingPath.Equals(Path.Combine(target,"HolyLoisReborn.exe"),StringComparison.OrdinalIgnoreCase)
+                            && !existingPath.Equals(Path.Combine(target,"HolyLoisSetup.exe"),StringComparison.OrdinalIgnoreCase)) return;
+                    }
                     finally { Marshal.FinalReleaseComObject(existing); }
                 }
                 else File.Move(old,next);
