@@ -86,7 +86,13 @@
     "Close": "Close",
     "CancelAction": "Cancel",
     "Preparing": "Preparing your launcher profile...",
-    "NeedsRepair": "Finish checking the pack"
+    "NeedsRepair": "Finish checking the pack",
+    "PreparingRemoval": "Preparing removal. Game files will be kept.",
+    "WorkingTime": "Elapsed",
+    "PreparingFiles": "Applying files and settings...",
+    "ApproxRemaining": "About {0} s remaining",
+    "Finishing": "Finishing setup...",
+    "BrowserDownload": "The official download page is open. Your browser shows the download progress. Return here after installing the launcher."
   },
   "ru": {
     "PlayTitle": "Играть в Holy Lois",
@@ -175,7 +181,13 @@
     "Close": "Закрыть",
     "CancelAction": "Отмена",
     "Preparing": "Подготавливаем профиль лаунчера...",
-    "NeedsRepair": "Заверши проверку сборки"
+    "NeedsRepair": "Заверши проверку сборки",
+    "PreparingRemoval": "Подготовка удаления. Файлы игры сохраняются.",
+    "WorkingTime": "Прошло",
+    "PreparingFiles": "Применяем файлы и настройки...",
+    "ApproxRemaining": "Осталось примерно {0} с",
+    "Finishing": "Завершаем настройку...",
+    "BrowserDownload": "Открыта официальная страница загрузки. Прогресс виден в браузере. Вернитесь после установки лаунчера."
   },
   "lv": {
     "PlayTitle": "Spēlēt Holy Lois",
@@ -264,6 +276,12 @@
     "Close": "Aizvērt",
     "CancelAction": "Atcelt",
     "Preparing": "Sagatavo palaidēja profilu...",
-    "NeedsRepair": "Pabeidz pakotnes pārbaudi"
+    "NeedsRepair": "Pabeidz pakotnes pārbaudi",
+    "PreparingRemoval": "Sagatavo noņemšanu. Spēles faili tiks saglabāti.",
+    "WorkingTime": "Pagājis",
+    "PreparingFiles": "Piemēro failus un iestatījumus...",
+    "ApproxRemaining": "Atlikušas aptuveni {0} s",
+    "Finishing": "Pabeidz iestatīšanu...",
+    "BrowserDownload": "Atvērta oficiālā lejupielādes lapa. Progresu rāda pārlūks. Atgriezieties pēc palaidēja instalēšanas."
   }
 }

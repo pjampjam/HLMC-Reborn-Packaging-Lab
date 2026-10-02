@@ -32,15 +32,17 @@ public partial class SetupWindow : ThemedWindow
     {
         if (LanguageChoice.SelectedItem is ComboBoxItem item) Localize.Apply(this, (string)item.Tag);
     }
-    private void Continue_Click(object sender, RoutedEventArgs e)
+    private async void Continue_Click(object sender, RoutedEventArgs e)
     {
         try
         {
-            LauncherStartup.InstallCurrent();
+            ContinueButton.IsEnabled = OfficialCard.IsEnabled = SkCard.IsEnabled = LanguageChoice.IsEnabled = false; SetupProgress.Visibility = Visibility.Visible; ErrorText.Text = Localize.Text("Finishing");
+            await Task.Run(LauncherStartup.InstallCurrent);
             LauncherSetup.Complete(root, new(launcher, DesktopChoice.IsChecked == true, StartChoice.IsChecked == true), desktop => LauncherStartup.CreateShortcut(root, desktop));
             context.SelectLauncher(launcher); context.SetLanguage(Localize.Language);
             Completed = true; DialogResult = true;
         }
         catch (Exception ex) { ErrorText.Text = Localize.Error(ex); }
+        finally { ContinueButton.IsEnabled = OfficialCard.IsEnabled = SkCard.IsEnabled = LanguageChoice.IsEnabled = true; SetupProgress.Visibility = Visibility.Collapsed; }
     }
 }

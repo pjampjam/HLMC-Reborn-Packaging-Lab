@@ -34,3 +34,13 @@ Updates replace or remove only files recorded as pack-managed. Extra client mods
 The file's Company metadata now says pjampjam. Windows' verified publisher comes from an Authenticode certificate, not this metadata. This preview is still unsigned. SmartScreen can show Unknown publisher even when Defender did not detect malware and a multi-engine scan reports zero detections. Do not describe the preview as globally cleared.
 
 No app-stable preview update channel is public yet. A short notice that preview app updates are unavailable is expected. Your signed modpack update channel is independent.
+
+## Preview 0.7.0 visual checks
+
+Open Settings, then Remove launcher app. The main screen and Settings should dim in separate layers. Remove is red with white text; Cancel has a muted red accent. Cancel this dialog for the visual check. Yellow Continue and Install actions use dark text. Play uses green when ready. Keyboard focus remains inside the rounded border.
+
+Repair / check files shows verified/downloaded size, file counts and elapsed time. Active progress is green, finished progress is yellow, cancelled progress is muted, and failure progress is red. The final launcher-setup stage stays indeterminate because its duration cannot be known. Transfer estimates are approximate and appear after enough data is available.
+
+The launcher checks and downloads its own signed app update before opening the main screen when the app-stable channel exists. This owner draft does not promote that channel. Minecraft Launcher and SKlauncher downloads opened on their official websites use the browser's progress display.
+
+Removal shows progress after confirmation and keeps game files. The worker verifies the exact installed app before deleting it. Windows-managed prompts and file pickers retain Windows styling.

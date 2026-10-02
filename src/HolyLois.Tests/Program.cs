@@ -262,6 +262,21 @@ tests.Add(("App-only removal rejects unowned folders and preserves worlds, extra
     Check(!File.Exists(Path.Combine(d,"HolyLoisReborn.exe")) && File.ReadAllText(Path.Combine(d,"data/saves/world.txt"))=="world" && File.ReadAllText(Path.Combine(d,"personal.txt"))=="keep","Removal touched personal files or left the installed executable.");
 }));
 
+tests.Add(("Download progress stays within the pack total with delayed dispatch", async () => {
+    var d = Dir("progress-order"); var down = new FakeDownloader(Path.Combine(d,"cache"));
+    down.Data["mods/a.jar"] = "0123456789"; down.Data["mods/b.jar"] = "abcdefghijklmnopqrstuvwxyz";
+    var events = new List<InstallProgress>(); var previousContext = SynchronizationContext.Current;
+    var queued = new QueuedContext(); SynchronizationContext.SetSynchronizationContext(queued);
+    try {
+        await new PackInstaller(Path.Combine(d,"game"),Path.Combine(d,"state"),down).InstallAsync(
+            Manifest(FileSpec("mods/a.jar",down.Data["mods/a.jar"]),FileSpec("mods/b.jar",down.Data["mods/b.jar"])),new Dictionary<string,byte[]>(),new InlineProgress<InstallProgress>(events.Add));
+        queued.Drain();
+        Check(events.All(x => x.CompletedBytes >= 0 && x.CompletedBytes <= x.TotalBytes),"Progress exceeded the approved total.");
+        Check(events.Zip(events.Skip(1)).All(x => x.First.CompletedBytes <= x.Second.CompletedBytes),"Delayed callbacks made progress go backward.");
+        Check(events.Count(x => x.Message.StartsWith("Downloading")) >= 4,"Chunk progress was lost.");
+    } finally { SynchronizationContext.SetSynchronizationContext(previousContext); }
+}));
+
 foreach (var test in tests)
 {
     try { await test.Run(); Console.WriteLine("PASS " + test.Name); passed++; }
@@ -277,6 +292,14 @@ sealed class FakeDownloader(string root) : IFileDownloader
     {
         token.ThrowIfCancellationRequested(); Directory.CreateDirectory(root);
         if (!Data.TryGetValue(file.Path, out var text)) throw new IOException("Simulated network failure.");
+        progress?.Report(file.Size / 2); progress?.Report(file.Size);
         var path = Path.Combine(root, Guid.NewGuid().ToString("N")); System.IO.File.WriteAllText(path, text); return Task.FromResult(path);
     }
+}
+
+sealed class QueuedContext : SynchronizationContext
+{
+    private readonly Queue<(SendOrPostCallback Callback, object? State)> queue = new();
+    public override void Post(SendOrPostCallback callback, object? state) => queue.Enqueue((callback,state));
+    public void Drain() { while (queue.TryDequeue(out var entry)) entry.Callback(entry.State); }
 }

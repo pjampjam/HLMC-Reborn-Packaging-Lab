@@ -37,6 +37,29 @@ public partial class App : Application
                 launcherTestRoot = Path.GetFullPath(args[launcherIndex + 1]);
             }
             var context = new ClientContext(data, launcherTestRoot);
+            if (args.Contains("--verify-ui")) {
+                if (data is null) throw new ArgumentException("UI verification requires an isolated folder.");
+                var action = new System.Windows.Controls.Button { Content = "Continue", Background = (Brush)Resources["Gold"], Foreground = Brushes.Black, Width = 180, Height = 48 };
+                var confirm = new System.Windows.Controls.Button { Content = "Remove launcher app", Style = (Style)Resources["DangerButton"], Width = 190, Height = 48 };
+                var testPanel = new System.Windows.Controls.StackPanel(); testPanel.Children.Add(action); testPanel.Children.Add(confirm);
+                testPanel.Measure(new Size(300,120)); testPanel.Arrange(new Rect(0,0,300,120)); testPanel.UpdateLayout();
+                System.Windows.Controls.TextBlock? FindText(DependencyObject parent) { for (var n=0;n<VisualTreeHelper.GetChildrenCount(parent);n++) { var child=VisualTreeHelper.GetChild(parent,n); if (child is System.Windows.Controls.TextBlock text) return text; var nested=FindText(child); if(nested is not null)return nested; } return null; }
+                if (FindText(action)?.Foreground is not SolidColorBrush { Color: var yellowText } || yellowText != Colors.Black
+                    || FindText(confirm)?.Foreground is not SolidColorBrush { Color: var removalText } || removalText != Colors.White) throw new IOException("Button text no longer follows its action foreground.");
+                File.WriteAllText(Path.Combine(data,"ui-verification.txt"),"Yellow action inherits black text; destructive action inherits white text."); Shutdown(0); return;
+            }
+            if (args.Contains("--render-modal-preview")) {
+                if (data is null) throw new ArgumentException("Rendering requires an isolated folder.");
+                await LauncherDiscovery.WarmAsync();
+                var main = new MainWindow(context); main.EnsureChrome();
+                var settings = new SettingsWindow(context); settings.EnsureChrome();
+                using var mainShade = main.DimForModal(); using var settingsShade = settings.DimForModal();
+                var dialog = AppDialog.Create(Localize.Text("UninstallApp"),Localize.Text("UninstallInfo"),Localize.Text("UninstallApp"),true,_=>{}); dialog.EnsureChrome();
+                var layers = new System.Windows.Controls.Canvas { Width = 1060, Height = 780, Background = (Brush)Resources["Surface"] };
+                void Layer(Window window,int x,int y,int w,int h) { var body=(FrameworkElement)window.Content; window.Content=null; var border=new System.Windows.Controls.Border { Width=w, Height=h, Background=window.Background, Child=body }; System.Windows.Controls.Canvas.SetLeft(border,x); System.Windows.Controls.Canvas.SetTop(border,y); layers.Children.Add(border); }
+                Layer(main,0,0,1060,780); Layer(settings,230,65,610,650); Layer(dialog,275,285,520,265);
+                Render(new ThemedWindow { Content=layers,Background=(Brush)Resources["Surface"] },data,"modal-layering.png",1060,812); Shutdown(0); return;
+            }
             if (args.Contains("--verify-first-run")) {
                 if (data is null || !context.IsIsolated) throw new ArgumentException("First-run verification requires an isolated folder.");
                 var root = LauncherStartup.InstallRoot;
@@ -55,7 +78,8 @@ public partial class App : Application
             if (args.Contains("--render-settings-preview")) { Render(new SettingsWindow(context),data!,"settings-preview.png",610,650); Shutdown(0); return; }
             if (args.Contains("--render-update-preview")) {
                 if (data is null) throw new ArgumentException("Rendering requires an isolated folder.");
-                Render(new AppUpdateWindow(),data,"update-preview.png",504,201); Shutdown(0); return;
+                var update = new AppUpdateWindow(); update.SetTransfer("Downloading launcher 0.7.0...",37000000,67000000);
+                Render(update,data,"update-preview.png",520,280); Shutdown(0); return;
             }
             if (args.Contains("--render-setup-preview")) {
                 if (data is null) throw new ArgumentException("Rendering requires an isolated folder.");

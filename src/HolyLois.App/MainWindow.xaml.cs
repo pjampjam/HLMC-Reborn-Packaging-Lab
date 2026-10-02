@@ -14,9 +14,13 @@ public partial class MainWindow : ThemedWindow
     private CancellationTokenSource? cancellation;
     private readonly DispatcherTimer updateTimer = new() { Interval = TimeSpan.FromMinutes(2) };
     private bool checking;
+    private readonly Stopwatch operationTime = new();
+    private readonly DispatcherTimer progressClock = new() { Interval = TimeSpan.FromSeconds(1) };
+    private string progressDetail = "";
     public MainWindow(ClientContext context)
     {
-        this.context = context; InitializeComponent(); Localize.Apply(this, context.Settings.Language);
+        this.context = context; InitializeComponent();
+        progressClock.Tick += (_,_) => ProgressDetails.Text = progressDetail + "  -  " + T("WorkingTime") + " " + operationTime.Elapsed.ToString(@"m\:ss"); Localize.Apply(this, context.Settings.Language);
         LanguageChoice.SelectedIndex = context.Settings.Language == "en" ? 1 : context.Settings.Language == "lv" ? 2 : 0;
         Closing += OnClosing; 
         UpdateStatus.Text = T("AutoCheck"); StatusText.Text = AppUpdates.Notice ?? T("StartHint"); Refresh();
@@ -48,7 +52,7 @@ public partial class MainWindow : ThemedWindow
         InstallButton.Background = ready ? new SolidColorBrush(Color.FromRgb(41, 42, 38)) : accent;
         InstallLabel.Foreground = ready ? new SolidColorBrush(Color.FromRgb(243, 243, 238)) : new SolidColorBrush(Color.FromRgb(17, 18, 15));
         InstallButton.BorderThickness = ready ? new Thickness(1) : new Thickness(0);
-        PlayButton.Background = ready ? accent : new SolidColorBrush(Color.FromRgb(41, 42, 38));
+        PlayButton.Background = ready ? (Brush)FindResource("ActionGreen") : new SolidColorBrush(Color.FromRgb(41, 42, 38));
         PlayLabel.Foreground = ready ? new SolidColorBrush(Color.FromRgb(17, 18, 15)) : new SolidColorBrush(Color.FromRgb(243, 243, 238));
         PlayLabel.Text = T(sk ? "OpenSk" : "OpenOfficial");
         HistoryPanel.Children.Clear();
@@ -98,15 +102,23 @@ public partial class MainWindow : ThemedWindow
                 catch (System.Net.Http.HttpRequestException) { UpdateStatus.Text = T("OfflineCheck"); }
                 catch (OperationCanceledException) when (!cancellation.IsCancellationRequested) { UpdateStatus.Text = T("OfflineCheck"); }
             }
-            var installProgress = new Progress<InstallProgress>(p => { StatusText.Text = p.Message.StartsWith("Preparing") ? T("Preparing") : p.Message.StartsWith("Holy Lois") ? T("Installed") : T("Progress") + $" {p.CompletedFiles}/{p.TotalFiles}"; Progress.IsIndeterminate = p.Message.StartsWith("Preparing"); Progress.Value = p.TotalBytes == 0 ? 0 : 100.0 * p.CompletedBytes / p.TotalBytes; });
+            var feedback = new TransferFeedback(); var finished = false;
+            var installProgress = new Progress<InstallProgress>(p => {
+                if (finished || cancellation is null) return;
+                var preparing = p.Message.StartsWith("Preparing") || p.Message.StartsWith("Pack ") || p.Message.StartsWith("Holy Lois");
+                StatusText.Text = preparing ? T("Preparing") : T("Progress") + $" {p.CompletedFiles}/{p.TotalFiles}";
+                Progress.IsIndeterminate = preparing;
+                Progress.Value = preparing ? 94 : p.TotalBytes == 0 ? 0 : Math.Max(Progress.Value,90.0 * Math.Clamp(p.CompletedBytes,0,p.TotalBytes) / p.TotalBytes);
+                progressDetail = preparing ? T("Finishing") : feedback.Describe(p.CompletedBytes,p.TotalBytes); ProgressDetails.Text = progressDetail;
+            });
             await Task.Run(() => context.InstallAsync(installProgress, cancellation.Token), cancellation.Token);
-            StatusText.Text = T("Installed"); Progress.Value = 100;
+            finished = true; StatusText.Text = T("Installed"); Progress.IsIndeterminate = false; Progress.Value = 100; Progress.Foreground = (Brush)FindResource("Gold"); ProgressDetails.Text = T("Ready");
         }
-        catch (OperationCanceledException) { StatusText.Text = T("Cancelled"); }
-        catch (Exception ex) { StatusText.Text = Localize.Error(ex); }
+        catch (OperationCanceledException) { StatusText.Text = T("Cancelled"); Progress.Foreground = (Brush)FindResource("Muted"); ProgressDetails.Text = T("Cancelled"); }
+        catch (Exception ex) { StatusText.Text = Localize.Error(ex); Progress.Foreground = (Brush)FindResource("Danger"); ProgressDetails.Text = T("Error"); }
         finally { cancellation.Dispose(); cancellation = null; SetBusy(false); Refresh(); }
     }
-    private void SetBusy(bool busy) { Progress.IsIndeterminate = busy; SettingsButton.IsEnabled = !busy; LauncherActions.IsEnabled = !busy; LinkSkButton.IsEnabled = RebuildSkButton.IsEnabled = InstallButton.IsEnabled = OfficialCard.IsEnabled = SkCard.IsEnabled = LanguageChoice.IsEnabled = !busy; CheckUpdatesButton.IsEnabled = !busy && !checking; PlayButton.IsEnabled = !busy && context.CanPlay; CancelButton.Visibility = busy ? Visibility.Visible : Visibility.Collapsed; }
+    private void SetBusy(bool busy) { Progress.IsIndeterminate = busy; if (busy) { operationTime.Restart(); progressClock.Start(); progressDetail = T("Checking"); Progress.Value = 0; Progress.Foreground = (Brush)FindResource("ActionGreen"); ProgressDetails.Visibility = Visibility.Visible; ProgressDetails.Text = T("Checking"); } if (!busy) { progressClock.Stop(); operationTime.Stop(); } SettingsButton.IsEnabled = !busy; LauncherActions.IsEnabled = !busy; LinkSkButton.IsEnabled = RebuildSkButton.IsEnabled = InstallButton.IsEnabled = OfficialCard.IsEnabled = SkCard.IsEnabled = LanguageChoice.IsEnabled = !busy; CheckUpdatesButton.IsEnabled = !busy && !checking; PlayButton.IsEnabled = !busy && context.CanPlay; CancelButton.Visibility = busy ? Visibility.Visible : Visibility.Collapsed; }
     private void Cancel_Click(object sender, RoutedEventArgs e) => cancellation?.Cancel();
     private void Play_Click(object sender, RoutedEventArgs e) { try { context.OpenLauncher(); StatusText.Text = T(context.Settings.Launcher == "sk" ? "SkLinked" : "OfficialHint"); } catch (Exception ex) { StatusText.Text = Localize.Error(ex); } }
     private async void Locate_Click(object sender, RoutedEventArgs e)
@@ -125,8 +137,8 @@ public partial class MainWindow : ThemedWindow
     }
     private void RebuildSk_Click(object sender, RoutedEventArgs e)
     { if (cancellation is not null) return; context.RebuildSkImport(); Refresh(); StatusText.Text = T("SkMissing"); }
-    private void GetLauncher_Click(object sender, RoutedEventArgs e) => ClientContext.OpenUrl(context.Settings.Launcher == "sk" ? "https://next.skmedix.pl/downloads" : "https://www.minecraft.net/download");
-    private void Settings_Click(object sender, RoutedEventArgs e) { if (cancellation is null) new SettingsWindow(context) { Owner = this }.ShowDialog(); Refresh(); }
+    private void GetLauncher_Click(object sender, RoutedEventArgs e) { ClientContext.OpenUrl(context.Settings.Launcher == "sk" ? "https://next.skmedix.pl/downloads" : "https://www.minecraft.net/download"); StatusText.Text = T("BrowserDownload"); }
+    private void Settings_Click(object sender, RoutedEventArgs e) { if (cancellation is null) new SettingsWindow(context).ShowModal(this); Refresh(); }
     private void GameFolder_Click(object sender, RoutedEventArgs e) { Directory.CreateDirectory(context.Instance); Process.Start(new ProcessStartInfo("explorer.exe") { UseShellExecute = true, ArgumentList = { context.Instance } }); }
     private void CopyAddress_Click(object sender, RoutedEventArgs e) { Clipboard.SetText(context.Manifest.Server); StatusText.Text = T("Copied"); }
     private void DisableShaders_Click(object sender, RoutedEventArgs e) { if (cancellation is not null) return; try { context.DisableShaders(); StatusText.Text = T("Disabled"); } catch (Exception ex) { StatusText.Text = Localize.Error(ex); } }

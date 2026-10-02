@@ -24,16 +24,20 @@ public static class AppMaintenance
         var expected = args[i+3];
         var source = Path.GetFullPath(Environment.ProcessPath!); var tempRoot = Path.Combine(Path.GetTempPath(),"HolyLoisRebornLab-Maintenance") + Path.DirectorySeparatorChar;
         if (!source.StartsWith(tempRoot,StringComparison.OrdinalIgnoreCase) || AtomicFiles.Hash(source) != expected) throw new IOException("The maintenance worker could not be verified.");
+        var window = new AppUpdateWindow(Localize.Text("UninstallApp"),false); window.Show(); window.SetStage("Waiting for the launcher to close...",10);
         try { using var parent = Process.GetProcessById(pid); if (parent.StartTime.ToUniversalTime().Ticks != ticks) throw new IOException("The original app process changed."); using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30)); await parent.WaitForExitAsync(timeout.Token); }
         catch (ArgumentException) { }
         if (!AppUpdates.AcquireLock()) throw new IOException("Another preview is still open.");
         try
         {
+            window.SetStage("Removing launcher shortcuts...",35);
             RemoveShortcut(true); RemoveShortcut(false);
-            ApplicationRemoval.RemoveOwnedApp(LauncherStartup.InstallRoot,expected);
+            window.SetStage("Removing the launcher app. Keeping game files...",65);
+            await Task.Run(() => ApplicationRemoval.RemoveOwnedApp(LauncherStartup.InstallRoot,expected));
         }
         finally { AppUpdates.ReleaseLock(); }
         AtomicFiles.Write(SafePaths.Resolve(LauncherStartup.InstallRoot,"removal-result.txt"),"Preview launcher removed. Game files and personal settings were kept."u8.ToArray());
+        window.SetStage("Launcher removed. Game files were kept.",100,true); await Task.Delay(750); window.FinishAndClose();
     }
     private static void RemoveShortcut(bool desktop)
     {

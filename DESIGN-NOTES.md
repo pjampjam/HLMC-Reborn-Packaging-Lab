@@ -9,3 +9,7 @@ These choices follow Microsoft's [Windows design guidance](https://learn.microso
 The requested [GetLayers](https://www.getlayers.ai/), [Landdding](https://landdding.com/), [Motion](https://www.motionin.design/) and [CollectUI](https://collectui.com/) collections informed the reference review. No protected templates, code or commercial assets were copied. Pageflows could not be retrieved during this review.
 
 Windows-owned SmartScreen prompts and file pickers are not simulated or hidden. App-owned error and confirmation dialogs share the launcher theme. File Company metadata is separate from the verified publisher described in Microsoft's [SmartScreen guidance](https://learn.microsoft.com/en-us/windows/apps/package-and-deploy/smartscreen-reputation).
+
+## 0.7.0 follow-up
+
+Modal owners dim until their child closes, including nested confirmations. Child windows get distinct surfaces and a visible outline. Text inherits the action foreground instead of a global white TextBlock style. Green indicates launching and active progress; red marks removal, failure and cancellation; yellow remains the brand/continue and completed-progress accent. Labels still communicate the action, so color is not the only cue. Focus strokes sit inside the control bounds to avoid clipping in scroll containers.

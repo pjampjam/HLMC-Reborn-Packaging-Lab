@@ -21,8 +21,8 @@
 <Border BorderBrush="#454A40" BorderThickness="0,1,0,0" Margin="0,20,0,0" Padding="0,18,0,0"><StackPanel>
 <TextBlock x:Name="PackStatus" FontSize="20" FontWeight="SemiBold"/><TextBlock x:Name="SizeLabel" FontSize="12" Foreground="{StaticResource Muted}" Margin="0,6,0,0"/>
 <TextBlock x:Name="StatusText" FontSize="13" Margin="0,14,0,12"/>
-<ProgressBar x:Name="Progress" Minimum="0" Maximum="100" Height="4" Foreground="{StaticResource Gold}" Background="#454A40" BorderThickness="0" Margin="0,0,0,14"/>
-<WrapPanel><Button x:Name="InstallButton" Click="Install_Click" FontWeight="SemiBold" MinWidth="190" MinHeight="48"><TextBlock x:Name="InstallLabel"/></Button><Button x:Name="PlayButton" Click="Play_Click" Margin="10,0,0,0" MinHeight="48"><TextBlock x:Name="PlayLabel"/></Button><Button x:Name="CancelButton" Content="{DynamicResource L.Cancel}" Click="Cancel_Click" Visibility="Collapsed" Margin="10,8,0,0"/></WrapPanel>
+<ProgressBar x:Name="Progress" Minimum="0" Maximum="100" Height="7" Foreground="{StaticResource ActionGreen}" Background="#454A40" BorderThickness="0" Margin="0,0,0,14"/>
+<TextBlock x:Name="ProgressDetails" FontSize="12" Foreground="{StaticResource Muted}" Margin="0,0,0,12" Visibility="Collapsed"/><WrapPanel><Button x:Name="InstallButton" Click="Install_Click" FontWeight="SemiBold" MinWidth="190" MinHeight="48"><TextBlock x:Name="InstallLabel"/></Button><Button x:Name="PlayButton" Click="Play_Click" Margin="10,0,0,0" MinHeight="48"><TextBlock x:Name="PlayLabel"/></Button><Button x:Name="CancelButton" Style="{StaticResource CancelButton}" Content="{DynamicResource L.Cancel}" Click="Cancel_Click" Visibility="Collapsed" Margin="10,8,0,0"/></WrapPanel>
 </StackPanel></Border>
 <TextBlock Text="{DynamicResource L.ShaderHint}" FontSize="12" Foreground="{StaticResource Muted}" Margin="0,18,0,10"/>
 <WrapPanel><Button Content="{DynamicResource L.ShaderOff}" Click="DisableShaders_Click" FontSize="12" Padding="12,8"/><Button Content="{DynamicResource L.Folder}" Click="GameFolder_Click" FontSize="12" Padding="12,8" Margin="8,0,0,0"/></WrapPanel>

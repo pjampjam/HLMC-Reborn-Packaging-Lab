@@ -13,7 +13,7 @@ public sealed class SettingsWindow : ThemedWindow
     public SettingsWindow(ClientContext context)
     {
         Title = "Holy Lois: Reborn - Settings"; Width = 610; Height = 650; ResizeMode = ResizeMode.NoResize;
-        WindowStartupLocation = WindowStartupLocation.CenterOwner; Background = (Brush)Application.Current.Resources["Surface"]; FontFamily = new FontFamily("Segoe UI");
+        WindowStartupLocation = WindowStartupLocation.CenterOwner; Background = new SolidColorBrush(Color.FromRgb(37,42,37)); FontFamily = new FontFamily("Segoe UI");
         var panel = new StackPanel { Margin = new Thickness(28,22,28,24) };
         Text(Localize.Text("Settings"),27,true);
         Text(Localize.Text("SettingsIntro"));
@@ -36,8 +36,15 @@ public sealed class SettingsWindow : ThemedWindow
             AppUpdates.ReleaseLock(); AppUpdates.Start(LauncherStartup.InstalledExe,["--show-setup","--skip-app-update-once"]).Dispose(); Application.Current.Shutdown();
         }, !context.IsIsolated);
         Action(Localize.Text("UninstallApp"), () => {
-            if (!AppDialog.Show(this,Localize.Text("UninstallApp"),Localize.Text("UninstallInfo"),Localize.Text("UninstallApp"))) return;
-            AppMaintenance.RequestRemoval(); Application.Current.Shutdown();
+            if (!AppDialog.Show(this,Localize.Text("UninstallApp"),Localize.Text("UninstallInfo"),Localize.Text("UninstallApp"),true)) return;
+            var busy = new AppUpdateWindow(Localize.Text("UninstallApp"),false) { Owner = this }; busy.Show();
+            busy.SetStatus(Localize.Text("PreparingRemoval"));
+            _ = Remove();
+            async Task Remove() {
+                using var shade = DimForModal(); IsEnabled = false;
+                try { await Task.Run(AppMaintenance.RequestRemoval); Application.Current.Shutdown(); }
+                catch (Exception ex) { busy.FinishAndClose(); IsEnabled = true; AppDialog.Show(this,Localize.Text("Error"),ex.Message); }
+            }
         }, !context.IsIsolated && LauncherStartup.IsInstalled);
         Text(Localize.Text("KeepPersonalFiles"),12);
         Content = new ScrollViewer { Content = panel, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled };
@@ -45,6 +52,7 @@ public sealed class SettingsWindow : ThemedWindow
         void Action(string text, System.Action action, bool enabled = true)
         {
             var button = new Button { Content = text, HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(0,8,0,0), IsEnabled = enabled, FontSize = 13, Padding = new Thickness(14,8,14,8) };
+            if (text == Localize.Text("UninstallApp")) button.Style = (Style)Application.Current.Resources["CancelButton"];
             button.Click += (_, _) => { try { action(); } catch (Exception ex) { AppDialog.Show(this,Localize.Text("Error"),ex.Message); } }; panel.Children.Add(button);
         }
     }

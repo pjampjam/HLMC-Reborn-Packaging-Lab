@@ -43,8 +43,9 @@ public sealed class PackInstaller(string instanceRoot, string stateRoot, IFileDo
                 throw new IOException("An unowned file conflicts with the pack: " + file.Path + ". Move it aside before installing.");
             progress?.Report(new("Downloading " + Path.GetFileName(file.Path), doneBytes, totalBytes, doneFiles, all.Length));
             // Keep the active installation unchanged until every required download verifies.
-            var cached = await downloader.GetAsync(file, new Progress<long>(n => progress?.Report(
-                new("Downloading " + Path.GetFileName(file.Path), doneBytes + n, totalBytes, doneFiles, all.Length))), cancellationToken);
+            var fileStart = doneBytes; var fileIndex = doneFiles;
+            var cached = await downloader.GetAsync(file, new InlineProgress<long>(n => progress?.Report(
+                new("Downloading " + Path.GetFileName(file.Path), fileStart + Math.Clamp(n,0,file.Size), totalBytes, fileIndex, all.Length))), cancellationToken);
             if (!AtomicFiles.Matches(cached, file)) throw new InvalidDataException("A staged download did not pass verification.");
             ready[file.Path] = cached;
             doneBytes += file.Size; doneFiles++;
