@@ -4,19 +4,21 @@ A Windows launcher and updater for the Holy Lois modpack. Choose Minecraft Launc
 
 ## Download
 
-[Download HolyLoisReborn.exe 0.8.0](https://github.com/pjampjam/HLMC-Reborn-Packaging-Lab/releases/download/v0.8.0/HolyLoisReborn.exe) - about 67 MB. Windows x64, with its .NET runtime included.
+[Download HolyLoisReborn.exe 1.0.0](https://github.com/pjampjam/HLMC-Reborn-Packaging-Lab/releases/download/v1.0.0/HolyLoisReborn.exe) - about 67 MB. Windows x64, with its .NET runtime included.
 
-This is the public test edition. It keeps the tested Packaging Lab installation folder and separate Minecraft profile. The original small installers in HLMC-Reborn remain withdrawn. Do not download those older installers.
+This is the full release. Existing preview installations move to the standard HolyLoisReborn folder, and owned launcher profiles and shortcuts lose their Preview names. The original small installers in HLMC-Reborn remain withdrawn. Do not download those older installers.
 
 1. Open the downloaded EXE. Choose your Minecraft launcher and optional shortcuts.
 2. Close Minecraft, then click Install Holy Lois.
-3. Click Play beneath the logo. In Minecraft Launcher, select Holy Lois: Reborn (Preview). For SKlauncher, follow the app's import step and link the imported Holy Lois game folder.
+3. Click Play beneath the logo. In Minecraft Launcher, select Holy Lois: Reborn. For SKlauncher, follow the app's import step and link the imported Holy Lois game folder.
 
-Already using the preview? Close and reopen your installed app or its shortcut. Its signed app-stable channel updates it to 0.8.0 before showing the main window. You do not need another installer. An old downloaded copy hands off to the newer installed version after its verified update.
+Already using Holy Lois? Close and reopen your installed app or its shortcut. Its signed app-stable channel updates it to 1.0.0 before showing the main window. You do not need another installer. An old downloaded copy hands off to the newer installed version after its verified update.
 
 The app is unsigned by a Windows publisher certificate. SmartScreen may show Unknown publisher. Local scans and previous user download tests do not guarantee every antivirus result. If Defender detects a threat, stop and report the detection rather than adding an exclusion.
 
-## Version 0.8.0
+## Version 1.0.0
+
+- Standard HolyLoisReborn installation folder, clean shortcut and Minecraft profile names, and a one-time migration preserving your data and any older installation.
 
 - A larger Play button beneath the logo names your chosen launcher. It becomes green only when that launcher is found and the pack is ready.
 - Mouse interaction clears keyboard focus outlines, including after closing dialogs. Tab navigation retains visible focus.
@@ -28,7 +30,7 @@ The app is unsigned by a Windows publisher certificate. SmartScreen may show Unk
 
 ## Files and updates
 
-The app installs into `%LOCALAPPDATA%\HolyLoisRebornLab`. Game files and preferences live under its data folder. The original `%LOCALAPPDATA%\HolyLoisReborn` installation remains separate.
+The app installs into `%LOCALAPPDATA%\HolyLoisReborn`. Game files and preferences live under its data folder. If an older installation already occupies that folder, migration preserves it as a sibling HolyLoisReborn-backup folder before moving the working preview installation. The backup is retained for recovery. Close Minecraft and its launcher during this one-time move.
 
 App updates use this repository's signed app-stable channel. Modpack updates use the existing separate signed HLMC-Reborn pack channel. Direct release-file checks do not use the GitHub REST API quota; hosting and download failures can still occur. The working installed app remains available when the network check fails.
 
@@ -40,4 +42,4 @@ Use .NET 10 and run build.ps1. Add -Package for a self-contained Windows x64 exe
 
 assets/app-release-public.pem verifies launcher releases; assets/release-public.pem verifies modpack releases. Their private keys are excluded from source control. Keep the launcher key stable between releases. Sign any future Authenticode build before calculating its release hash and catalog; never replace an already published version with changed bytes.
 
-This edition is public for friend testing. Promotion into the original application folder requires a separately tested migration. Publishing a clean scan result does not establish global antivirus clearance.
+This edition is public for friends. Folder migration, profile naming, shortcut preservation, signed app updates and rollback are tested. Publishing a clean scan result does not establish global antivirus clearance. The repository name remains Packaging Lab to preserve existing trusted update URLs; it is not the installed application name.

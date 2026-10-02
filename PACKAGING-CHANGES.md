@@ -40,3 +40,7 @@ dotnet run --project src/HolyLois.Publisher -c Release --no-build -- catalog pri
 ```
 
 This writes app-release.txt and app-release.txt.sig locally. It does not publish anything. Use the dedicated app private key, keep it private, and retain it for later releases. Do not substitute the production modpack key.
+
+## Full release 1.0.0
+
+The application name is now Holy Lois: Reborn throughout visible setup, shortcuts and Minecraft profiles. The default application root is HolyLoisReborn. An owned older Lab installation moves with its data; an existing older destination is backed up rather than deleted. Native process tests cover the move, profile retargeting and preserving deleted shortcuts. The trusted repository and signing key remain unchanged for compatibility.

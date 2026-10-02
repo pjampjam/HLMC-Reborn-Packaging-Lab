@@ -2,12 +2,13 @@ namespace HolyLois.Core;
 
 public static class ApplicationRemoval
 {
-    public const string Marker = "holylois-packaging-preview-v1";
+    public const string Marker = "holylois-reborn-app-v1";
+    public static bool IsOwnedMarker(string marker) => marker is Marker or "holylois-packaging-preview-v1";
     public static void RemoveOwnedApp(string root, string expectedHash)
     {
         SafePaths.RejectLinks(root);
         var marker = SafePaths.Resolve(root,"holylois-app.txt");
-        if (!File.Exists(marker) || File.ReadAllText(marker) != Marker) throw new IOException("This folder is not an owned preview installation.");
+        if (!File.Exists(marker) || !IsOwnedMarker(File.ReadAllText(marker))) throw new IOException("This folder is not an owned Holy Lois installation.");
         var target = SafePaths.Resolve(root,"HolyLoisReborn.exe");
         if (!File.Exists(target) || AtomicFiles.Hash(target) != expectedHash) throw new IOException("The installed app changed; removal was cancelled.");
         // Never recurse or touch game data, other launchers, downloaded copies or unknown files.

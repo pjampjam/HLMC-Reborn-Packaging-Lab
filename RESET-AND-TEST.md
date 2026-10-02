@@ -1,54 +1,37 @@
-# Holy Lois 0.8.0 - reset and test
+# Holy Lois: Reborn - setup and maintenance
 
-Your application files are in %USERPROFILE%\AppData\Local\HolyLoisRebornLab. Your preview game and pack files are under data\instances\Holy Lois Reborn. The production application folder HolyLoisReborn is separate.
+## Install and play
 
-## Repeat the welcome setup
+1. Download HolyLoisReborn.exe from the latest public release.
+2. Close Minecraft and Minecraft Launcher or SKlauncher.
+3. Open Holy Lois. Choose your launcher and the shortcuts you want.
+4. Click Install Holy Lois. When the pack is ready, Play beneath the logo becomes green.
+5. Play opens your selected launcher. Select Holy Lois: Reborn, then play inside that launcher.
 
-Open Settings > Run setup again. The app restarts and offers launcher and shortcut choices. Your language, launcher preferences and game files stay available. You do not need to delete a folder.
+For SKlauncher 4, follow the app's import instructions, close SKlauncher, and use Link SK game folder to select the imported Holy Lois instance. Repair / check files connects future updates to that folder. If the instance was deleted, reinstall, import it again, and link its new folder.
 
-Deleted shortcuts still stay deleted unless you explicitly create them in Settings or choose them during repeated setup.
+## Existing installations
 
-## Check the fixes
+Close and reopen your installed Holy Lois app to receive the signed launcher update. Version 1.0.0 moves an owned HolyLoisRebornLab installation to `%LOCALAPPDATA%\HolyLoisReborn`. Pack files, settings, worlds and personal extras move together. If an older installation occupies the destination, it is retained in a sibling HolyLoisReborn-backup folder. No old world data is deleted.
 
-1. Open the revised preview. The title bar should contain only the window controls.
-2. When Minecraft Launcher is found, the main screen should show that status and hide Find launcher and Download launcher. Settings > Choose a different launcher file remains available.
-3. Click Repair / check files. The window should remain responsive and show a launcher-profile preparation phase after pack-file verification. You can cancel downloads; an in-progress file commit completes or rolls back safely.
-4. Open Minecraft Launcher and choose Holy Lois: Reborn (Preview). Your original Holy Lois profile remains unchanged while testing this separate version.
-5. Switch to SKlauncher. The existing import/link steps remain necessary. Link only a Holy Lois instance using Link SK game folder. Update and test that instance separately.
-6. Check English, Russian and Latvian using the main-screen language selector. Check keyboard focus, resizing and scrolling.
+Existing owned Desktop and Start menu shortcuts are renamed Holy Lois Reborn and retargeted. A shortcut you deleted stays deleted. The official launcher profile becomes Holy Lois: Reborn, preserving its memory arguments and unrelated profiles. Its previous profile file is backed up locally and can contain account information, so do not share that backup.
 
-For a clean first-run test, close the preview and use File Explorer to rename HolyLoisRebornLab to HolyLoisRebornLab-test-backup. Then open the newly downloaded EXE. Renaming keeps your previous data recoverable. Do not delete the working production HolyLoisReborn folder, .minecraft, .sklauncher or your CurseForge profile.
+The repository name stays Packaging Lab because older apps trust that update address. It does not appear in the installed application's folder or shortcuts.
 
-## Remove the app
+## Settings and removal
 
-Settings > Remove launcher app opens a confirmation. It removes the installed preview EXE and shortcuts that point to it. Worlds, pack files, personal settings, download caches and other Minecraft launchers are retained. The downloaded EXE in Downloads is separate and is not removed. Temporary maintenance/update copies can remain as retained files; this preview does not remove unrelated contents of a folder.
+Settings > Run setup again repeats launcher and shortcut choices without deleting game data. Settings can also create shortcuts explicitly, choose a launcher file, or open the app folder.
 
-If you want to remove all preview data afterward, first copy any worlds, personal screenshots or extra mods you want to keep. Then delete only %USERPROFILE%\AppData\Local\HolyLoisRebornLab using File Explorer. This is optional and is not done by app-only removal. A preview installation entry can remain in Minecraft Launcher; remove only the entry named Holy Lois: Reborn (Preview), never your working production entry.
+Settings > Remove launcher app removes its installed EXE and matching shortcuts. Game files, worlds, settings and download caches stay. The copy in Downloads is separate. Other launchers and modpacks are untouched.
 
-## Update policy
+For a fresh setup test, close the app and rename only `%LOCALAPPDATA%\HolyLoisReborn` to a backup name, then open the downloaded EXE. Keep any worlds and extra files you want. Do not delete .minecraft, .sklauncher or a CurseForge profile.
 
-Updates replace or remove only files recorded as pack-managed. Extra client mods and shader ZIPs stay in place. Worlds, voice-device choices and other personal files are not distributed or deleted. Shared changes are merged once per pack version; unrelated preferences remain. A conflicting unowned file is reported for review rather than silently overwritten.
+## Updates
 
-## Windows publisher warning
+The app checks its signed launcher update channel before opening the main window. The modpack has a separate signed channel. A failed network check keeps the working app available. Updates replace only pack-managed files. Shared defaults merge once per pack version; unrelated preferences, worlds, voice-device choices and extra client mods or shaders remain.
 
-The file's Company metadata now says pjampjam. Windows' verified publisher comes from an Authenticode certificate, not this metadata. This preview is still unsigned. SmartScreen can show Unknown publisher even when Defender did not detect malware and a multi-engine scan reports zero detections. Do not describe the preview as globally cleared.
+## Short test
 
-The public app-stable channel provides signed launcher updates before the main screen opens. Close and reopen your installed app to check. Your signed modpack update channel is independent. A failed network check keeps your working app available.
+Check both Minecraft Launcher and SKlauncher, their clean profile names, and green Play when ready. Switch English, Russian and Latvian. Open and cancel Settings dialogs; mouse clicks must not leave a keyboard focus outline, while Tab still displays focus. Delete an unwanted shortcut, reopen the app, and confirm it stays absent.
 
-## Preview 0.7.0 visual checks
-
-Open Settings, then Remove launcher app. The main screen and Settings should dim in separate layers. Remove is red with white text; Cancel has a muted red accent. Cancel this dialog for the visual check. Yellow Continue and Install actions use dark text. Play uses green when ready. Keyboard focus remains inside the rounded border.
-
-Repair / check files shows verified/downloaded size, file counts and elapsed time. Active progress is green, finished progress is yellow, cancelled progress is muted, and failure progress is red. The final launcher-setup stage stays indeterminate because its duration cannot be known. Transfer estimates are approximate and appear after enough data is available.
-
-The launcher checks and downloads its own signed app update before opening the main screen. Minecraft Launcher and SKlauncher downloads opened on their official websites use the browser's progress display.
-
-Removal shows progress after confirmation and keeps game files. The worker verifies the exact installed app before deleting it. Windows-managed prompts and file pickers retain Windows styling.
-
-## Version 0.8.0 checks
-
-Click and hold a launcher card, move away, then release. It must not remain pressed. Switching cards should retain only the selected-launcher border. Open Settings > Remove launcher app, then cancel or close the dialog. A mouse click must not leave a keyboard outline on the previous button. Press Tab to check that keyboard focus is still visible.
-
-Play is now beneath the logo. It stays gray until the pack is ready and the selected launcher is found. Green Play names that launcher and opens it; you still select the Holy Lois installation and press Play inside Minecraft Launcher or SKlauncher. Test both launcher paths. The logo slogan is removed.
-
-Try the window at its minimum size, open both help sections, and switch English, Russian and Latvian. Rounded buttons, fields and section borders should stay consistent. Any new browser detection should be reported with the release version and detection name.
+The EXE is unsigned by a Windows publisher certificate. SmartScreen may show Unknown publisher. Report a Defender detection instead of adding an exclusion. A local scan cannot guarantee every PC's antivirus result.

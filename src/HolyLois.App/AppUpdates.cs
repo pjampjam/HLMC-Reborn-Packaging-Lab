@@ -72,7 +72,7 @@ public static class AppUpdates
         catch (Exception ex) when (ex is HttpRequestException or OperationCanceledException or IOException or InvalidDataException or System.Security.Cryptography.CryptographicException)
         {
             Notice = ex is HttpRequestException { StatusCode: System.Net.HttpStatusCode.NotFound }
-                ? "Preview app updates are not published yet. Your installed app remains available."
+                ? "Launcher updates are not published yet. Your installed app remains available."
                 : "Launcher updates are unavailable right now. Your installed app remains available.";
             return false;
         }
@@ -100,7 +100,7 @@ public static class AppUpdates
             using var wait = new CancellationTokenSource(TimeSpan.FromSeconds(30)); await parent.WaitForExitAsync(wait.Token);
         }
         catch (ArgumentException) { /* The parent already exited. */ }
-        if (!AcquireLock()) throw new IOException("Another preview app is running. Close it before updating.");
+        if (!AcquireLock()) throw new IOException("Another Holy Lois app is running. Close it before updating.");
         if (recovery) {
             try { deployment.Rollback(nonce); }
             finally { ReleaseLock(); }
@@ -118,7 +118,7 @@ public static class AppUpdates
             while (!child.HasExited && DateTime.UtcNow < deadline && !deployment.IsAcknowledged(nonce)) await Task.Delay(100);
             if (deployment.IsAcknowledged(nonce)) { deployment.Finalize(nonce); workerWindow?.SetStage("Launcher updated.",100,true); if (workerWindow is not null) await Task.Delay(500); return 0; }
             if (!child.HasExited) { child.Kill(); await child.WaitForExitAsync(); }
-            if (!AcquireLock()) throw new IOException("Update recovery is waiting for the preview app to close.");
+            if (!AcquireLock()) throw new IOException("Update recovery is waiting for Holy Lois to close.");
             deployment.Rollback(nonce); ReleaseLock();
             AtomicFiles.Write(SafePaths.Resolve(LauncherStartup.InstallRoot,"failed-app-update.txt"),Encoding.ASCII.GetBytes(release.Sha256));
             if (File.Exists(deployment.Target)) Start(deployment.Target,args.Contains("--app-update-smoke-fail") ? ["--skip-app-update-once","--app-update-smoke"] : ["--skip-app-update-once"]).Dispose();

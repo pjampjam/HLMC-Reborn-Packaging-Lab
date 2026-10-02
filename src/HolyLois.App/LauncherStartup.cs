@@ -10,10 +10,7 @@ public static class LauncherStartup
         {
             var args = Environment.GetCommandLineArgs(); var i = Array.IndexOf(args,"--lab-root");
             var root = i >= 0 && i + 1 < args.Length ? Path.GetFullPath(args[i+1])
-                : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "HolyLoisRebornLab");
-            var production = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "HolyLoisReborn");
-            if (root.Equals(production,StringComparison.OrdinalIgnoreCase) || root.StartsWith(production + Path.DirectorySeparatorChar,StringComparison.OrdinalIgnoreCase))
-                throw new IOException("The packaging preview cannot use the production installation folder.");
+                : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "HolyLoisReborn");
             _ = SafePaths.Resolve(root,"HolyLoisReborn.exe"); return root;
         }
     }
@@ -29,7 +26,7 @@ public static class LauncherStartup
             var deployment = AppUpdates.Deployment;
             if (deployment.Installed is { } release && AtomicFiles.Matches(InstalledExe,release.File) && release.NumericVersion >= AppUpdates.RunningVersion) return;
             if (AtomicFiles.Hash(InstalledExe) == AtomicFiles.Hash(self)) return;
-            throw new IOException("An existing preview installation differs from this copy. Open the installed preview to update it safely.");
+            throw new IOException("An existing installation differs from this copy. Open the installed Holy Lois app to update it safely.");
         }
         var temp = SafePaths.Resolve(InstallRoot,"HolyLoisReborn.exe.first-install");
         try
@@ -45,7 +42,7 @@ public static class LauncherStartup
     public static void CreateShortcut(string root, bool desktop)
     {
         var folder = Environment.GetFolderPath(desktop ? Environment.SpecialFolder.DesktopDirectory : Environment.SpecialFolder.Programs);
-        var shortcut = SafePaths.Resolve(folder,"Holy Lois Reborn Preview.lnk");
+        var shortcut = SafePaths.Resolve(folder,"Holy Lois Reborn.lnk");
         if (File.Exists(shortcut)) return;
         var target = SafePaths.Resolve(root,"HolyLoisReborn.exe");
         var shellType = Type.GetTypeFromProgID("WScript.Shell") ?? throw new IOException("Windows shortcuts are unavailable.");
@@ -53,7 +50,7 @@ public static class LauncherStartup
         try
         {
             dynamic link = shell.CreateShortcut(shortcut);
-            try { link.TargetPath = target; link.IconLocation = target + ",0"; link.WorkingDirectory = root; link.Description = "Holy Lois: Reborn - packaging preview"; link.Save(); }
+            try { link.TargetPath = target; link.IconLocation = target + ",0"; link.WorkingDirectory = root; link.Description = "Holy Lois: Reborn"; link.Save(); }
             finally { System.Runtime.InteropServices.Marshal.FinalReleaseComObject(link); }
         }
         finally { System.Runtime.InteropServices.Marshal.FinalReleaseComObject(shell); }

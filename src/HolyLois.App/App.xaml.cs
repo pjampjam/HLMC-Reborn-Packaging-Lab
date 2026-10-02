@@ -17,12 +17,14 @@ public partial class App : Application
             var args = e.Args;
             var development = args.Contains("--data-dir") || args.Any(a => a.StartsWith("--render-", StringComparison.Ordinal) || a.StartsWith("--verify-", StringComparison.Ordinal)) || args.Contains("--publish-prepared");
             ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            if (args.Contains("--promote-install")) { await AppPromotion.RunAsync(args); Shutdown(0); return; }
             if (args.Contains("--remove-app")) { await AppMaintenance.RemoveAsync(args); Shutdown(0); return; }
             if (args.Contains("--apply-app-update") || args.Contains("--recover-app-update")) { Shutdown(await AppUpdates.ApplyAsync(args)); return; }
+            if (!development && !args.Contains("--app-update-ready") && AppPromotion.Request(args)) { Shutdown(0); return; }
             if (!development && !AppUpdates.AcquireLock()) { Shutdown(0); return; }
             Exit += (_,_) => AppUpdates.ReleaseLock();
             if (args.Contains("--owner-root") || args.Contains("--publish-prepared"))
-                throw new InvalidDataException("Owner publishing stays in the production admin app. This preview does not publish packs.");
+                throw new InvalidDataException("Owner publishing stays in the production admin app. The player app does not publish packs.");
             string? data = null;
             var index = Array.IndexOf(args, "--data-dir");
             if (index >= 0 && args.Length > index + 1) data = Path.GetFullPath(args[index + 1]);
@@ -36,7 +38,17 @@ public partial class App : Application
                     throw new ArgumentException("Launcher integration tests require an explicit --data-dir and launcher library path.");
                 launcherTestRoot = Path.GetFullPath(args[launcherIndex + 1]);
             }
+            var migrationTestIndex = Array.IndexOf(args,"--promotion-base");
+            if (migrationTestIndex >= 0 && migrationTestIndex + 1 < args.Length &&
+                !Path.GetFullPath(args[migrationTestIndex+1]).Equals(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),StringComparison.OrdinalIgnoreCase))
+            { data ??= Path.Combine(LauncherStartup.InstallRoot,"data"); launcherTestRoot ??= Path.Combine(Path.GetFullPath(args[migrationTestIndex+1]),"minecraft"); }
+            if (!development) AppPromotion.RelocateSettings(args);
             var context = new ClientContext(data, launcherTestRoot);
+            if (args.Contains("--verify-shortcut-names")) {
+                if (data is null || !context.IsIsolated) throw new IOException("Shortcut verification requires an isolated folder.");
+                AppPromotion.RenameShortcutAt(Path.Combine(data,"shortcuts"),Path.Combine(data,"source"),Path.Combine(data,"target"));
+                File.WriteAllText(Path.Combine(data,"shortcut-result.txt"),"Shortcut naming pass completed."); Shutdown(0); return;
+            }
             if (args.Contains("--verify-ui")) {
                 if (data is null) throw new ArgumentException("UI verification requires an isolated folder.");
                 var action = new System.Windows.Controls.Button { Content = "Continue", Background = (Brush)Resources["Gold"], Foreground = Brushes.Black, Width = 180, Height = 48 };
@@ -71,7 +83,7 @@ public partial class App : Application
             if (args.Contains("--verify-first-run")) {
                 if (data is null || !context.IsIsolated) throw new ArgumentException("First-run verification requires an isolated folder.");
                 var root = LauncherStartup.InstallRoot;
-                if (File.Exists(LauncherStartup.InstalledExe)) throw new IOException("First-run verification needs a fresh preview root.");
+                if (File.Exists(LauncherStartup.InstalledExe)) throw new IOException("First-run verification needs a fresh installation folder.");
                 if (!LauncherSetup.NeedsSetup(root,false)) throw new InvalidDataException("Fresh setup did not offer choices.");
                 LauncherStartup.InstallCurrent(); var shortcuts = new List<bool>();
                 LauncherSetup.Complete(root,new("official",false,false),shortcuts.Add);
@@ -186,7 +198,8 @@ public partial class App : Application
                     if (handedOff) { AppUpdates.ReleaseLock(); Shutdown(0); return; }
                 }
                 var main = new MainWindow(context);
-                if (readyNonce is not null) main.ContentRendered += (_,_) => Ready();
+                AppPromotion.CompleteNames(context,args);
+                if (readyNonce is not null) main.ContentRendered += async (_,_) => { Ready(); try { await AppPromotion.AfterUpdateAsync(args,main); } catch(Exception ex) { AppDialog.Show(main,"Installation update",ex.Message); } };
                 MainWindow = main;
             }
             else MainWindow = new MainWindow(context);

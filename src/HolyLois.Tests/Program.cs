@@ -277,6 +277,72 @@ tests.Add(("Download progress stays within the pack total with delayed dispatch"
     } finally { SynchronizationContext.SetSynchronizationContext(previousContext); }
 }));
 
+tests.Add(("Full release moves the owned installation, preserves data and backs up a previous installation", () => {
+    var d=Dir("name-migration"); var source=Path.Combine(d,"HolyLoisRebornLab"); var target=Path.Combine(d,"HolyLoisReborn");
+    Directory.CreateDirectory(Path.Combine(source,"data","saves")); Directory.CreateDirectory(Path.Combine(target,"data"));
+    File.WriteAllText(Path.Combine(source,"holylois-app.txt"),"holylois-packaging-preview-v1");
+    File.WriteAllText(Path.Combine(source,"HolyLoisReborn.exe"),"old-app"); File.WriteAllText(Path.Combine(source,"data","saves","world.txt"),"world");
+    File.WriteAllText(Path.Combine(source,"setup-completed.json"),"preferences");
+    File.WriteAllText(Path.Combine(target,"setup-completed.json"),"legacy"); File.WriteAllText(Path.Combine(target,"data","personal.txt"),"keep-legacy");
+    var replacement=Path.Combine(d,"new.exe");File.WriteAllText(replacement,"new-app");
+    var receipt=InstallationPromotion.Promote(source,target,replacement);
+    Check(!Directory.Exists(source),"The old application folder remained active.");
+    Check(File.ReadAllText(Path.Combine(target,"HolyLoisReborn.exe"))=="new-app","The release app was not installed.");
+    Check(File.ReadAllText(Path.Combine(target,"data","saves","world.txt"))=="world","World data changed.");
+    Check(File.ReadAllText(Path.Combine(target,"setup-completed.json"))=="preferences","Shortcut choices changed.");
+    Check(File.ReadAllText(Path.Combine(receipt.PreviousInstallationBackup!,"data","personal.txt"))=="keep-legacy","Previous installation was not preserved.");
+    return Task.CompletedTask;
+}));
+tests.Add(("Failed name migration restores both folders and rejects an unrelated destination", () => {
+    var d=Dir("name-migration-fail"); var source=Path.Combine(d,"HolyLoisRebornLab"); var target=Path.Combine(d,"HolyLoisReborn");
+    Directory.CreateDirectory(source);Directory.CreateDirectory(target);
+    File.WriteAllText(Path.Combine(source,"holylois-app.txt"),ApplicationRemoval.Marker);File.WriteAllText(Path.Combine(source,"HolyLoisReborn.exe"),"old-app");
+    File.WriteAllText(Path.Combine(target,"personal.txt"),"keep");var replacement=Path.Combine(d,"new.exe");File.WriteAllText(replacement,"new-app");
+    try {InstallationPromotion.Promote(source,target,replacement);throw new Exception("Unrelated destination accepted.");}catch(IOException){}
+    Check(File.ReadAllText(Path.Combine(target,"personal.txt"))=="keep","Unrelated files changed.");
+    File.WriteAllText(Path.Combine(target,"setup-completed.json"),"legacy");
+    try {InstallationPromotion.Promote(source,target,replacement,()=>throw new IOException("simulated"));throw new Exception("Failure ignored.");}catch(IOException){}
+    Check(File.ReadAllText(Path.Combine(source,"HolyLoisReborn.exe"))=="old-app","Source was not restored.");
+    Check(File.ReadAllText(Path.Combine(target,"personal.txt"))=="keep","Previous target was not restored.");return Task.CompletedTask;
+}));
+tests.Add(("Full release profile removes its preview label while preserving personal profiles and account metadata", () => {
+    var d=Dir("release-profile");var oldGame=Path.Combine(d,"old-game");var newGame=Path.Combine(d,"new-game");
+    var original=new JsonObject { ["profiles"]=new JsonObject {
+        [LauncherProfiles.PreviewProfileId]=new JsonObject { ["gameDir"]=oldGame,["name"]="Holy Lois: Reborn (Preview)",["javaArgs"]="personal",["lastVersionId"]=LauncherProfiles.VersionId },
+        ["other"]=new JsonObject { ["gameDir"]=Path.Combine(d,"personal"),["name"]="Personal world" } },
+        ["selectedProfile"]=LauncherProfiles.PreviewProfileId,["authenticationDatabase"]=new JsonObject { ["opaque"]="keep" } };
+    var next=JsonNode.Parse(LauncherProfiles.PromoteNames(Encoding.UTF8.GetBytes(original.ToJsonString()),oldGame,newGame,[1],false))!;
+    Check(next["profiles"]![LauncherProfiles.PreviewProfileId] is null,"Preview entry remained active.");
+    Check((string?)next["profiles"]![LauncherProfiles.ReleaseProfileId]!["name"]=="Holy Lois: Reborn","Release name is wrong.");
+    Check((string?)next["profiles"]![LauncherProfiles.ReleaseProfileId]!["javaArgs"]=="personal","User memory arguments changed.");
+    Check((string?)next["selectedProfile"]==LauncherProfiles.ReleaseProfileId,"Selected profile was not migrated.");
+    Check(next["profiles"]!["other"]!.ToJsonString()==original["profiles"]!["other"]!.ToJsonString(),"Unrelated profile changed.");
+    Check(next["authenticationDatabase"]!.ToJsonString()==original["authenticationDatabase"]!.ToJsonString(),"Account data changed.");
+    return Task.CompletedTask;
+}));
+
+tests.Add(("SKlauncher naming changes only a verified Holy Lois instance and preserves custom instance fields", () => {
+    var d=Dir("sk-name-migration"); var game=Path.Combine(d,"game"); Directory.CreateDirectory(game);
+    File.WriteAllText(Path.Combine(game,"holylois-instance.json"),"{\"instance\":\"holylois-reborn-26.3\"}");
+    var original=new JsonObject { ["instances"]=new JsonArray {
+        new JsonObject { ["name"]="Holy Lois: Reborn (Preview)",["directory"]=game,["memoryMax"]=6144,["id"]="keep-id" },
+        new JsonObject { ["name"]="Personal pack",["directory"]=Path.Combine(d,"other"),["id"]="other-id" } } };
+    var next=JsonNode.Parse(LauncherProfiles.PromoteSkNames(Encoding.UTF8.GetBytes(original.ToJsonString()),Path.Combine(d,"HolyLoisRebornLab"),Path.Combine(d,"HolyLoisReborn")))!;
+    Check((string?)next["instances"]![0]!["name"]=="Holy Lois: Reborn","SK display name was not promoted.");
+    Check((int?)next["instances"]![0]!["memoryMax"]==6144 && (string?)next["instances"]![0]!["id"]=="keep-id","Personal instance fields changed.");
+    Check(next["instances"]![1]!.ToJsonString()==original["instances"]![1]!.ToJsonString(),"Another SK instance changed.");return Task.CompletedTask;
+}));
+
+tests.Add(("An old downloaded copy cannot replace an existing full installation during naming migration", () => {
+    var d=Dir("redundant-source");var source=Path.Combine(d,"HolyLoisRebornLab");var target=Path.Combine(d,"HolyLoisReborn");
+    Directory.CreateDirectory(source);Directory.CreateDirectory(target);
+    File.WriteAllText(Path.Combine(source,"holylois-app.txt"),"holylois-packaging-preview-v1");File.WriteAllText(Path.Combine(source,"personal.txt"),"old-copy-data");
+    File.WriteAllText(Path.Combine(target,"holylois-app.txt"),ApplicationRemoval.Marker);File.WriteAllText(Path.Combine(target,"personal.txt"),"current-data");
+    var backup=InstallationPromotion.ArchiveRedundantSource(source,target);
+    Check(!Directory.Exists(source) && File.ReadAllText(Path.Combine(backup,"personal.txt"))=="old-copy-data","Redundant source data was not preserved.");
+    Check(File.ReadAllText(Path.Combine(target,"personal.txt"))=="current-data","Current installation data changed.");return Task.CompletedTask;
+}));
+
 foreach (var test in tests)
 {
     try { await test.Run(); Console.WriteLine("PASS " + test.Name); passed++; }

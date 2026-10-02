@@ -116,7 +116,7 @@ public sealed class ClientContext
         if (Settings.Launcher != "sk" || Settings.SkInstance is null)
         {
             progress?.Report(new("Preparing Fabric launcher profile...", 1, 1, Manifest.Files.Length, Manifest.Files.Length));
-            await LauncherProfiles.PrepareAsync(MinecraftRoot, Instance, Manifest, Asset("fabric-profile.json"), Asset("profile-icon.png"), downloader, token, Asset("vanilla-profile.json"), LauncherProfiles.PreviewProfileId, "Holy Lois: Reborn (Preview)");
+            await LauncherProfiles.PrepareAsync(MinecraftRoot, Instance, Manifest, Asset("fabric-profile.json"), Asset("profile-icon.png"), downloader, token, Asset("vanilla-profile.json"), LauncherProfiles.ReleaseProfileId, "Holy Lois: Reborn");
         }
         AtomicFiles.WriteJson(SafePaths.Resolve(Instance, "holylois-pack-receipt.json"), Installer.ReadReceipt());
         AtomicFiles.Write(SafePaths.Resolve(StatePath, "ready.txt"), Encoding.ASCII.GetBytes(Manifest.Version));
@@ -124,7 +124,7 @@ public sealed class ClientContext
         downloader.Prune(Manifest.Files.Concat(Manifest.LoaderFiles).Concat(Manifest.Defaults is { } retained ? [retained] : []));
         progress?.Report(new("Holy Lois is ready. Select its profile in your launcher.", 1, 1, Manifest.Files.Length, Manifest.Files.Length));
     }
-    private static bool IsGameOrLauncherRunning(bool includeLauncher = true)
+    public static bool IsGameOrLauncherRunning(bool includeLauncher = true)
     {
         foreach (var name in includeLauncher ? new[] { "java", "javaw", "MinecraftLauncher", "Minecraft", "SKlauncher" } : new[] { "java", "javaw" })
         {
@@ -145,7 +145,7 @@ public sealed class ClientContext
     public void OpenLauncher()
     {
         if (!CanPlay) throw new IOException("Finish Verify & update before opening your launcher.");
-        if (IsIsolated) throw new IOException("Preview setup is ready. Opening Minecraft is disabled in this development build.");
+        if (IsIsolated) throw new IOException("Test setup is ready. Opening Minecraft is disabled in this development build.");
         var exe = DetectLauncher() ?? throw new IOException("Choose your installed launcher using 'Locate launcher'. Microsoft Store launcher users can open it from Start after setup.");
         var launch = new ProcessStartInfo(exe.StartsWith("shell:", StringComparison.Ordinal) ? "explorer.exe" : exe) { UseShellExecute = true };
         if (exe.StartsWith("shell:", StringComparison.Ordinal)) launch.ArgumentList.Add(exe);

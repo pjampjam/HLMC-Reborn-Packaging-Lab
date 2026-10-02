@@ -8,6 +8,50 @@ public static class LauncherProfiles
     public const string ProfileId = "holylois-reborn";
     public const string VersionId = "holylois-reborn-fabric-0.19.5-26.3";
     public const string PreviewProfileId = "holylois-reborn-preview";
+    public const string ReleaseProfileId = "holylois-reborn-launcher";
+    public static byte[] PromoteSkNames(byte[] existing, string previousRoot, string installRoot)
+    {
+        var root = JsonNode.Parse(existing) as JsonObject ?? throw new InvalidDataException("SKlauncher instances could not be read.");
+        if (root["instances"] is not JsonArray instances) return existing;
+        var changed = false;
+        foreach (var item in instances.OfType<JsonObject>())
+        {
+            if (item["directory"] is not JsonValue dir || !dir.TryGetValue<string>(out var path) || !Path.IsPathFullyQualified(path)) continue;
+            var next = Path.GetFullPath(path).StartsWith(previousRoot + Path.DirectorySeparatorChar,StringComparison.OrdinalIgnoreCase)
+                ? Path.Combine(installRoot,Path.GetRelativePath(previousRoot,path)) : path;
+            string marker;
+            try { marker = SafePaths.Resolve(next,"holylois-instance.json"); }
+            catch (Exception ex) when (ex is IOException or InvalidDataException or ArgumentException) { continue; }
+            if (!File.Exists(marker) || File.ReadAllText(marker) != "{\"instance\":\"holylois-reborn-26.3\"}") continue;
+            if ((string?)item["name"] != "Holy Lois: Reborn") { item["name"] = "Holy Lois: Reborn"; changed = true; }
+            if (next != path) { item["directory"] = next; changed = true; }
+        }
+        return changed ? Encoding.UTF8.GetBytes(root.ToJsonString(JsonSettings.Options)) : existing;
+    }
+    public static byte[] PromoteNames(byte[] existing, string previousDirectory, string gameDirectory, byte[] icon, bool retiredPreviousInstallation)
+    {
+        var root = JsonNode.Parse(existing) as JsonObject ?? throw new InvalidDataException("Launcher profiles could not be read.");
+        if (root["profiles"] is not JsonObject profiles) return existing;
+        bool Uses(JsonNode? entry, string directory) => entry?["gameDir"] is JsonValue path && path.TryGetValue<string>(out var value)
+            && Path.GetFullPath(value).Equals(Path.GetFullPath(directory),StringComparison.OrdinalIgnoreCase);
+        var previous = profiles[PreviewProfileId];
+        if (!Uses(previous,previousDirectory) && !Uses(previous,gameDirectory)) previous = null;
+        if (profiles[ReleaseProfileId] is { } current && !Uses(current,gameDirectory))
+            throw new IOException("The release profile belongs to a different game folder. It was preserved.");
+        var entry = profiles[ReleaseProfileId] ?? previous;
+        if (entry is null) return existing;
+        var selectedPreview = previous is not null;
+        profiles[ReleaseProfileId] = entry.DeepClone();
+        if (selectedPreview) profiles.Remove(PreviewProfileId);
+        // A retired application has a complete file and profile backup. Unrelated profiles stay untouched.
+        if (retiredPreviousInstallation && Uses(profiles[ProfileId],gameDirectory)
+            && (string?)profiles[ProfileId]?["lastVersionId"] == VersionId) profiles.Remove(ProfileId);
+        if ((string?)root["selectedProfile"] == PreviewProfileId && selectedPreview ||
+            (string?)root["selectedProfile"] == ProfileId && !profiles.ContainsKey(ProfileId)) root["selectedProfile"] = ReleaseProfileId;
+        profiles[ReleaseProfileId]!["gameDir"] = Path.GetFullPath(gameDirectory);
+        var data = Upsert(Encoding.UTF8.GetBytes(root.ToJsonString(JsonSettings.Options)),gameDirectory,icon,ReleaseProfileId,"Holy Lois: Reborn");
+        return data;
+    }
     public static byte[] Upsert(byte[]? existing, string gameDirectory, byte[] icon, string profileId = ProfileId, string displayName = "Holy Lois: Reborn")
     {
         var root = existing is null ? new JsonObject() : JsonNode.Parse(existing) as JsonObject
