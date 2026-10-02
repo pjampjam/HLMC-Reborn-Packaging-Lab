@@ -92,7 +92,11 @@
     "PreparingFiles": "Applying files and settings...",
     "ApproxRemaining": "About {0} s remaining",
     "Finishing": "Finishing setup...",
-    "BrowserDownload": "The official download page is open. Your browser shows the download progress. Return here after installing the launcher."
+    "BrowserDownload": "The official download page is open. Your browser shows the download progress. Return here after installing the launcher.",
+    "Play": "Play",
+    "PlayReadyHint": "Opens your selected Minecraft launcher.",
+    "PlayInstallHint": "Install or update the pack to play.",
+    "PlayMissingLauncher": "Find or install your Minecraft launcher."
   },
   "ru": {
     "PlayTitle": "Играть в Holy Lois",
@@ -187,7 +191,11 @@
     "PreparingFiles": "Применяем файлы и настройки...",
     "ApproxRemaining": "Осталось примерно {0} с",
     "Finishing": "Завершаем настройку...",
-    "BrowserDownload": "Открыта официальная страница загрузки. Прогресс виден в браузере. Вернитесь после установки лаунчера."
+    "BrowserDownload": "Открыта официальная страница загрузки. Прогресс виден в браузере. Вернитесь после установки лаунчера.",
+    "Play": "Играть",
+    "PlayReadyHint": "Откроет выбранный лаунчер Minecraft.",
+    "PlayInstallHint": "Установите или обновите сборку.",
+    "PlayMissingLauncher": "Найдите или установите лаунчер Minecraft."
   },
   "lv": {
     "PlayTitle": "Spēlēt Holy Lois",
@@ -282,6 +290,10 @@
     "PreparingFiles": "Piemēro failus un iestatījumus...",
     "ApproxRemaining": "Atlikušas aptuveni {0} s",
     "Finishing": "Pabeidz iestatīšanu...",
-    "BrowserDownload": "Atvērta oficiālā lejupielādes lapa. Progresu rāda pārlūks. Atgriezieties pēc palaidēja instalēšanas."
+    "BrowserDownload": "Atvērta oficiālā lejupielādes lapa. Progresu rāda pārlūks. Atgriezieties pēc palaidēja instalēšanas.",
+    "Play": "Spēlēt",
+    "PlayReadyHint": "Atver izvēlēto Minecraft palaidēju.",
+    "PlayInstallHint": "Instalējiet vai atjauniniet modpaku.",
+    "PlayMissingLauncher": "Atrodiet vai instalējiet Minecraft palaidēju."
   }
 }

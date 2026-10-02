@@ -4,9 +4,11 @@ Checked on 2 October 2026 against the providers' own pages. Prices and stock can
 
 ## Recommendation
 
-Start with a Microsoft Store MSIX edition if zero-cost signing and a simple install link are the priority. Keep the existing standalone EXE for owner testing. Store approval is required; there is no instant certificate we can apply automatically to the current EXE.
+For sharing directly from GitHub, keep the tested standalone EXE and consider a trusted signing provider if a verified Windows publisher is required. A free Microsoft Store signature requires submitting the app and passing Store certification. Downloading MSIX tools or packaging an app does not provide a transferable certificate for GitHub distribution.
 
-A Store edition needs a separate deployment mode: Windows installs, updates and removes the launcher package. The launcher continues to fetch the signed modpack from GitHub into a writable game-data folder. It must not copy or replace its own Store executable or use the preview's app-only removal worker. Existing worlds and launcher profiles need an explicit migration test. This adaptation is not implemented in 0.7.0.
+If Store distribution becomes acceptable, a Microsoft Store MSIX edition offers free signing. For non-Store MSIX distribution, you must provide your own valid signing certificate. Source: [Microsoft Store publishing questions](https://learn.microsoft.com/en-us/windows/apps/publish/get-started?tabs=individual,msix-pwa-getting-started).
+
+A Store edition needs a separate deployment mode: Windows installs, updates and removes the launcher package. The launcher continues to fetch the signed modpack from GitHub into a writable game-data folder. It must not copy or replace its own Store executable or use the preview's app-only removal worker. Existing worlds and launcher profiles need an explicit migration test. This adaptation is not implemented in 0.8.0.
 
 Microsoft provides free signing and hosting for Store MSIX submissions. The EXE/MSI submission route still requires the publisher to sign the installer. New developer onboarding at storedeveloper.microsoft.com is free, but asks the account owner for government ID and a selfie. Account creation, identity verification and accepting publishing agreements remain owner steps.
 

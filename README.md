@@ -1,38 +1,43 @@
-# Holy Lois: Reborn - Packaging Lab
+# Holy Lois: Reborn
 
-An experimental one-file Windows launcher for the Holy Lois modpack. This repository is separate from the production HLMC-Reborn repository. The original installer and its Microsoft review remain unchanged.
+A Windows launcher and updater for the Holy Lois modpack. Choose Minecraft Launcher or SKlauncher, install the pack, then open your chosen launcher to play.
 
-## What changed
+## Download
 
-- One self-contained HolyLoisReborn.exe, approximately 67 MB. No separate .NET installation is needed.
-- First-run setup chooses Minecraft Launcher or SKlauncher and optional Desktop and Start menu shortcuts.
-- The embedded HolyLoisSetup.exe and its startup handoff have been removed.
-- App updates use a separate pinned signing key and this repository's dedicated app-stable feed. Normal checks use direct release files, not the GitHub REST API.
-- Downloads are bounded and verified against signed metadata, SHA-256 and exact size before execution.
-- Replacement uses a temporary invocation of the same verified app. Startup acknowledgement commits the update; failed startup restores and restarts the previous app.
-- The preview uses LocalAppData/HolyLoisRebornLab and differently named shortcuts. It refuses to use the production HolyLoisReborn installation folder.
-- Modpack signatures, downloads and game settings remain separate from app updates.
+[Download HolyLoisReborn.exe 0.8.0](https://github.com/pjampjam/HLMC-Reborn-Packaging-Lab/releases/download/v0.8.0/HolyLoisReborn.exe) - about 67 MB. Windows x64, with its .NET runtime included.
 
-## Current status
+This is the public test edition. It keeps the tested Packaging Lab installation folder and separate Minecraft profile. The original small installers in HLMC-Reborn remain withdrawn. Do not download those older installers.
 
-Preview 0.7.0 adds dimmed modal layers, semantic action colors, readable button text and focus borders, byte-based progress with download estimates, and visible setup/update/removal stages. See SIGNING-OPTIONS.md for the free Store route and standalone signing alternatives. Preview 0.6.0 introduced a clean caption, proportional launcher artwork, themed dialogs and settings, background file repair, an isolated official-launcher profile and app-only removal. Read RESET-AND-TEST.md for a short owner test and reset guide. The Company file metadata says pjampjam; the app remains unsigned by an Authenticode certificate.
+1. Open the downloaded EXE. Choose your Minecraft launcher and optional shortcuts.
+2. Close Minecraft, then click Install Holy Lois.
+3. Click Play beneath the logo. In Minecraft Launcher, select Holy Lois: Reborn (Preview). For SKlauncher, follow the app's import step and link the imported Holy Lois game folder.
 
-Prototype only. Public binary distribution is not enabled. Any draft release is for owner review and is not a clearance claim. A local Defender scan does not establish that browser downloads or other PCs will be clear. Do not disable protection, add exclusions or allow detected threats to complete these tests.
+Already using the preview? Close and reopen your installed app or its shortcut. Its signed app-stable channel updates it to 0.8.0 before showing the main window. You do not need another installer. An old downloaded copy hands off to the newer installed version after its verified update.
 
-The stable app update channel has not been promoted. Until it exists, the prototype keeps its working installed version and reports that its launcher update check did not complete. It can still check the existing signed modpack channel independently.
+The app is unsigned by a Windows publisher certificate. SmartScreen may show Unknown publisher. Local scans and previous user download tests do not guarantee every antivirus result. If Defender detects a threat, stop and report the detection rather than adding an exclusion.
 
-## Build
+## Version 0.8.0
 
-Install the .NET 10 SDK. Run build.ps1 for compilation and tests; add -Package for a self-contained Windows x64 test artifact. The build script uses the locally bundled SDK when present. A clean standalone checkout can use dotnet from PATH.
+- A larger Play button beneath the logo names your chosen launcher. It becomes green only when that launcher is found and the pack is ready.
+- Mouse interaction clears keyboard focus outlines, including after closing dialogs. Tab navigation retains visible focus.
+- Consistent rounded controls, stronger action colors and no logo slogan.
+- Signed app updates, byte-based download progress and safe rollback remain in place.
+- Optional shortcuts stay deleted when you delete them. Settings can explicitly create them again.
 
-The app public update key is in assets/app-release-public.pem. The private signing key is excluded from source control. Do not generate a different key for each release. The separate assets/release-public.pem verifies the existing production modpack and is a different trust boundary.
+[Setup, reset and testing guide](RESET-AND-TEST.md) | [Signing options](SIGNING-OPTIONS.md) | [Modpack admin guide](https://github.com/pjampjam/HLMC-Reborn/blob/main/ADMIN-GUIDE.md)
 
-## Test and promotion
+## Files and updates
 
-Read TEST-GUIDE.md. Before promoting this design, test first-run setup, user-controlled shortcuts, official and SKlauncher profiles, normal browser downloads with Defender enabled, and real signed app updates. Continue the original Microsoft investigation if browser detection reproduces.
+The app installs into `%LOCALAPPDATA%\HolyLoisRebornLab`. Game files and preferences live under its data folder. The original `%LOCALAPPDATA%\HolyLoisReborn` installation remains separate.
 
-Once reviewed, the implementation can be migrated to the production project with an explicit installation migration, trusted signing if available, and a tested release channel. Do not replace the production feed merely because one local scan passed.
+App updates use this repository's signed app-stable channel. Modpack updates use the existing separate signed HLMC-Reborn pack channel. Direct release-file checks do not use the GitHub REST API quota; hosting and download failures can still occur. The working installed app remains available when the network check fails.
 
-## Remove the preview
+Updates replace only pack-managed files. Worlds, personal voice-device choices and extra client mods or shaders are preserved. Shared defaults are merged once per pack version while unrelated preferences remain. Settings > Remove launcher app removes the app and its matching shortcuts while keeping game data.
 
-Close the preview. Its app files are under LocalAppData/HolyLoisRebornLab, with optional shortcuts named Holy Lois Reborn Preview. Remove those preview shortcuts and application files using normal File Explorer deletion. Keep its data folder if you want to retain the preview's downloaded pack and preferences. Production Minecraft worlds and the original HolyLoisReborn folder are separate. A dedicated uninstall interface is still pending.
+## Build and verification
+
+Use .NET 10 and run build.ps1. Add -Package for a self-contained Windows x64 executable. The core test suite covers signatures, bounded downloads, safe paths, preservation of user data, app replacement and rollback. Public releases include verification.json and their signed app-release.txt catalog.
+
+assets/app-release-public.pem verifies launcher releases; assets/release-public.pem verifies modpack releases. Their private keys are excluded from source control. Keep the launcher key stable between releases. Sign any future Authenticode build before calculating its release hash and catalog; never replace an already published version with changed bytes.
+
+This edition is public for friend testing. Promotion into the original application folder requires a separately tested migration. Publishing a clean scan result does not establish global antivirus clearance.

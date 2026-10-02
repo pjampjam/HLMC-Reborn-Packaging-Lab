@@ -1,4 +1,4 @@
-# Preview 0.6.0 - reset and test
+# Holy Lois 0.8.0 - reset and test
 
 Your application files are in %USERPROFILE%\AppData\Local\HolyLoisRebornLab. Your preview game and pack files are under data\instances\Holy Lois Reborn. The production application folder HolyLoisReborn is separate.
 
@@ -33,7 +33,7 @@ Updates replace or remove only files recorded as pack-managed. Extra client mods
 
 The file's Company metadata now says pjampjam. Windows' verified publisher comes from an Authenticode certificate, not this metadata. This preview is still unsigned. SmartScreen can show Unknown publisher even when Defender did not detect malware and a multi-engine scan reports zero detections. Do not describe the preview as globally cleared.
 
-No app-stable preview update channel is public yet. A short notice that preview app updates are unavailable is expected. Your signed modpack update channel is independent.
+The public app-stable channel provides signed launcher updates before the main screen opens. Close and reopen your installed app to check. Your signed modpack update channel is independent. A failed network check keeps your working app available.
 
 ## Preview 0.7.0 visual checks
 
@@ -41,6 +41,14 @@ Open Settings, then Remove launcher app. The main screen and Settings should dim
 
 Repair / check files shows verified/downloaded size, file counts and elapsed time. Active progress is green, finished progress is yellow, cancelled progress is muted, and failure progress is red. The final launcher-setup stage stays indeterminate because its duration cannot be known. Transfer estimates are approximate and appear after enough data is available.
 
-The launcher checks and downloads its own signed app update before opening the main screen when the app-stable channel exists. This owner draft does not promote that channel. Minecraft Launcher and SKlauncher downloads opened on their official websites use the browser's progress display.
+The launcher checks and downloads its own signed app update before opening the main screen. Minecraft Launcher and SKlauncher downloads opened on their official websites use the browser's progress display.
 
 Removal shows progress after confirmation and keeps game files. The worker verifies the exact installed app before deleting it. Windows-managed prompts and file pickers retain Windows styling.
+
+## Version 0.8.0 checks
+
+Click and hold a launcher card, move away, then release. It must not remain pressed. Switching cards should retain only the selected-launcher border. Open Settings > Remove launcher app, then cancel or close the dialog. A mouse click must not leave a keyboard outline on the previous button. Press Tab to check that keyboard focus is still visible.
+
+Play is now beneath the logo. It stays gray until the pack is ready and the selected launcher is found. Green Play names that launcher and opens it; you still select the Holy Lois installation and press Play inside Minecraft Launcher or SKlauncher. Test both launcher paths. The logo slogan is removed.
+
+Try the window at its minimum size, open both help sections, and switch English, Russian and Latvian. Rounded buttons, fields and section borders should stay consistent. Any new browser detection should be reported with the release version and detection name.

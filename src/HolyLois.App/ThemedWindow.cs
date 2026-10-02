@@ -19,6 +19,8 @@ public class ThemedWindow : Window
         WindowChrome.SetWindowChrome(this, new WindowChrome { CaptionHeight = 32, ResizeBorderThickness = new Thickness(6), GlassFrameThickness = new Thickness(0), CornerRadius = new CornerRadius(0), UseAeroCaptionButtons = false });
         SourceInitialized += (_, _) => WindowCaption.Apply(this);
         Loaded += (_, _) => EnsureChrome();
+        PreviewMouseDown += (_,_) => InputModality.SetKeyboardFocusVisible(this,false);
+        PreviewKeyDown += (_,e) => { if (e.Key is Key.Tab or Key.Up or Key.Down or Key.Left or Key.Right or Key.Space or Key.Enter or Key.Escape) InputModality.SetKeyboardFocusVisible(this,true); };
         PreviewKeyDown += (_, e) => { if (e.Key == Key.Escape && Owner is not null) { Close(); e.Handled = true; } };
     }
     public void EnsureChrome()
@@ -49,8 +51,10 @@ public class ThemedWindow : Window
     public void ShowModal(Window owner)
     {
         Owner = owner;
+        InputModality.SetKeyboardFocusVisible(this,InputModality.GetKeyboardFocusVisible(owner));
         using var shade = (owner as ThemedWindow)?.DimForModal();
         ShowDialog();
+        InputModality.SetKeyboardFocusVisible(owner,InputModality.GetKeyboardFocusVisible(this));
     }
     public IDisposable DimForModal()
     {

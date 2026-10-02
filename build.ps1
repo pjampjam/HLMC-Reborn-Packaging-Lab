@@ -1,4 +1,4 @@
-param([switch]$Package, [string]$Version = '0.7.0', [string]$Output = 'publish\preview')
+param([switch]$Package, [string]$Version = '0.8.0', [string]$Output = 'publish\preview')
 $ErrorActionPreference = 'Stop'
 $env:DOTNET_CLI_HOME = Join-Path $PSScriptRoot '..\dotnet-home'
 $env:DOTNET_CLI_TELEMETRY_OPTOUT = '1'

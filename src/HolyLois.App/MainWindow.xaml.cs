@@ -31,7 +31,7 @@ public partial class MainWindow : ThemedWindow
     private void Refresh()
     {
         var sk = context.Settings.Launcher == "sk";
-        AppVersion.Text = T("App") + " " + AppUpdates.RunningVersion.ToString(3) + " preview";
+        AppVersion.Text = T("App") + " " + AppUpdates.RunningVersion.ToString(3) + "";
         ReleaseLabel.Text = "Minecraft 26.3 / Fabric 0.19.5 / " + T("Version") + " " + context.Manifest.Version;
         SizeLabel.Text = $"{context.Manifest.Files.Count(f => f.Path.StartsWith("mods/"))} {T("Mods")}  -  {context.Manifest.Files.Sum(f => f.Size) / 1048576:N0} MB";
         OfficialSelected.Visibility = sk ? Visibility.Hidden : Visibility.Visible; SkSelected.Visibility = sk ? Visibility.Visible : Visibility.Hidden;
@@ -47,14 +47,16 @@ public partial class MainWindow : ThemedWindow
         var available = receipt is not null && receipt.Version != context.Manifest.Version;
         PackStatus.Text = context.CanPlay ? T("Ready") : receipt is null ? T("NoPack") : T(available ? "NewPack" : "NeedsRepair");
         InstallLabel.Text = receipt is null ? T("Install") : available ? T("Update") : T("Verify");
-        PlayButton.IsEnabled = context.CanPlay && cancellation is null;
-        var ready = context.CanPlay;
-        InstallButton.Background = ready ? new SolidColorBrush(Color.FromRgb(41, 42, 38)) : accent;
-        InstallLabel.Foreground = ready ? new SolidColorBrush(Color.FromRgb(243, 243, 238)) : new SolidColorBrush(Color.FromRgb(17, 18, 15));
-        InstallButton.BorderThickness = ready ? new Thickness(1) : new Thickness(0);
+        PlayButton.IsEnabled = context.CanPlay && detected is not null && cancellation is null;
+        var packReady = context.CanPlay;
+        var ready = packReady && detected is not null;
+        InstallButton.Background = packReady ? new SolidColorBrush(Color.FromRgb(41, 42, 38)) : accent;
+        InstallLabel.Foreground = packReady ? new SolidColorBrush(Color.FromRgb(243, 243, 238)) : new SolidColorBrush(Color.FromRgb(17, 18, 15));
+        InstallButton.BorderThickness = packReady ? new Thickness(1) : new Thickness(0);
         PlayButton.Background = ready ? (Brush)FindResource("ActionGreen") : new SolidColorBrush(Color.FromRgb(41, 42, 38));
         PlayLabel.Foreground = ready ? new SolidColorBrush(Color.FromRgb(17, 18, 15)) : new SolidColorBrush(Color.FromRgb(243, 243, 238));
-        PlayLabel.Text = T(sk ? "OpenSk" : "OpenOfficial");
+        PlayLabel.Text = T("Play"); PlayLauncherLabel.Text = sk ? "SKlauncher" : "Minecraft Launcher"; PlayHint.Text = T(ready ? "PlayReadyHint" : context.CanPlay ? "PlayMissingLauncher" : "PlayInstallHint");
+        PlayButton.Foreground = PlayLabel.Foreground; PlayLauncherLabel.Foreground = PlayLabel.Foreground; PlayButton.BorderBrush = ready ? (Brush)FindResource("ActionGreen") : neutral;
         HistoryPanel.Children.Clear();
         foreach (var item in context.Manifest.History ?? [])
         {
@@ -118,7 +120,7 @@ public partial class MainWindow : ThemedWindow
         catch (Exception ex) { StatusText.Text = Localize.Error(ex); Progress.Foreground = (Brush)FindResource("Danger"); ProgressDetails.Text = T("Error"); }
         finally { cancellation.Dispose(); cancellation = null; SetBusy(false); Refresh(); }
     }
-    private void SetBusy(bool busy) { Progress.IsIndeterminate = busy; if (busy) { operationTime.Restart(); progressClock.Start(); progressDetail = T("Checking"); Progress.Value = 0; Progress.Foreground = (Brush)FindResource("ActionGreen"); ProgressDetails.Visibility = Visibility.Visible; ProgressDetails.Text = T("Checking"); } if (!busy) { progressClock.Stop(); operationTime.Stop(); } SettingsButton.IsEnabled = !busy; LauncherActions.IsEnabled = !busy; LinkSkButton.IsEnabled = RebuildSkButton.IsEnabled = InstallButton.IsEnabled = OfficialCard.IsEnabled = SkCard.IsEnabled = LanguageChoice.IsEnabled = !busy; CheckUpdatesButton.IsEnabled = !busy && !checking; PlayButton.IsEnabled = !busy && context.CanPlay; CancelButton.Visibility = busy ? Visibility.Visible : Visibility.Collapsed; }
+    private void SetBusy(bool busy) { Progress.IsIndeterminate = busy; if (busy) { operationTime.Restart(); progressClock.Start(); progressDetail = T("Checking"); Progress.Value = 0; Progress.Foreground = (Brush)FindResource("ActionGreen"); ProgressDetails.Visibility = Visibility.Visible; ProgressDetails.Text = T("Checking"); } if (!busy) { progressClock.Stop(); operationTime.Stop(); } SettingsButton.IsEnabled = !busy; LauncherActions.IsEnabled = !busy; LinkSkButton.IsEnabled = RebuildSkButton.IsEnabled = InstallButton.IsEnabled = OfficialCard.IsEnabled = SkCard.IsEnabled = LanguageChoice.IsEnabled = !busy; CheckUpdatesButton.IsEnabled = !busy && !checking; PlayButton.IsEnabled = !busy && context.CanPlay && context.DetectLauncher() is not null; CancelButton.Visibility = busy ? Visibility.Visible : Visibility.Collapsed; }
     private void Cancel_Click(object sender, RoutedEventArgs e) => cancellation?.Cancel();
     private void Play_Click(object sender, RoutedEventArgs e) { try { context.OpenLauncher(); StatusText.Text = T(context.Settings.Launcher == "sk" ? "SkLinked" : "OfficialHint"); } catch (Exception ex) { StatusText.Text = Localize.Error(ex); } }
     private async void Locate_Click(object sender, RoutedEventArgs e)

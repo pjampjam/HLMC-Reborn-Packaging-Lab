@@ -13,3 +13,11 @@ Windows-owned SmartScreen prompts and file pickers are not simulated or hidden. 
 ## 0.7.0 follow-up
 
 Modal owners dim until their child closes, including nested confirmations. Child windows get distinct surfaces and a visible outline. Text inherits the action foreground instead of a global white TextBlock style. Green indicates launching and active progress; red marks removal, failure and cancellation; yellow remains the brand/continue and completed-progress accent. Labels still communicate the action, so color is not the only cue. Focus strokes sit inside the control bounds to avoid clipping in scroll containers.
+
+## 0.8.0 follow-up
+
+Play moves below the proportionally scaled logo and name. Its subtitle identifies the chosen launcher. It is enabled and green only when both launcher detection and pack readiness succeed. The slogan is removed. Buttons, input fields, menus and help-section containers use a shared six-pixel outer radius. Stronger green and red actions retain readable text.
+
+Input modality distinguishes pointer interaction from keyboard navigation. Mouse interaction clears keyboard focus decoration; Tab and navigation keys restore it. Closing a modal propagates its last input modality to its owner, preventing a stale button outline. A selected launcher still retains its deliberate selection border.
+
+The [anti-slop reference](https://github.com/miqdadbadjuber/anti-slop) informed the focus on useful hierarchy, intentional spacing and consistent controls. No source or assets were copied from it.

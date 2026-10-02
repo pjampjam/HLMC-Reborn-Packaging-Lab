@@ -43,7 +43,7 @@ public static class AppUpdates
             }
         }
         using var http = new HttpClient(new HttpClientHandler { AllowAutoRedirect = true }) { Timeout = TimeSpan.FromSeconds(20) };
-        http.DefaultRequestHeaders.UserAgent.ParseAdd("HolyLoisRebornPackagingPreview/0.5");
+        http.DefaultRequestHeaders.UserAgent.ParseAdd("HolyLoisReborn/" + RunningVersion.ToString(3));
         try
         {
             var signed = await new AppReleaseFeed(http,Key).FetchAsync(window.Cancellation.Token);

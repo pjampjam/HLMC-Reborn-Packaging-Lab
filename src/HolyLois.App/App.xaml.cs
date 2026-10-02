@@ -46,7 +46,15 @@ public partial class App : Application
                 System.Windows.Controls.TextBlock? FindText(DependencyObject parent) { for (var n=0;n<VisualTreeHelper.GetChildrenCount(parent);n++) { var child=VisualTreeHelper.GetChild(parent,n); if (child is System.Windows.Controls.TextBlock text) return text; var nested=FindText(child); if(nested is not null)return nested; } return null; }
                 if (FindText(action)?.Foreground is not SolidColorBrush { Color: var yellowText } || yellowText != Colors.Black
                     || FindText(confirm)?.Foreground is not SolidColorBrush { Color: var removalText } || removalText != Colors.White) throw new IOException("Button text no longer follows its action foreground.");
-                File.WriteAllText(Path.Combine(data,"ui-verification.txt"),"Yellow action inherits black text; destructive action inherits white text."); Shutdown(0); return;
+                var focusWindow = new ThemedWindow { Content = testPanel,Width=360,Height=220,Background=(Brush)Resources["Surface"] };
+                focusWindow.Show(); action.Focus(); focusWindow.UpdateLayout();
+                InputModality.SetKeyboardFocusVisible(focusWindow,true);
+                var ring = (System.Windows.Controls.Border)action.Template.FindName("FocusRing",action);
+                if (!action.IsKeyboardFocused || ring.Visibility != Visibility.Visible) throw new IOException("Keyboard navigation has no visible focus.");
+                focusWindow.RaiseEvent(new System.Windows.Input.MouseButtonEventArgs(System.Windows.Input.Mouse.PrimaryDevice,Environment.TickCount,System.Windows.Input.MouseButton.Left) { RoutedEvent = System.Windows.Input.Mouse.PreviewMouseDownEvent });
+                if (ring.Visibility != Visibility.Collapsed) throw new IOException("A mouse click left the keyboard focus ring active.");
+                focusWindow.Close();
+                File.WriteAllText(Path.Combine(data,"ui-verification.txt"),"Action text contrast passed. Keyboard focus stays visible; pointer interaction clears its ring without disabling focus."); Shutdown(0); return;
             }
             if (args.Contains("--render-modal-preview")) {
                 if (data is null) throw new ArgumentException("Rendering requires an isolated folder.");
@@ -78,7 +86,7 @@ public partial class App : Application
             if (args.Contains("--render-settings-preview")) { Render(new SettingsWindow(context),data!,"settings-preview.png",610,650); Shutdown(0); return; }
             if (args.Contains("--render-update-preview")) {
                 if (data is null) throw new ArgumentException("Rendering requires an isolated folder.");
-                var update = new AppUpdateWindow(); update.SetTransfer("Downloading launcher 0.7.0...",37000000,67000000);
+                var update = new AppUpdateWindow(); update.SetTransfer("Downloading launcher " + AppUpdates.RunningVersion.ToString(3) + "...",37000000,67000000);
                 Render(update,data,"update-preview.png",520,280); Shutdown(0); return;
             }
             if (args.Contains("--render-setup-preview")) {
@@ -102,12 +110,18 @@ public partial class App : Application
                 context.SelectLauncher("official");
                 var window = new MainWindow(context);
                 Render(window, data, "launcher-design.png", 1060, 748);
-                Render(window, data, "launcher-design-small.png", 900, 588);
+                Render(window, data, "launcher-design-small.png", 920, 650);
                 context.SelectLauncher("sk");
                 window = new MainWindow(context);
                 Render(window, data, "launcher-design-sk.png", 1020, 708);
                 context.SetLanguage("ru"); window = new MainWindow(context); Render(window,data,"launcher-design-ru.png",1060,748);
                 context.SetLanguage("lv"); window = new MainWindow(context); Render(window,data,"launcher-design-lv.png",1060,748);
+                Shutdown(0); return;
+            }
+            if (args.Contains("--render-ready-preview")) {
+                if (data is null || !context.CanPlay) throw new ArgumentException("Ready rendering requires an installed isolated fixture.");
+                await LauncherDiscovery.WarmAsync();
+                var window = new MainWindow(context); Render(window,data,"launcher-ready.png",1060,748);
                 Shutdown(0); return;
             }
             if (args.Contains("--verify-responsive"))

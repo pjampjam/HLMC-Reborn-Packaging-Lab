@@ -27,7 +27,7 @@ No shell script, Defender exception, protection change or executable obfuscation
 
 ## Release status
 
-The owner preview is a draft release. Its app-stable channel is not published. A failed channel check keeps the installed app usable. Browser download, interactive setup, both launcher integrations and updates on the affected PC remain owner acceptance checks before any production promotion.
+Version 0.8.0 is a public friend-test release with its signed app-stable channel. A failed channel check keeps the installed app usable. The owner accepted the preceding browser download, interactive setup and both launcher integrations. Automated update and rollback tests supplement those checks. Migration into the original production application folder is still a separate future change.
 
 Normal checks use direct GitHub release URLs, avoiding the REST API's anonymous hourly request quota. GitHub hosting, network failures and other service limits still apply. Offline startup keeps the working installed app.
 
