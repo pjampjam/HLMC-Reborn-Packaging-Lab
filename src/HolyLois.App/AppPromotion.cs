@@ -148,16 +148,17 @@ public static class AppPromotion
     {
         var old = SafePaths.Resolve(folder,"Holy Lois Reborn Preview.lnk");
         var next = SafePaths.Resolve(folder,"Holy Lois Reborn.lnk");
-        if (!File.Exists(old)) return; // A deleted shortcut must stay deleted.
+        if (!File.Exists(old) && !File.Exists(next)) return; // A deleted shortcut must stay deleted.
         var type = Type.GetTypeFromProgID("WScript.Shell")!; dynamic shell = Activator.CreateInstance(type)!;
         try
         {
-            dynamic link = shell.CreateShortcut(old);
+            dynamic link = shell.CreateShortcut(File.Exists(old) ? old : next);
             try
             {
                 string previousTarget = link.TargetPath;
                 var owned = Path.GetFullPath(previousTarget).Equals(Path.Combine(source,"HolyLoisReborn.exe"),StringComparison.OrdinalIgnoreCase)
-                    || Path.GetFullPath(previousTarget).Equals(Path.Combine(target,"HolyLoisReborn.exe"),StringComparison.OrdinalIgnoreCase);
+                    || Path.GetFullPath(previousTarget).Equals(Path.Combine(target,"HolyLoisReborn.exe"),StringComparison.OrdinalIgnoreCase)
+                    || Path.GetFullPath(previousTarget).Equals(Path.Combine(target,"HolyLoisSetup.exe"),StringComparison.OrdinalIgnoreCase);
                 if (!owned) return;
                 if (File.Exists(next))
                 {

@@ -20,6 +20,10 @@ The app is unsigned by a Windows publisher certificate. SmartScreen may show Unk
 
 - A legacy installer shortcut occupying the final shortcut name is retargeted safely, removing the redundant Preview shortcut.
 
+- A legacy installer shortcut occupying the final shortcut name is retargeted safely, removing the redundant Preview shortcut.
+
+- A legacy installer shortcut occupying the final shortcut name is retargeted safely, removing the redundant Preview shortcut.
+
 - Standard HolyLoisReborn installation folder, clean shortcut and Minecraft profile names, and a one-time migration preserving your data and any older installation.
 
 - A larger Play button beneath the logo names your chosen launcher. It becomes green only when that launcher is found and the pack is ready.
