@@ -156,7 +156,7 @@ public final class HolyLois implements ModInitializer {
         if (state == null || server.getTickCount()%20 != 0) return;
         if (server.getTickCount()%200 == 0) loadRules();
         if (server.getTickCount()%2400 == 0) Leaderboards.refreshAsync();
-        events.tick(server);
+        safely("events", () -> events.tick(server));
         for (var player : server.getPlayerList().getPlayers()) {
             var id = player.getUUID();
             boolean auth = ((PlayerAuth)player).easyAuth$isAuthenticated();
@@ -164,8 +164,8 @@ public final class HolyLois implements ModInitializer {
             if (!auth) authenticatedSamples.remove(id);
             if (!state.pending.contains(id)) {
                 if (auth && samples >= 3) welcome(player,false);
-                if (auth && samples >= 3 && server.getTickCount()%40 == 0) discoveries.check(server,player);
-                if (auth && samples >= 3 && server.getTickCount()%100 == 0) Achievements.check(server,player,server.getTickCount());
+                if (auth && samples >= 3 && server.getTickCount()%40 == 0) safely("discoveries", () -> discoveries.check(server,player));
+                if (auth && samples >= 3 && server.getTickCount()%100 == 0) safely("achievements", () -> Achievements.check(server,player,server.getTickCount()));
                 continue;
             }
             if (!ready(state.pending.contains(id),auth,samples,failures.getOrDefault(id,0))) continue;
@@ -269,9 +269,17 @@ public final class HolyLois implements ModInitializer {
                 .withStyle(style -> style.withColor(ChatFormatting.AQUA).withBold(false)));
         player.sendSystemMessage(message);
         var server = player.level().getServer();
-        int streak = daily.claim(server, player);
-        if (streak > 0) Achievements.streak(server, player, streak);
-        events.welcome(server, player);
+        safely("daily gifts", () -> { int streak = daily.claim(server, player); if (streak > 0) Achievements.streak(server, player, streak); });
+        safely("holiday events", () -> events.welcome(server, player));
+    }
+    // Extra features must never stop the server tick: a failure is logged once a minute and the game goes on.
+    private final Map<String,Long> lastFailure = new HashMap<>();
+    private void safely(String feature, Runnable action) {
+        try { action.run(); }
+        catch (RuntimeException error) {
+            long now = System.currentTimeMillis();
+            if (now - lastFailure.getOrDefault(feature, 0L) > 60_000) { lastFailure.put(feature, now); LOG.error("Holy Lois {} failed; the server keeps running", feature, error); }
+        }
     }
     private boolean openLootbox(net.minecraft.server.level.ServerPlayer player, net.minecraft.world.item.ItemStack stack) {
         if (DailyRewards.lootboxTier(stack) <= 0) return false;

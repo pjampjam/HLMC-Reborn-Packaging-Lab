@@ -42,7 +42,8 @@ public final class Achievements {
         if (tick % 1200 != 0) return;
         var stats = player.getStats();
         long centimetres = 0;
-        for (var id : BuiltInRegistries.CUSTOM_STAT.keySet())
+        // Iterate the registered values: Stats.CUSTOM.get needs the registry's own instances, not equal keys.
+        for (var id : BuiltInRegistries.CUSTOM_STAT)
             if (id.getPath().endsWith("_one_cm") && !id.getPath().contains("fall")) centimetres += stats.getValue(Stats.CUSTOM.get(id));
         if (centimetres >= 100L * 100_000) award(server, player, "travel/long_way_home", "done");
         if (centimetres >= 1000L * 100_000) award(server, player, "travel/around_the_world", "done");
