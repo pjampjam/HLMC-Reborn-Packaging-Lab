@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "version": "1.7.0",
+  "version": "1.7.1",
   "minecraft": "26.3",
   "fabric": "0.19.5",
   "java": 25,
@@ -620,12 +620,22 @@
   ],
   "defaults": {
     "path": "defaults.zip",
-    "url": "https://github.com/pjampjam/HLMC-Reborn/releases/download/pack-v1.7.0/defaults.zip",
-    "size": 52917,
-    "sha256": "5334218d90e10208440f382022f058e45c4b1e29dd7ec95760100ca64edce675",
+    "url": "https://github.com/pjampjam/HLMC-Reborn/releases/download/pack-v1.7.1/defaults.zip",
+    "size": 52918,
+    "sha256": "f068435dbc5bdc0ae027e74ec6427066735dd7602d5d21b20f4537ae1622aa19",
     "policy": "seed"
   },
   "history": [
+    {
+      "version": "1.7.1",
+      "date": "2026-10-03",
+      "summary": "Fixes chests showing a second lid or flickering.",
+      "added": [],
+      "removed": [],
+      "updated": [
+        "Chests use vanilla rendering again, so the lid opens cleanly with or without shaders"
+      ]
+    },
     {
       "version": "1.7.0",
       "date": "2026-10-03",

@@ -24,9 +24,12 @@ public static class LauncherStartup
         if (File.Exists(InstalledExe))
         {
             var deployment = AppUpdates.Deployment;
-            if (deployment.Installed is { } release && AtomicFiles.Matches(InstalledExe,release.File) && release.NumericVersion >= AppUpdates.RunningVersion) return;
+            // A genuine signed installation (older or newer) starts instead; an older one updates itself from app-stable.
+            if (deployment.Installed is { } release && AtomicFiles.Matches(InstalledExe,release.File)) return;
             if (AtomicFiles.Hash(InstalledExe) == AtomicFiles.Hash(self)) return;
-            throw new IOException("An existing installation differs from this copy. Open the installed Holy Lois app to update it safely.");
+            // An unknown or damaged installation is kept as a backup and replaced by this copy, like a first install.
+            ReplaceUnknownInstallation(self);
+            return;
         }
         var temp = SafePaths.Resolve(InstallRoot,"HolyLoisReborn.exe.first-install");
         try
@@ -34,6 +37,20 @@ public static class LauncherStartup
             File.Copy(self,temp,true);
             if (new FileInfo(temp).Length != new FileInfo(self).Length || AtomicFiles.Hash(temp) != AtomicFiles.Hash(self)) throw new IOException("Application copy verification failed.");
             File.Move(temp,InstalledExe);
+            AtomicFiles.Write(SafePaths.Resolve(InstallRoot,"holylois-app.txt"),System.Text.Encoding.ASCII.GetBytes(ApplicationRemoval.Marker));
+        }
+        finally { if (File.Exists(temp)) File.Delete(temp); }
+    }
+    private static void ReplaceUnknownInstallation(string self)
+    {
+        var backup = SafePaths.Resolve(InstallRoot,"rollback/HolyLoisReborn.replaced-" + DateTime.UtcNow.ToString("yyyyMMddHHmmss") + ".exe");
+        Directory.CreateDirectory(Path.GetDirectoryName(backup)!);
+        var temp = SafePaths.Resolve(InstallRoot,"HolyLoisReborn.exe.replace");
+        try
+        {
+            File.Copy(self,temp,true);
+            if (AtomicFiles.Hash(temp) != AtomicFiles.Hash(self)) throw new IOException("Application copy verification failed.");
+            File.Replace(temp,InstalledExe,backup);
             AtomicFiles.Write(SafePaths.Resolve(InstallRoot,"holylois-app.txt"),System.Text.Encoding.ASCII.GetBytes(ApplicationRemoval.Marker));
         }
         finally { if (File.Exists(temp)) File.Delete(temp); }

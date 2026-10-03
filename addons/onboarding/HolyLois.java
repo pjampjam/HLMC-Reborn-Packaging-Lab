@@ -255,6 +255,8 @@ public final class HolyLois implements ModInitializer {
         int online = player.level().getServer().getPlayerList().getPlayerCount();
         var message = Component.literal(greeting(firstJoin, player.getGameProfile().name()))
             .withStyle(ChatFormatting.GOLD,ChatFormatting.BOLD);
+        if (firstJoin) message.append(Component.literal("\nFirst time here? Please read the rules with /rules (or holylois.com/rules).")
+            .withStyle(style -> style.withColor(ChatFormatting.RED).withBold(false)));
         var nameDay = NameDays.today();
         var own = NameDays.celebrating(nameDay, player.getGameProfile().name());
         if (own.isPresent()) message.append(Component.literal("\nDaudz laimes vārda dienā, " + own.get() + "! Happy name day!")

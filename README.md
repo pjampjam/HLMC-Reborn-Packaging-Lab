@@ -4,7 +4,7 @@ A Windows launcher and updater for the Holy Lois modpack. Choose Minecraft Launc
 
 ## Download
 
-[Download HolyLoisReborn.exe 1.2.1](https://github.com/pjampjam/HLMC-Reborn-Packaging-Lab/releases/download/v1.2.1/HolyLoisReborn.exe) - about 67 MB. Windows x64, with its .NET runtime included.
+[Download HolyLoisReborn.exe](https://github.com/pjampjam/HLMC-Reborn-Packaging-Lab/releases/latest/download/HolyLoisReborn.exe) - about 67 MB. Windows x64, with its .NET runtime included.
 
 This is the full release. Existing preview installations move to the standard HolyLoisReborn folder, and owned launcher profiles and shortcuts lose their Preview names. The original small installers in HLMC-Reborn remain withdrawn. Do not download those older installers.
 
@@ -12,9 +12,14 @@ This is the full release. Existing preview installations move to the standard Ho
 2. Close Minecraft, then click Install Holy Lois.
 3. Click Play beneath the logo. In Minecraft Launcher, select Holy Lois: Reborn. In SKlauncher, open Library and select Holy Lois: Reborn. Click Install there once to prepare Minecraft and Java, then Play.
 
-Already using Holy Lois? Close and reopen your installed app or its shortcut. Its signed app-stable channel updates it to 1.2.1 before showing the main window. You do not need another installer. An old downloaded copy hands off to the newer installed version after its verified update.
+Already using Holy Lois? Close and reopen your installed app or its shortcut. Its signed app-stable channel updates it to 1.2.2 before showing the main window. You do not need another installer. An old downloaded copy hands off to the newer installed version after its verified update.
 
 The app is unsigned by a Windows publisher certificate. SmartScreen may show Unknown publisher. Local scans and previous user download tests do not guarantee every antivirus result. If Defender detects a threat, stop and report the detection rather than adding an exclusion.
+
+## Version 1.2.2
+
+- A freshly downloaded copy no longer stops with "An existing installation differs from this copy". It hands over to the installed app, which updates itself from app-stable, or replaces a damaged or unknown installation after keeping a backup in `rollback/`.
+- Pack 1.7.1: Enhanced Block Entities chest rendering is off, so chests open cleanly with shaders.
 
 ## Version 1.2.1
 

@@ -47,7 +47,7 @@ public final class ServerEvents {
     public static final class State { public Map<String, Set<String>> gifted = new HashMap<>(); public long lastDay = -1; }
     private State state = new State();
     private Path file;
-    private boolean countdownSent, newYearFired;
+    private boolean countdownSent, newYearFired, blueMapRendering;
 
     void load(Path worldRoot) {
         file = worldRoot.resolve("holylois/events.json");
@@ -71,13 +71,14 @@ public final class ServerEvents {
             rules.set(GameRules.ADVANCE_TIME, !empty, server);
             rules.set(GameRules.ADVANCE_WEATHER, !empty, server);
             LOG.info(empty ? "Server empty: time and weather paused" : "Players online: time and weather running");
-            // BlueMap renders only while nobody plays, like the terrain job.
-            if (net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("bluemap")) {
-                try {
-                    server.getCommands().getDispatcher().execute(empty ? "bluemap start" : "bluemap stop",
-                        server.createCommandSourceStack().withSuppressedOutput());
-                } catch (Exception error) { LOG.warn("Could not switch BlueMap rendering", error); }
-            }
+        }
+        // BlueMap renders only while nobody plays, like the terrain job. Re-applied every two minutes because
+        // BlueMap finishes loading after the server starts and ignores commands sent before that.
+        if (net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("bluemap") && (empty != blueMapRendering || server.getTickCount() % 2400 == 0)) {
+            try {
+                server.getCommands().getDispatcher().execute(empty ? "bluemap start" : "bluemap stop", server.createCommandSourceStack().withSuppressedOutput());
+                blueMapRendering = empty;
+            } catch (Exception error) { /* BlueMap is still loading; the next attempt follows shortly */ }
         }
         long day = day(server);
         if (state.lastDay >= 0 && day > state.lastDay && !empty) {
