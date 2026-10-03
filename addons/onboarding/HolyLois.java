@@ -87,7 +87,7 @@ public final class HolyLois implements ModInitializer {
     }
     private void load(MinecraftServer server) {
         loadRules();
-        LOG.info("Holy Lois quote of the day: {}", Quotes.today());
+        LOG.info("Holy Lois quote of the day: {} | Name day: {}", Quotes.today(), NameDays.join(NameDays.today()));
         stateFile = server.getWorldPath(LevelResource.ROOT).resolve("holylois/onboarding.json");
         try {
             if (Files.exists(stateFile)) {
@@ -223,6 +223,12 @@ public final class HolyLois implements ModInitializer {
             .withStyle(ChatFormatting.GOLD,ChatFormatting.BOLD)
             .append(Component.literal("\n\"" + Quotes.text(quote) + "\"" + (author.isEmpty() ? "" : " - " + author))
                 .withStyle(style -> style.withColor(ChatFormatting.GRAY).withBold(false).withItalic(true)));
+        var nameDay = NameDays.today();
+        var own = NameDays.celebrating(nameDay, player.getGameProfile().name());
+        if (own.isPresent()) message.append(Component.literal("\nDaudz laimes vārda dienā, " + own.get() + "! Happy name day!")
+            .withStyle(style -> style.withColor(ChatFormatting.LIGHT_PURPLE).withBold(true).withItalic(false)));
+        else if (!nameDay.isEmpty()) message.append(Component.literal("\nToday is the Latvian name day of " + NameDays.join(nameDay) + ".")
+            .withStyle(style -> style.withColor(ChatFormatting.LIGHT_PURPLE).withBold(false).withItalic(false)));
         if (online > 1) message.append(Component.literal("\n" + (online - 1) + (online == 2 ? " friend is" : " friends are") + " online. Hold Tab to see who.")
             .withStyle(style -> style.withColor(ChatFormatting.GREEN).withBold(false)));
         message.append(Component.literal("\n/home set base | /home tp base | /rtp | /tpa NAME")

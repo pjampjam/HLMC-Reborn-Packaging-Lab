@@ -14,5 +14,9 @@ final class QuotePlaceholder {
             (context, argument) -> PlaceholderResult.value(Component.literal(Quotes.text(Quotes.today()))));
         Placeholders.registerServer(Identifier.fromNamespaceAndPath("holylois", "quote_author"),
             (context, argument) -> PlaceholderResult.value(Component.literal(Quotes.author(Quotes.today()))));
+        Placeholders.registerServer(Identifier.fromNamespaceAndPath("holylois", "nameday"), (context, argument) -> {
+            String names = NameDays.join(NameDays.today());
+            return PlaceholderResult.value(Component.literal(names.isEmpty() ? "no name day today" : names));
+        });
     }
 }
