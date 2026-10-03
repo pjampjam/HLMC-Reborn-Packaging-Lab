@@ -51,6 +51,7 @@ public final class HolyLois implements ModInitializer {
     @Override public void onInitialize() {
         PayloadTypeRegistry.clientboundPlay().register(AuthStatus.TYPE, AuthStatus.CODEC);
         if (net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("placeholder-api")) QuotePlaceholder.register();
+        net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback.EVENT.register((dispatcher, registries, environment) -> BotWallCommand.register(dispatcher));
         ServerLifecycleEvents.SERVER_STARTED.register(this::load);
         ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer,newPlayer,alive) -> {
             // Vanilla clears the new player's spawn config if their bed/anchor is unusable.

@@ -18,5 +18,9 @@ final class QuotePlaceholder {
             String names = NameDays.join(NameDays.today());
             return PlaceholderResult.value(Component.literal(names.isEmpty() ? "no name day today" : names));
         });
+        Placeholders.registerServer(Identifier.fromNamespaceAndPath("holylois", "bots_today"),
+            (context, argument) -> PlaceholderResult.value(Component.literal(String.format("%,d", BotWall.get().today))));
+        Placeholders.registerServer(Identifier.fromNamespaceAndPath("holylois", "bots_latest"),
+            (context, argument) -> PlaceholderResult.value(Component.literal(BotWall.latest(BotWall.get()))));
     }
 }
