@@ -1,0 +1,43 @@
+# Holy Lois quote of the day. One "quote | author" per line.
+# The server picks one per UTC day, so everyone sees the same line.
+# Edit this copy in /opt/minecraft/config; changes apply without a restart.
+Measure twice, mine once. | Holy Lois proverb
+A torch in the hand is worth two in the chest. | Holy Lois proverb
+Never dig straight down. Never. | Every Minecraft veteran
+The best time to plant a tree was twenty years ago. The second best time is now. | Proverb
+Home is wherever your bed spawn is. | Holy Lois proverb
+Fortune favours the bold, and the well-armoured. | Holy Lois proverb
+Every great castle started as a dirt hut. | Holy Lois proverb
+A creeper hisses only once. | Holy Lois proverb
+Well begun is half done. | Aristotle
+The journey of a thousand miles begins with a single step. | Lao Tzu
+Luck is what happens when preparation meets opportunity. | Seneca
+Little by little, one travels far. | Spanish proverb
+Many hands make light work. | Proverb
+Fall seven times, stand up eight. | Japanese proverb
+He who would travel happily must travel light. | Antoine de Saint-Exupery
+Not all those who wander are lost, but check your coordinates anyway. | Holy Lois proverb
+Share your bread and your wheat farm. | Holy Lois proverb
+A good neighbour lights the path to your door. | Holy Lois proverb
+Diamonds are found by those who keep swinging. | Holy Lois proverb
+The night is darkest just before the phantoms arrive. | Holy Lois proverb
+Do not count your eggs before the chicken spawns. | Holy Lois proverb
+Rome was not built in a day, and neither was that farm. | Holy Lois proverb
+When in doubt, bring a water bucket. | Holy Lois proverb
+Knowledge is power. | Francis Bacon
+Well done is better than well said. | Benjamin Franklin
+An investment in knowledge pays the best interest. | Benjamin Franklin
+Energy and persistence conquer all things. | Benjamin Franklin
+Great things are done by a series of small things brought together. | Vincent van Gogh
+What we do in life echoes in eternity. | Marcus Aurelius
+The impediment to action advances action. What stands in the way becomes the way. | Marcus Aurelius
+It does not matter how slowly you go as long as you do not stop. | Confucius
+A friend is someone who shares their last golden carrot. | Holy Lois proverb
+Label your chests. Future you says thanks. | Holy Lois proverb
+Cook your food. Raw chicken has opinions. | Holy Lois proverb
+A full stomach makes a brave miner. | Holy Lois proverb
+Leave the village better than you found it. | Holy Lois proverb
+The Nether rewards the prepared and roasts the rest. | Holy Lois proverb
+Today's cobblestone is tomorrow's castle. | Holy Lois proverb
+Sit down, have a burger, admire the view. | Holy Lois proverb
+Every sunrise is a free respawn for your plans. | Holy Lois proverb

@@ -16,7 +16,7 @@ public sealed class OwnerWindow : Window
     private readonly TextBox notes = new() { Text = "Updated mods and shared settings.", AcceptsReturn = true, Height = 65, TextWrapping = TextWrapping.Wrap };
     private readonly TextBox log = new() { IsReadOnly = true, AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, Height = 155, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
     private readonly StackPanel settings = new();
-    private readonly CheckBox tested = new() { Content = "I tested this CurseForge profile with Minecraft closed now.", Foreground = Brushes.White, Margin = new Thickness(0,14,0,8) };
+    private readonly CheckBox tested = new() { Content = "I tested this CurseForge profile with Minecraft closed now.", Margin = new Thickness(0,14,0,8) };
     private readonly Button prepare = new() { Content = "2. Prepare update", Margin = new Thickness(0,8,8,0) };
     private readonly Button publish = new() { Content = "3. Publish to friends", IsEnabled = false, Margin = new Thickness(0,8,0,0) };
     private readonly Button connect = new() { Content = "Connect GitHub once", Margin = new Thickness(0,8,0,0) };
@@ -27,7 +27,7 @@ public sealed class OwnerWindow : Window
     {
         root = Path.GetFullPath(ownerRoot);
         if (!File.Exists(Path.Combine(root,"assets","pack.json")) || !File.Exists(Path.Combine(root,"private","release-private.pem"))) throw new IOException("Open the owner app from your private Holy Lois development folder. Friends do not receive the signing key.");
-        Title = "Holy Lois: Reborn - Owner"; Width=850; Height=880; MinWidth=760; MinHeight=700; WindowStartupLocation=WindowStartupLocation.CenterScreen; Background=new SolidColorBrush(Color.FromRgb(32,33,31));
+        Title = "Holy Lois: Reborn - Owner"; Width=850; Height=880; MinWidth=760; MinHeight=700; WindowStartupLocation=WindowStartupLocation.CenterScreen; Background=(Brush)Application.Current.Resources["Surface"];
         SourceInitialized += (_,_)=>WindowCaption.Apply(this);
         var content = new StackPanel { Margin=new Thickness(30) }; Content=new ScrollViewer { Content=content, VerticalScrollBarVisibility=ScrollBarVisibility.Auto };
         content.Children.Add(new TextBlock { Text="Publish a Holy Lois update", FontSize=27, FontWeight=FontWeights.SemiBold });
@@ -60,7 +60,7 @@ public sealed class OwnerWindow : Window
             if(Path.GetExtension(file) is not (".json" or ".json5" or ".toml" or ".properties" or ".conf"))continue;
             try{_=SharedDefaults.Target("config/yosbr/"+relative);files.Add(relative);}catch(InvalidDataException){}
         }
-        foreach(var file in files.Order())settings.Children.Add(new CheckBox {Content=file,Tag=file,IsChecked=known.Contains(file),Foreground=Brushes.White,Margin=new Thickness(0,3,0,3)});
+        foreach(var file in files.Order())settings.Children.Add(new CheckBox {Content=file,Tag=file,IsChecked=known.Contains(file),Margin=new Thickness(0,3,0,3)});
     }
     private async Task<string> Run(string executable,params string[] arguments)
     {

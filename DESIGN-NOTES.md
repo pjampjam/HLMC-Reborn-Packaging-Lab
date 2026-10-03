@@ -21,3 +21,16 @@ Play moves below the proportionally scaled logo and name. Its subtitle identifie
 Input modality distinguishes pointer interaction from keyboard navigation. Mouse interaction clears keyboard focus decoration; Tab and navigation keys restore it. Closing a modal propagates its last input modality to its owner, preventing a stale button outline. A selected launcher still retains its deliberate selection border.
 
 The [anti-slop reference](https://github.com/miqdadbadjuber/anti-slop) informed the focus on useful hierarchy, intentional spacing and consistent controls. No source or assets were copied from it.
+
+## 1.2.0 color system
+
+All colors now come from named tokens in `App.xaml`; code-built windows read the same resources. Surfaces step up in lightness from Canvas (caption and sidebar) through Surface (main window), SurfaceRaised (settings, dialogs, panels) and Control (buttons) to ControlHover. Neutrals are a slightly warm charcoal so the gold reads as Holy Lois rather than as a warning.
+
+| Role | Token | Use |
+| --- | --- | --- |
+| Brand / next step | Gold `#F4C542` on OnGold `#1C1505` | Install, Continue, selection, focus rings, server address |
+| Play / active progress | ActionGreen `#34D27B` on OnGreen `#05200F` | Play when it will work, progress bars |
+| Destructive / failure | DangerFill `#C2362F` with white text, Danger `#FF928A` for text | Remove, Cancel, errors |
+| Detected / success | Success `#7ED3A0` | Launcher detection outline |
+
+Every text pair on a fill keeps at least 4.5:1 contrast, and labels always name the action so color is never the only cue. Buttons, fields, menus and panels share an 8-pixel radius (6 pixels for inner focus rings and pictures). Hover adds a 7% white wash and press a 16% black wash over any fill, which keeps one interaction model across secondary, gold, green and red buttons without per-color hover shades. State changes are instant; the only animation remains the short reveal fade, which turns off with Windows animation settings or high contrast.

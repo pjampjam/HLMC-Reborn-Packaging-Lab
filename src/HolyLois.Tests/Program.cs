@@ -20,6 +20,19 @@ tests.Add(("Body toggle migrates legacy defaults without stealing custom control
     Check(Merge(key + ":key.keyboard.295\n", next).Contains(key + ":key.keyboard.295"), "Repair reset a later preference.");
     return Task.CompletedTask;
 }));
+tests.Add(("New mod keybinds are seeded once without replacing personal or taken keys", () => {
+    static byte[] Lines(params string[] lines) => Encoding.UTF8.GetBytes(string.Join("\n", lines) + "\n");
+    var old = Lines("key_key.voice:key.keyboard.m");
+    var next = Lines("key_key.voice:key.keyboard.m", "key_gui.xaero_open_map:key.keyboard.j", "key_gui.xaero_new_waypoint:key.keyboard.b", "key_gui.xaero_toggle_grid:key.keyboard.unknown");
+    string Merge(byte[] current, byte[]? previous) => Encoding.UTF8.GetString(SharedDefaults.Merge("options.txt", current, previous, next));
+    var fresh = Merge(Lines("key_key.voice:key.keyboard.m", "key_key.inventory:key.keyboard.e"), old);
+    Check(fresh.Contains("key_gui.xaero_open_map:key.keyboard.j") && fresh.Contains("key_gui.xaero_toggle_grid:key.keyboard.unknown"), "New mod controls were not seeded.");
+    var personal = Merge(Lines("key_gui.xaero_open_map:key.keyboard.m"), old);
+    Check(personal.Contains("key_gui.xaero_open_map:key.keyboard.m") && !personal.Contains("open_map:key.keyboard.j"), "Personal map key changed.");
+    Check(!Merge(Lines("key_key.custom:key.keyboard.b"), old).Contains("xaero_new_waypoint"), "A taken key was assigned twice.");
+    Check(!Merge(Lines("key_key.voice:key.keyboard.m"), next).Contains("xaero_open_map"), "Repair re-added a control that was not new in this release.");
+    return Task.CompletedTask;
+}));
 void Check(bool value, string message) { if (!value) throw new Exception(message); }
 async Task Throws(Func<Task> action) { try { await action(); } catch (Exception ex) when (ex is IOException or InvalidDataException or OperationCanceledException or CryptographicException) { return; } throw new Exception("Expected a rejected operation."); }
 string Dir(string test) { var d = Path.Combine(root, test); Directory.CreateDirectory(d); return d; }

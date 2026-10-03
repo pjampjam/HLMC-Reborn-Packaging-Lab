@@ -14,7 +14,7 @@ public class ThemedWindow : Window
     public bool IsClosed { get; private set; }
     public ThemedWindow()
     {
-        Foreground = new SolidColorBrush(Color.FromRgb(244,244,239));
+        Foreground = (Brush)Application.Current.Resources["Text"];
         UseLayoutRounding = true; SnapsToDevicePixels = true;
         WindowStyle = WindowStyle.None;
         WindowChrome.SetWindowChrome(this, new WindowChrome { CaptionHeight = 32, ResizeBorderThickness = new Thickness(6), GlassFrameThickness = new Thickness(0), CornerRadius = new CornerRadius(0), UseAeroCaptionButtons = false });
@@ -32,7 +32,7 @@ public class ThemedWindow : Window
         var frame = new Grid();
         chromeFrame = frame;
         frame.RowDefinitions.Add(new() { Height = new GridLength(32) }); frame.RowDefinitions.Add(new());
-        var caption = new Grid { Background = new SolidColorBrush(Color.FromRgb(16,17,16)) };
+        var caption = new Grid { Background = (Brush)Application.Current.Resources["Canvas"] };
         var actions = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right };
         void Add(string glyph, string label, Action action)
         {
@@ -46,7 +46,7 @@ public class ThemedWindow : Window
             Add("\uE922","Maximize or restore",() => { if (WindowState == WindowState.Maximized) SystemCommands.RestoreWindow(this); else SystemCommands.MaximizeWindow(this); });
         Add("\uE8BB","Close",Close);
         caption.Children.Add(actions); frame.Children.Add(caption); Grid.SetRow(body,1); frame.Children.Add(body);
-        var outline = new Border { BorderBrush = new SolidColorBrush(Color.FromRgb(93,102,88)), BorderThickness = new Thickness(1), IsHitTestVisible = false };
+        var outline = new Border { BorderBrush = (Brush)Application.Current.Resources["Line"], BorderThickness = new Thickness(1), IsHitTestVisible = false };
         Grid.SetRowSpan(outline,2); frame.Children.Add(outline); Content = frame;
         StateChanged += (_, _) => frame.Margin = WindowState == WindowState.Maximized ? new Thickness(7) : new Thickness(0);
     }

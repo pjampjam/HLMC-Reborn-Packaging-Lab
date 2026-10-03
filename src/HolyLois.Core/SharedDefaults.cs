@@ -40,7 +40,7 @@ public static class SharedDefaults
                 var i = lines.FindIndex(line => line.StartsWith(key + delimiter, StringComparison.Ordinal));
                 if (i >= 0) lines[i] = key + delimiter + value; else lines.Add(key + delimiter + value);
             }
-            if (target == "options.txt") MigrateBodyToggle(lines, oldKeys, newKeys);
+            if (target == "options.txt") { MigrateBodyToggle(lines, oldKeys, newKeys); SeedNewKeybinds(lines, oldKeys, newKeys); }
             return Encoding.UTF8.GetBytes(string.Join("\n", lines).TrimEnd('\n') + "\n");
         }
         // TOML and other formats use the reviewed complete shared file when its bytes change.
@@ -58,6 +58,21 @@ public static class SharedDefaults
         if (lines.Any(line => line.StartsWith("key_", StringComparison.Ordinal)
             && !line.StartsWith(key + ":", StringComparison.Ordinal) && line.EndsWith(":" + binding, StringComparison.Ordinal))) return;
         lines[index] = key + ":" + binding;
+    }
+
+    // A control first published in this release (normally from a newly added mod) is written once, before the
+    // game would register the mod's own default. Existing lines stay personal, and a key another control already
+    // uses is never taken; the mod default then applies and the player can rebind it in Controls.
+    private static void SeedNewKeybinds(List<string> lines, Dictionary<string, string> oldKeys, Dictionary<string, string> newKeys)
+    {
+        foreach (var (key, binding) in newKeys)
+        {
+            if (!key.StartsWith("key_", StringComparison.Ordinal) || oldKeys.ContainsKey(key)
+                || lines.Any(line => line.StartsWith(key + ":", StringComparison.Ordinal))) continue;
+            if (binding != "key.keyboard.unknown" && lines.Any(line => line.StartsWith("key_", StringComparison.Ordinal)
+                && line.EndsWith(":" + binding, StringComparison.Ordinal))) continue;
+            lines.Add(key + ":" + binding);
+        }
     }
 
     private static Dictionary<string, string> Lines(byte[]? bytes, char delimiter) => bytes is null ? [] :

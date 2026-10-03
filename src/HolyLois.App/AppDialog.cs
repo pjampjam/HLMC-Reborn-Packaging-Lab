@@ -8,7 +8,7 @@ public static class AppDialog
 {
     public static ThemedWindow Create(string title, string message, string? action, bool destructive, Action<bool> finish)
     {
-        var window = new ThemedWindow { Title = "Holy Lois: Reborn", Width = 520, SizeToContent = SizeToContent.Height, ResizeMode = ResizeMode.NoResize, Background = new SolidColorBrush(Color.FromRgb(43,48,43)), FontFamily = new FontFamily("Segoe UI"), WindowStartupLocation = WindowStartupLocation.CenterOwner };
+        var window = new ThemedWindow { Title = "Holy Lois: Reborn", Width = 520, SizeToContent = SizeToContent.Height, ResizeMode = ResizeMode.NoResize, Background = (Brush)Application.Current.Resources["SurfaceRaised"], FontFamily = new FontFamily("Segoe UI"), WindowStartupLocation = WindowStartupLocation.CenterOwner };
         var panel = new StackPanel { Margin = new Thickness(28) };
         panel.Children.Add(new TextBlock { Text = title, FontSize = 23, FontWeight = FontWeights.SemiBold });
         panel.Children.Add(new TextBlock { Text = message, FontSize = 14, Foreground = (Brush)Application.Current.Resources["Muted"], Margin = new Thickness(0,14,0,24), TextWrapping = TextWrapping.Wrap });

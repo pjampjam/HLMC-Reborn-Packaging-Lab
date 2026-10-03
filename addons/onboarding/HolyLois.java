@@ -50,6 +50,7 @@ public final class HolyLois implements ModInitializer {
     }
     @Override public void onInitialize() {
         PayloadTypeRegistry.clientboundPlay().register(AuthStatus.TYPE, AuthStatus.CODEC);
+        if (net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("placeholder-api")) QuotePlaceholder.register();
         ServerLifecycleEvents.SERVER_STARTED.register(this::load);
         ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer,newPlayer,alive) -> {
             // Vanilla clears the new player's spawn config if their bed/anchor is unusable.
@@ -86,6 +87,7 @@ public final class HolyLois implements ModInitializer {
     }
     private void load(MinecraftServer server) {
         loadRules();
+        LOG.info("Holy Lois quote of the day: {}", Quotes.today());
         stateFile = server.getWorldPath(LevelResource.ROOT).resolve("holylois/onboarding.json");
         try {
             if (Files.exists(stateFile)) {
@@ -142,7 +144,7 @@ public final class HolyLois implements ModInitializer {
             int samples = auth ? authenticatedSamples.merge(id,1,Integer::sum) : 0;
             if (!auth) authenticatedSamples.remove(id);
             if (!state.pending.contains(id)) {
-                if (auth && samples >= 3) welcome(player);
+                if (auth && samples >= 3) welcome(player,false);
                 continue;
             }
             if (!ready(state.pending.contains(id),auth,samples,failures.getOrDefault(id,0))) continue;
@@ -161,7 +163,7 @@ public final class HolyLois implements ModInitializer {
                 state.completed.add(id);
                 arrivalProtection(server,id);
                 save();
-                welcome(player);
+                welcome(player,true);
                 LOG.info("First-join RTP completed for {} at {},{},{}",name,player.getBlockX(),player.getBlockY(),player.getBlockZ());
             } catch (Exception e) {
                 int count = failures.merge(id,1,Integer::sum);
@@ -209,14 +211,24 @@ public final class HolyLois implements ModInitializer {
         protectedUntil.entrySet().removeIf(entry -> now >= entry.getValue());
         placingUntil.entrySet().removeIf(entry -> now >= entry.getValue());
     }
-    private void welcome(net.minecraft.server.level.ServerPlayer player) {
+    static String greeting(boolean firstJoin, String name) {
+        return firstJoin ? "Welcome to Holy Lois: Reborn, " + name + "!" : "Welcome back, " + name + "!";
+    }
+    private void welcome(net.minecraft.server.level.ServerPlayer player, boolean firstJoin) {
         if (player.level().getServer().getTickCount() < placingUntil.getOrDefault(player.getUUID(),0)) return;
         if (!welcomed.add(player.getUUID())) return;
-        player.sendSystemMessage(Component.literal("Welcome to Holy Lois: Reborn!")
+        String quote = Quotes.today(), author = Quotes.author(quote);
+        int online = player.level().getServer().getPlayerList().getPlayerCount();
+        var message = Component.literal(greeting(firstJoin, player.getGameProfile().name()))
             .withStyle(ChatFormatting.GOLD,ChatFormatting.BOLD)
-            .append(Component.literal("\n/home set base | /home tp base | /rtp")
+            .append(Component.literal("\n\"" + Quotes.text(quote) + "\"" + (author.isEmpty() ? "" : " - " + author))
+                .withStyle(style -> style.withColor(ChatFormatting.GRAY).withBold(false).withItalic(true)));
+        if (online > 1) message.append(Component.literal("\n" + (online - 1) + (online == 2 ? " friend is" : " friends are") + " online. Hold Tab to see who.")
+            .withStyle(style -> style.withColor(ChatFormatting.GREEN).withBold(false)));
+        message.append(Component.literal("\n/home set base | /home tp base | /rtp | /tpa NAME")
                 .withStyle(style -> style.withColor(ChatFormatting.YELLOW).withBold(false)))
-            .append(Component.literal("\n/tpa NAME | /tpaccept NAME | V: voice | Caps Lock: talk")
-                .withStyle(style -> style.withColor(ChatFormatting.AQUA).withBold(false))));
+            .append(Component.literal("\nV: voice | Caps Lock: talk | Tab: server stats")
+                .withStyle(style -> style.withColor(ChatFormatting.AQUA).withBold(false)));
+        player.sendSystemMessage(message);
     }
 }

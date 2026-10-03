@@ -25,6 +25,9 @@ public partial class SetupWindow : ThemedWindow
         OfficialSelected.Visibility = sk ? Visibility.Hidden : Visibility.Visible;
         SkSelected.Visibility = sk ? Visibility.Visible : Visibility.Hidden;
         OfficialCard.BorderBrush = sk ? neutral : accent; SkCard.BorderBrush = sk ? accent : neutral;
+        // The chosen launcher gets a warm tint as well as the gold outline and "Selected" label.
+        var tint = (Brush)FindResource("GoldSoft"); var plain = (Brush)FindResource("Control");
+        OfficialCard.Background = sk ? plain : tint; SkCard.Background = sk ? tint : plain;
     }
     private void Official_Click(object sender, RoutedEventArgs e) { launcher = "official"; Refresh(); }
     private void Sk_Click(object sender, RoutedEventArgs e) { launcher = "sk"; Refresh(); }

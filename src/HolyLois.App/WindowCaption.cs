@@ -12,9 +12,9 @@ internal static class WindowCaption
         if (handle == IntPtr.Zero) return;
         // Preserve native resizing, Snap Layouts and accessible caption buttons.
         Set(handle, 20, 1);
-        Set(handle, 35, 0x00101110); // #101110, COLORREF (BGR)
-        Set(handle, 36, 0x00EEF3F3); // #F3F3EE
-        Set(handle, 34, 0x00101110);
+        Set(handle, 35, 0x00151211); // Canvas #111215, COLORREF (BGR)
+        Set(handle, 36, 0x00E8F0F3); // Text #F3F0E8
+        Set(handle, 34, 0x00151211);
     }
 
     private static void Set(IntPtr handle, int attribute, int value)

@@ -1,0 +1,2 @@
+# Signed and hashed release inputs must keep their exact bytes on every platform.
+assets/** -text

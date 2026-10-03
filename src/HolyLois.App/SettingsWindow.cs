@@ -13,7 +13,7 @@ public sealed class SettingsWindow : ThemedWindow
     public SettingsWindow(ClientContext context)
     {
         Title = "Holy Lois: Reborn - Settings"; Width = 610; Height = 650; ResizeMode = ResizeMode.NoResize;
-        WindowStartupLocation = WindowStartupLocation.CenterOwner; Background = new SolidColorBrush(Color.FromRgb(37,42,37)); FontFamily = new FontFamily("Segoe UI");
+        WindowStartupLocation = WindowStartupLocation.CenterOwner; Background = (Brush)Application.Current.Resources["SurfaceRaised"]; FontFamily = new FontFamily("Segoe UI");
         var panel = new StackPanel { Margin = new Thickness(28,22,28,24) };
         Text(Localize.Text("Settings"),27,true);
         Text(Localize.Text("SettingsIntro"));

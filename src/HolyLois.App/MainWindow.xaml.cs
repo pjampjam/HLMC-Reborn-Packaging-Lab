@@ -39,6 +39,9 @@ public partial class MainWindow : ThemedWindow
         OfficialSelected.Visibility = sk ? Visibility.Hidden : Visibility.Visible; SkSelected.Visibility = sk ? Visibility.Visible : Visibility.Hidden;
         var neutral = (Brush)FindResource("Line"); var accent = (Brush)FindResource("Gold");
         OfficialCard.BorderBrush = sk ? neutral : accent; SkCard.BorderBrush = sk ? accent : neutral;
+        // The chosen launcher gets a warm tint as well as the gold outline and "Selected" label.
+        var tint = (Brush)FindResource("GoldSoft"); var plain = (Brush)FindResource("Control");
+        OfficialCard.Background = sk ? plain : tint; SkCard.Background = sk ? tint : plain;
         LinkSkButton.Visibility = Visibility.Collapsed; RebuildSkButton.Visibility = Visibility.Collapsed;
         LauncherHint.Text = T(sk ? context.CanPlay ? "SkLinked" : context.RecoveredDeletedInstance ? "SkMissing" : "SkFirst" : "OfficialHint");
         var detected = context.DetectLauncher();
@@ -52,13 +55,13 @@ public partial class MainWindow : ThemedWindow
         PlayButton.IsEnabled = context.CanPlay && detected is not null && cancellation is null;
         var packReady = context.CanPlay;
         var ready = packReady && detected is not null;
-        InstallButton.Background = packReady ? new SolidColorBrush(Color.FromRgb(41, 42, 38)) : accent;
-        InstallLabel.Foreground = packReady ? new SolidColorBrush(Color.FromRgb(243, 243, 238)) : new SolidColorBrush(Color.FromRgb(17, 18, 15));
-        InstallButton.BorderThickness = packReady ? new Thickness(1) : new Thickness(0);
-        PlayButton.Background = ready ? (Brush)FindResource("ActionGreen") : new SolidColorBrush(Color.FromRgb(41, 42, 38));
-        PlayLabel.Foreground = ready ? new SolidColorBrush(Color.FromRgb(17, 18, 15)) : new SolidColorBrush(Color.FromRgb(243, 243, 238));
+        // Gold marks the next required step; green appears only when Play will work.
+        InstallButton.Style = (Style)FindResource(packReady ? typeof(Button) : "PrimaryButton");
+        InstallLabel.Foreground = (Brush)FindResource(packReady ? "Text" : "OnGold");
+        PlayButton.Style = ready ? (Style)FindResource("SuccessButton") : (Style)FindResource(typeof(Button));
+        PlayLabel.Foreground = (Brush)FindResource(ready ? "OnGreen" : "Text");
         PlayLabel.Text = T("Play"); PlayLauncherLabel.Text = sk ? "SKlauncher" : "Minecraft Launcher"; PlayHint.Text = T(ready ? "PlayReadyHint" : context.CanPlay ? "PlayMissingLauncher" : "PlayInstallHint");
-        PlayButton.Foreground = PlayLabel.Foreground; PlayLauncherLabel.Foreground = PlayLabel.Foreground; PlayButton.BorderBrush = ready ? (Brush)FindResource("ActionGreen") : neutral;
+        PlayButton.Foreground = PlayLabel.Foreground; PlayLauncherLabel.Foreground = PlayLabel.Foreground; PlayButton.FontWeight = FontWeights.SemiBold;
         HistoryPanel.Children.Clear();
         foreach (var item in context.Manifest.History ?? [])
         {

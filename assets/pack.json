@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "version": "1.5.4",
+  "version": "1.6.0",
   "minecraft": "26.3",
   "fabric": "0.19.5",
   "java": 25,
@@ -140,6 +140,13 @@
       "policy": "managed"
     },
     {
+      "path": "mods/FarmersDelight-26.3-3.6.27+refabricated.jar",
+      "url": "https://cdn.modrinth.com/data/7vxePowz/versions/hTNvMewX/FarmersDelight-26.3-3.6.27%2Brefabricated.jar",
+      "size": 3486296,
+      "sha256": "07aa1346c23010c5f40405ce63cb8a793f5c246cff331aa892ef9dfdae523f17",
+      "policy": "managed"
+    },
+    {
       "path": "mods/fastquit-3.1.5+mc26.2.jar",
       "url": "https://cdn.modrinth.com/data/x1hIzbuY/versions/ZZ5dfboC/fastquit-3.1.5%2Bmc26.2.jar",
       "size": 63310,
@@ -231,6 +238,13 @@
       "policy": "managed"
     },
     {
+      "path": "mods/Jade-mc26.3-Fabric-26.3.5.jar",
+      "url": "https://cdn.modrinth.com/data/nvQzSEkH/versions/71CTWqdE/Jade-mc26.3-Fabric-26.3.5.jar",
+      "size": 1092685,
+      "sha256": "4899d6c60afa2af859b3a7e0824d0ef6b404f26458f831e3d877faa36be9af1c",
+      "policy": "managed"
+    },
+    {
       "path": "mods/konfig-fabric-0.9.0+26.3.jar",
       "url": "https://cdn.modrinth.com/data/pp7kIrlM/versions/GoZd8Dpx/konfig-fabric-0.9.0%2B26.3.jar",
       "size": 1488645,
@@ -256,6 +270,13 @@
       "url": "https://cdn.modrinth.com/data/gvQqBUqZ/versions/xS0Q8LSi/lithium-fabric-0.26.2%2Bmc26.3.jar",
       "size": 914543,
       "sha256": "0be5b17ef9f6e9244cd07b24b227553a73aec0cf93158cf28099f3094c167f1b",
+      "policy": "managed"
+    },
+    {
+      "path": "mods/mcw-furniture-3.4.2-mc26.3fabric.jar",
+      "url": "https://cdn.modrinth.com/data/dtWC90iB/versions/8Z6HSCVW/mcw-furniture-3.4.2-mc26.3fabric.jar",
+      "size": 2351343,
+      "sha256": "cf5cd30cb19976260803427b6ff47a8dfbf770bab2fd15863bdf29a3fc1a36af",
       "policy": "managed"
     },
     {
@@ -347,6 +368,20 @@
       "url": "https://cdn.modrinth.com/data/9eGKb6K1/versions/OLnMVWXy/voicechat-fabric-2.6.24%2B26.3.jar",
       "size": 5612855,
       "sha256": "97074fa1d094a22f17d5ac11282176965a45137950b66627d3813618810c3d00",
+      "policy": "managed"
+    },
+    {
+      "path": "mods/xaerominimap-fabric-26.3-26.5.3.jar",
+      "url": "https://cdn.modrinth.com/data/1bokaNcj/versions/YPkAliDt/xaerominimap-fabric-26.3-26.5.3.jar",
+      "size": 2229348,
+      "sha256": "82e67ef23a68c8560753669d9bee2af4e29c91c7d75c99afd502a4ba0bbe51a0",
+      "policy": "managed"
+    },
+    {
+      "path": "mods/xaeroworldmap-fabric-26.3-1.46.4.jar",
+      "url": "https://cdn.modrinth.com/data/NcUtCpym/versions/UleMm8za/xaeroworldmap-fabric-26.3-1.46.4.jar",
+      "size": 1480980,
+      "sha256": "22d8748cf2ee1d92083f1713b9857d8ebf178c79199cd248e44d7bd6076887c8",
       "policy": "managed"
     },
     {
@@ -487,12 +522,28 @@
   ],
   "defaults": {
     "path": "defaults.zip",
-    "url": "https://github.com/pjampjam/HLMC-Reborn/releases/download/pack-v1.5.4/defaults.zip",
-    "size": 52934,
-    "sha256": "c88f6a24d6308699485081c40175726c3aac06773a40e4327386a3341b562940",
+    "url": "https://github.com/pjampjam/HLMC-Reborn/releases/download/pack-v1.6.0/defaults.zip",
+    "size": 52635,
+    "sha256": "8748dbedbf0ca1ae5ca357ab2ba05676c5d5983a187f38468d0a23ffe626efff",
     "policy": "seed"
   },
   "history": [
+    {
+      "version": "1.6.0",
+      "date": "2026-10-03",
+      "summary": "Cooking, furniture, maps and a new look for the player list.",
+      "added": [
+        "Farmer's Delight: cutting board, knife, cooking pot, burgers, sushi rolls, pumpkin slices and new crops",
+        "Macaw's Furniture: chairs you can sit on, tables, drawers, wardrobes and kitchen cabinets",
+        "Xaero's Minimap and World Map (J opens the map, Y minimap settings, U waypoints, Z larger minimap)",
+        "Jade: shows what you are looking at, including crop growth and container contents"
+      ],
+      "removed": [],
+      "updated": [
+        "Hold Tab for server stats, ping, playtime and the quote of the day",
+        "Right-click ripe crops to harvest and replant them"
+      ]
+    },
     {
       "version": "1.5.4",
       "date": "2026-10-03",
