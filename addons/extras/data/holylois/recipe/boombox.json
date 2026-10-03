@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    " S ",
+    "IJI",
+    "ARA"
+  ],
+  "key": {
+    "S": "minecraft:string",
+    "I": "minecraft:iron_ingot",
+    "J": "minecraft:jukebox",
+    "A": "minecraft:amethyst_shard",
+    "R": "minecraft:redstone"
+  },
+  "result": {
+    "id": "holylois:boombox",
+    "count": 1
+  }
+}

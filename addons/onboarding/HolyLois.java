@@ -43,6 +43,9 @@ public final class HolyLois implements ModInitializer {
     private final Map<UUID,Integer> placingUntil = new HashMap<>();
     private final Map<UUID,Integer> protectedUntil = new HashMap<>();
     private final Map<UUID,Integer> sentMode = new HashMap<>();
+    private final Discoveries discoveries = new Discoveries();
+    private final DailyRewards daily = new DailyRewards();
+    private final ServerEvents events = new ServerEvents();
     public static final class State {
         public int version = 1;
         public Set<UUID> completed = new HashSet<>();
@@ -50,13 +53,21 @@ public final class HolyLois implements ModInitializer {
     }
     @Override public void onInitialize() {
         PayloadTypeRegistry.clientboundPlay().register(AuthStatus.TYPE, AuthStatus.CODEC);
-        if (net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("placeholder-api")) QuotePlaceholder.register();
+        if (net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("placeholder-api")) TabPlaceholders.register();
         net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback.EVENT.register((dispatcher, registries, environment) -> BotWallCommand.register(dispatcher));
         ServerLifecycleEvents.SERVER_STARTED.register(this::load);
+        net.fabricmc.fabric.api.event.player.UseItemCallback.EVENT.register((player, level, hand) ->
+            player instanceof net.minecraft.server.level.ServerPlayer sp && openLootbox(sp, sp.getItemInHand(hand))
+                ? net.minecraft.world.InteractionResult.SUCCESS : net.minecraft.world.InteractionResult.PASS);
+        // A lootbox is a present block item: open it instead of placing it.
+        net.fabricmc.fabric.api.event.player.UseBlockCallback.EVENT.register((player, level, hand, hit) ->
+            player instanceof net.minecraft.server.level.ServerPlayer sp && openLootbox(sp, sp.getItemInHand(hand))
+                ? net.minecraft.world.InteractionResult.SUCCESS : net.minecraft.world.InteractionResult.PASS);
         ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer,newPlayer,alive) -> {
             // Vanilla clears the new player's spawn config if their bed/anchor is unusable.
             if (AuthPolicy.randomRespawn(alive, newPlayer.getRespawnConfig() != null))
                 randomRespawns.add(newPlayer.getUUID());
+            if (!alive) deathNotice(oldPlayer, newPlayer);
         });
         ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity,source,amount) -> {
             if (entity instanceof net.minecraft.server.level.ServerPlayer player) {
@@ -79,6 +90,7 @@ public final class HolyLois implements ModInitializer {
             placingUntil.remove(handler.player.getUUID());
             protectedUntil.remove(handler.player.getUUID());
             sentMode.remove(handler.player.getUUID());
+            Leaderboards.forget(handler.player.getUUID());
         });
         ServerMessageEvents.ALLOW_GAME_MESSAGE.register((server,message,overlay) ->
             !(message.getContents() instanceof TranslatableContents t
@@ -88,8 +100,12 @@ public final class HolyLois implements ModInitializer {
     }
     private void load(MinecraftServer server) {
         loadRules();
-        LOG.info("Holy Lois quote of the day: {} | Name day: {}", Quotes.today(), NameDays.join(NameDays.today()));
+        LOG.info("Holy Lois name day: {}", NameDays.join(NameDays.today()));
+        Leaderboards.refreshAsync();
         stateFile = server.getWorldPath(LevelResource.ROOT).resolve("holylois/onboarding.json");
+        discoveries.load(server, server.getWorldPath(LevelResource.ROOT));
+        daily.load(server.getWorldPath(LevelResource.ROOT));
+        events.load(server.getWorldPath(LevelResource.ROOT));
         try {
             if (Files.exists(stateFile)) {
                 state = JSON.fromJson(Files.readString(stateFile),State.class);
@@ -139,6 +155,8 @@ public final class HolyLois implements ModInitializer {
     private void tick(MinecraftServer server) {
         if (state == null || server.getTickCount()%20 != 0) return;
         if (server.getTickCount()%200 == 0) loadRules();
+        if (server.getTickCount()%2400 == 0) Leaderboards.refreshAsync();
+        events.tick(server);
         for (var player : server.getPlayerList().getPlayers()) {
             var id = player.getUUID();
             boolean auth = ((PlayerAuth)player).easyAuth$isAuthenticated();
@@ -146,6 +164,8 @@ public final class HolyLois implements ModInitializer {
             if (!auth) authenticatedSamples.remove(id);
             if (!state.pending.contains(id)) {
                 if (auth && samples >= 3) welcome(player,false);
+                if (auth && samples >= 3 && server.getTickCount()%40 == 0) discoveries.check(server,player);
+                if (auth && samples >= 3 && server.getTickCount()%100 == 0) Achievements.check(server,player,server.getTickCount());
                 continue;
             }
             if (!ready(state.pending.contains(id),auth,samples,failures.getOrDefault(id,0))) continue;
@@ -212,18 +232,29 @@ public final class HolyLois implements ModInitializer {
         protectedUntil.entrySet().removeIf(entry -> now >= entry.getValue());
         placingUntil.entrySet().removeIf(entry -> now >= entry.getValue());
     }
+    static String deathText(int x, int y, int z, String dimension) {
+        return "You died at " + x + ", " + y + ", " + z + dimension + ".";
+    }
+    private void deathNotice(net.minecraft.server.level.ServerPlayer oldPlayer, net.minecraft.server.level.ServerPlayer newPlayer) {
+        var level = oldPlayer.level();
+        String dimension = level.dimension() == Level.NETHER ? " in the Nether" : level.dimension() == Level.END ? " in the End" : " in the Overworld";
+        var pos = oldPlayer.blockPosition();
+        var message = Component.literal("☠ ").withStyle(ChatFormatting.RED)
+            .append(Component.literal(deathText(pos.getX(), pos.getY(), pos.getZ(), dimension)).withStyle(ChatFormatting.WHITE));
+        if (!level.getGameRules().get(net.minecraft.world.level.gamerules.GameRules.KEEP_INVENTORY))
+            message.append(Component.literal("\nYour drops are protected for 30 minutes while the area is loaded. The death point on your minimap disappears when you get there.")
+                .withStyle(ChatFormatting.GRAY));
+        newPlayer.sendSystemMessage(message);
+    }
     static String greeting(boolean firstJoin, String name) {
         return firstJoin ? "Welcome to Holy Lois: Reborn, " + name + "!" : "Welcome back, " + name + "!";
     }
     private void welcome(net.minecraft.server.level.ServerPlayer player, boolean firstJoin) {
         if (player.level().getServer().getTickCount() < placingUntil.getOrDefault(player.getUUID(),0)) return;
         if (!welcomed.add(player.getUUID())) return;
-        String quote = Quotes.today(), author = Quotes.author(quote);
         int online = player.level().getServer().getPlayerList().getPlayerCount();
         var message = Component.literal(greeting(firstJoin, player.getGameProfile().name()))
-            .withStyle(ChatFormatting.GOLD,ChatFormatting.BOLD)
-            .append(Component.literal("\n\"" + Quotes.text(quote) + "\"" + (author.isEmpty() ? "" : " - " + author))
-                .withStyle(style -> style.withColor(ChatFormatting.GRAY).withBold(false).withItalic(true)));
+            .withStyle(ChatFormatting.GOLD,ChatFormatting.BOLD);
         var nameDay = NameDays.today();
         var own = NameDays.celebrating(nameDay, player.getGameProfile().name());
         if (own.isPresent()) message.append(Component.literal("\nDaudz laimes vārda dienā, " + own.get() + "! Happy name day!")
@@ -232,10 +263,20 @@ public final class HolyLois implements ModInitializer {
             .withStyle(style -> style.withColor(ChatFormatting.LIGHT_PURPLE).withBold(false).withItalic(false)));
         if (online > 1) message.append(Component.literal("\n" + (online - 1) + (online == 2 ? " friend is" : " friends are") + " online. Hold Tab to see who.")
             .withStyle(style -> style.withColor(ChatFormatting.GREEN).withBold(false)));
-        message.append(Component.literal("\n/home set base | /home tp base | /rtp | /tpa NAME")
+        message.append(Component.literal("\n/home set base | /rtp | /tpa NAME | /ah auction house | /daily coins")
                 .withStyle(style -> style.withColor(ChatFormatting.YELLOW).withBold(false)))
             .append(Component.literal("\nV: voice | Caps Lock: talk | Tab: server stats")
                 .withStyle(style -> style.withColor(ChatFormatting.AQUA).withBold(false)));
         player.sendSystemMessage(message);
+        var server = player.level().getServer();
+        int streak = daily.claim(server, player);
+        if (streak > 0) Achievements.streak(server, player, streak);
+        events.welcome(server, player);
+    }
+    private boolean openLootbox(net.minecraft.server.level.ServerPlayer player, net.minecraft.world.item.ItemStack stack) {
+        if (DailyRewards.lootboxTier(stack) <= 0) return false;
+        var server = player.level().getServer();
+        if (daily.open(server, player, stack)) Achievements.award(server, player, "daily/unboxed", "done");
+        return true;
     }
 }

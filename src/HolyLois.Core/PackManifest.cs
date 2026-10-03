@@ -45,7 +45,7 @@ public static class ManifestSecurity
     {
         if (manifest.Schema != 1 || manifest.Minecraft != "26.3" || manifest.Fabric != "0.19.5" || manifest.Java != 25)
             throw new InvalidDataException("This launcher supports the approved Minecraft 26.3 / Fabric 0.19.5 release.");
-        if (!System.Version.TryParse(manifest.Version, out _) || manifest.Server != "79.76.40.155:25565")
+        if (!System.Version.TryParse(manifest.Version, out _) || (manifest.Server != ServerAddress.Ip && manifest.Server != ServerAddress.Public))
             throw new InvalidDataException("Release identity is invalid.");
         if (manifest.Files.Length is < 1 or > 500 || manifest.LoaderFiles.Length > 50)
             throw new InvalidDataException("Release file list is invalid.");

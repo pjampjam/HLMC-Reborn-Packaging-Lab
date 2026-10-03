@@ -1,0 +1,16 @@
+{
+  "enchantment.nemos_enchantments.camouflage.desc": "Monsters notice you from a shorter distance.",
+  "enchantment.nemos_enchantments.climber.desc": "Lets you climb ladders and scaffolding faster.",
+  "enchantment.nemos_enchantments.collector.desc": "Places mined blocks directly into your inventory.",
+  "enchantment.nemos_enchantments.farmers_knowledge.desc": "Prevents you from harvesting crops before they are fully grown.",
+  "enchantment.nemos_enchantments.felling.desc": "Fells an entire tree by breaking one log.",
+  "enchantment.nemos_enchantments.head_hunter.desc": "Killed mobs have a chance to drop their heads.",
+  "enchantment.nemos_enchantments.magma_walker.desc": "Turns nearby lava into magma while you walk.",
+  "enchantment.nemos_enchantments.reaper.desc": "Harvests multiple nearby crops at once.",
+  "enchantment.nemos_enchantments.replanting.desc": "Replants harvested crops.",
+  "enchantment.nemos_enchantments.snow_walker.desc": "Allows you to walk over powder snow.",
+  "enchantment.nemos_enchantments.soul_binding.desc": "Soul-bound items stay with you after death.",
+  "enchantment.nemos_enchantments.soul_touch.desc": "Lets you pick up a monster spawner.",
+  "enchantment.nemos_enchantments.sprinter.desc": "Increases your movement speed.",
+  "enchantment.nemos_enchantments.wisdom.desc": "Blocks and mobs drop 50% more experience per level."
+}

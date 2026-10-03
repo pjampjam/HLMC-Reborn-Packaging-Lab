@@ -140,27 +140,38 @@ public static class NbtCodec
     }
 }
 
+public static class ServerAddress
+{
+    /// <summary>Shown, copied and saved in Minecraft. The signed pack keeps the IP, which launcher 1.2.0 requires.</summary>
+    public const string Public = "play.holylois.com";
+    public const string Ip = "79.76.40.155:25565";
+}
+
 public static class ServerList
 {
-    public static byte[] Upsert(byte[]? existing, string address, byte[] icon)
+    // Entries saved under an older address (the IP) are moved to the new one instead of being duplicated.
+    public static byte[] Upsert(byte[]? existing, string address, byte[] icon, params string[] aliases)
     {
         var doc = existing is null ? new NbtDocument("", []) : NbtCodec.Read(existing);
         if (!doc.Root.TryGetValue("servers", out var tag)) doc.Root["servers"] = tag = new(9, new NbtList(10, []));
         if (tag.Type != 9 || tag.Value is not NbtList { Type: 10 } servers)
             throw new InvalidDataException("Server list has an unexpected layout; it was preserved.");
-        var entry = servers.Items.Select(t => (Dictionary<string, NbtTag>)t.Value).FirstOrDefault(
-            e => e.TryGetValue("ip", out var ip) && ip.Type == 8 && ((string)ip.Value).Equals(address, StringComparison.OrdinalIgnoreCase));
+        bool Ours(NbtTag t) => t.Value is Dictionary<string, NbtTag> e && e.TryGetValue("ip", out var ip) && ip.Type == 8
+            && (((string)ip.Value).Equals(address, StringComparison.OrdinalIgnoreCase) || aliases.Any(a => ((string)ip.Value).Equals(a, StringComparison.OrdinalIgnoreCase)));
+        var matches = servers.Items.Where(Ours).ToList();
+        var entry = matches.Select(t => (Dictionary<string, NbtTag>)t.Value).FirstOrDefault();
+        foreach (var duplicate in matches.Skip(1)) servers.Items.Remove(duplicate);
         if (entry is null) { entry = []; servers.Items.Insert(0, new(10, entry)); }
         entry["name"] = new(8, "Holy Lois: Reborn"); entry["ip"] = new(8, address);
         entry["icon"] = new(8, Convert.ToBase64String(icon));
         return NbtCodec.Write(doc);
     }
 
-    public static void Ensure(string instance, string address, byte[] icon)
+    public static void Ensure(string instance, string address, byte[] icon, params string[] aliases)
     {
         var path = SafePaths.Resolve(instance, "servers.dat");
         var old = File.Exists(path) ? File.ReadAllBytes(path) : null;
-        var data = Upsert(old, address, icon);
+        var data = Upsert(old, address, icon, aliases);
         if (old is not null && data.AsSpan().SequenceEqual(old)) return;
         if (old is not null) AtomicFiles.Write(SafePaths.Resolve(instance, "servers.dat.holylois-backup"), old);
         AtomicFiles.Write(path, data);

@@ -27,7 +27,9 @@ public static class SharedDefaults
             MergeObject(current, older, newer);
             return Encoding.UTF8.GetBytes(current.ToJsonString(JsonSettings.Options));
         }
-        if (target == "options.txt" || target.EndsWith(".properties", StringComparison.OrdinalIgnoreCase))
+        // Xaero .cfg files are "key = value" lines too, so a shared default changes only the keys it lists.
+        if (target == "options.txt" || target.EndsWith(".properties", StringComparison.OrdinalIgnoreCase)
+            || target.StartsWith("config/xaero/", StringComparison.Ordinal) && target.EndsWith(".cfg", StringComparison.OrdinalIgnoreCase))
         {
             var delimiter = target == "options.txt" ? ':' : '=';
             var oldKeys = Lines(previous, delimiter); var newKeys = Lines(next, delimiter);
@@ -40,7 +42,7 @@ public static class SharedDefaults
                 var i = lines.FindIndex(line => line.StartsWith(key + delimiter, StringComparison.Ordinal));
                 if (i >= 0) lines[i] = key + delimiter + value; else lines.Add(key + delimiter + value);
             }
-            if (target == "options.txt") { MigrateBodyToggle(lines, oldKeys, newKeys); SeedNewKeybinds(lines, oldKeys, newKeys); }
+            if (target == "options.txt") { MigrateBodyToggle(lines, oldKeys, newKeys); SeedNewKeybinds(lines, oldKeys, newKeys); ResolveKeyConflicts(lines); }
             return Encoding.UTF8.GetBytes(string.Join("\n", lines).TrimEnd('\n') + "\n");
         }
         // TOML and other formats use the reviewed complete shared file when its bytes change.
@@ -74,6 +76,34 @@ public static class SharedDefaults
             lines.Add(key + ":" + binding);
         }
     }
+
+    // Low-priority controls that give way when they share a key with another control. The first free
+    // alternative is used, otherwise the control is unbound and can be set again in Controls. F3 debug
+    // combinations never count as a clash because they only fire while F3 is held.
+    private static readonly (string Key, string[] Alternatives)[] Yielding =
+    [
+        ("key_gui.xaero_open_map", ["key.keyboard.j", "key.keyboard.semicolon"]),
+        ("key_key.hide_icons", []),
+        ("key_key.saveToolbarActivator", []),
+        ("key_key.loadToolbarActivator", []),
+        ("key_zoomify.key.zoom.secondary", []),
+    ];
+
+    private static void ResolveKeyConflicts(List<string> lines)
+    {
+        foreach (var (key, alternatives) in Yielding)
+        {
+            var index = lines.FindIndex(line => line.StartsWith(key + ":", StringComparison.Ordinal));
+            if (index < 0) continue;
+            var binding = lines[index][(key.Length + 1)..];
+            if (binding == "key.keyboard.unknown" || !KeyTaken(lines, binding, key)) continue;
+            lines[index] = key + ":" + (alternatives.FirstOrDefault(free => !KeyTaken(lines, free, key)) ?? "key.keyboard.unknown");
+        }
+    }
+
+    private static bool KeyTaken(List<string> lines, string binding, string except) => lines.Any(line =>
+        line.StartsWith("key_", StringComparison.Ordinal) && !line.StartsWith("key_key.debug.", StringComparison.Ordinal)
+        && !line.StartsWith(except + ":", StringComparison.Ordinal) && line.EndsWith(":" + binding, StringComparison.Ordinal));
 
     private static Dictionary<string, string> Lines(byte[]? bytes, char delimiter) => bytes is null ? [] :
         Encoding.UTF8.GetString(bytes).Replace("\r\n", "\n").Split('\n').Where(x => x.IndexOf(delimiter) > 0 && !x.StartsWith('#'))

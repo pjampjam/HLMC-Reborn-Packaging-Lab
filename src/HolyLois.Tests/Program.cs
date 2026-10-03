@@ -33,6 +33,29 @@ tests.Add(("New mod keybinds are seeded once without replacing personal or taken
     Check(!Merge(Lines("key_key.voice:key.keyboard.m"), next).Contains("xaero_open_map"), "Repair re-added a control that was not new in this release.");
     return Task.CompletedTask;
 }));
+tests.Add(("Known key clashes move the low-priority control and leave the rest personal", () => {
+    static byte[] Lines(params string[] lines) => Encoding.UTF8.GetBytes(string.Join("\n", lines) + "\n");
+    var old = Lines("key_key.inventory:key.keyboard.e"); var next = Lines("key_key.inventory:key.keyboard.e", "lang:en_us");
+    var merged = Encoding.UTF8.GetString(SharedDefaults.Merge("options.txt", Lines("key_gui.xaero_open_map:key.keyboard.m", "key_key.mute_microphone:key.keyboard.m",
+        "key_gui.xaero_enlarge_map:key.keyboard.z", "key_key.hide_icons:key.keyboard.z", "key_zoomify.key.zoom:key.keyboard.c", "key_key.saveToolbarActivator:key.keyboard.c",
+        "key_key.loadToolbarActivator:key.keyboard.x", "key_key.debug.improvedTransparency:key.keyboard.x", "key_key.pickItem:key.mouse.middle", "key_key.spectatorHotbar:key.mouse.middle"), old, next));
+    Check(merged.Contains("key_gui.xaero_open_map:key.keyboard.j") && merged.Contains("key_key.mute_microphone:key.keyboard.m"), "The map key clash was not fixed.");
+    Check(merged.Contains("key_key.hide_icons:key.keyboard.unknown") && merged.Contains("key_gui.xaero_enlarge_map:key.keyboard.z"), "The voice icon clash was not fixed.");
+    Check(merged.Contains("key_key.saveToolbarActivator:key.keyboard.unknown") && merged.Contains("key_zoomify.key.zoom:key.keyboard.c"), "The zoom clash was not fixed.");
+    Check(merged.Contains("key_key.loadToolbarActivator:key.keyboard.x") && merged.Contains("key_key.spectatorHotbar:key.mouse.middle"), "Debug combos or vanilla pairs were treated as clashes.");
+    var taken = Encoding.UTF8.GetString(SharedDefaults.Merge("options.txt", Lines("key_gui.xaero_open_map:key.keyboard.m", "key_key.mute_microphone:key.keyboard.m", "key_key.custom:key.keyboard.j"), old, next));
+    Check(taken.Contains("key_gui.xaero_open_map:key.keyboard.semicolon"), "A taken alternative was reused.");
+    var xaero = Encoding.UTF8.GetString(SharedDefaults.Merge("config/xaero/minimap/profiles/default.cfg", Lines("minimap_size = 3", "minimap_block_colors = 0"), null, Lines("minimap_block_colors = 1")));
+    Check(xaero.Contains("minimap_size = 3") && xaero.Contains("minimap_block_colors = 1") && !xaero.Contains("minimap_block_colors = 0"), "Xaero defaults replaced personal minimap settings.");
+    return Task.CompletedTask;
+}));
+tests.Add(("Server status ping reads counts and keeps only safe player names", () => {
+    var ping = ServerStatus.Parse(Encoding.UTF8.GetBytes("{\"version\":{\"name\":\"26.3\"},\"players\":{\"online\":3,\"max\":20,\"sample\":[{\"name\":\"Elza\"},{\"name\":\"§cbad name\"},{\"name\":\"pjampjam\"}]}}"));
+    Check(ping.Online == 3 && ping.Max == 20 && ping.Version == "26.3", "Status counts were not read.");
+    Check(ping.Players.SequenceEqual(new[] { "Elza", "pjampjam" }), "Unsafe player names were shown.");
+    Check(ServerStatus.Parse(Encoding.UTF8.GetBytes("{\"players\":{\"online\":0,\"max\":20}}")).Players.Length == 0, "A missing sample list failed.");
+    return Task.CompletedTask;
+}));
 void Check(bool value, string message) { if (!value) throw new Exception(message); }
 async Task Throws(Func<Task> action) { try { await action(); } catch (Exception ex) when (ex is IOException or InvalidDataException or OperationCanceledException or CryptographicException) { return; } throw new Exception("Expected a rejected operation."); }
 string Dir(string test) { var d = Path.Combine(root, test); Directory.CreateDirectory(d); return d; }
@@ -135,6 +158,15 @@ tests.Add(("Server list keeps other entries and existing resource-pack consent",
     Check(list.Items.Count == 2 && (string)((Dictionary<string, NbtTag>)list.Items[0].Value)["name"].Value == "Friend ðŸŽ® server", "Other entry changed.");
     Check((byte)((Dictionary<string, NbtTag>)list.Items[1].Value)["acceptTextures"].Value == 0, "User consent changed.");
     Check(((int[])changed.Root["custom"].Value)[1] == -2, "Unknown tag lost."); return Task.CompletedTask;
+}));
+tests.Add(("Server list moves the IP entry to the domain without duplicates", () => {
+    var holy = new Dictionary<string, NbtTag> { ["name"] = new(8, "Holy Lois: Reborn"), ["ip"] = new(8, ServerAddress.Ip), ["acceptTextures"] = new(1, (byte)1) };
+    var again = new Dictionary<string, NbtTag> { ["name"] = new(8, "Copy"), ["ip"] = new(8, ServerAddress.Public) };
+    var initial = NbtCodec.Write(new("", new() { ["servers"] = new(9, new NbtList(10, [new(10, holy), new(10, again)])) }));
+    var list = (NbtList)NbtCodec.Read(ServerList.Upsert(initial, ServerAddress.Public, [1], ServerAddress.Ip)).Root["servers"].Value;
+    var entry = (Dictionary<string, NbtTag>)list.Items[0].Value;
+    Check(list.Items.Count == 1 && (string)entry["ip"].Value == ServerAddress.Public && (byte)entry["acceptTextures"].Value == 1, "The saved server was not moved cleanly to the domain.");
+    return Task.CompletedTask;
 }));
 tests.Add(("Official profile keeps other profiles and opaque account data", () => {
     var old = Encoding.UTF8.GetBytes("{\"profiles\":{\"vanilla\":{\"name\":\"Keep me\"}},\"authenticationDatabase\":{\"opaque\":\"fixture-only\"},\"settings\":{\"keep\":true}}");

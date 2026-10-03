@@ -1,0 +1,6 @@
+{
+  "enchantment.runeforged.fire.desc": "Adds Fire damage: burns the target over time and lowers its Frost and Physical Resistance.",
+  "enchantment.runeforged.holy.desc": "Adds Holy damage: stronger against undead, with a chance to restore your health.",
+  "enchantment.runeforged.lightning.desc": "Adds Lightning damage: a chance to call down a lightning strike for extra damage.",
+  "enchantment.runeforged.low_temperature.desc": "Adds Frost damage: chills and slows the target, and can stop Creeper explosions."
+}

@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "version": "1.6.0",
+  "version": "1.7.0",
   "minecraft": "26.3",
   "fabric": "0.19.5",
   "java": 25,
@@ -35,6 +35,13 @@
       "policy": "managed"
     },
     {
+      "path": "mods/architectury-fabric-22.0.3.jar",
+      "url": "https://cdn.modrinth.com/data/lhGA9TYQ/versions/gAI51C1M/architectury-fabric-22.0.3.jar",
+      "size": 622449,
+      "sha256": "3b93647fecee390effe2c2a96575a026efb712597855240325435b2b060a89ea",
+      "policy": "managed"
+    },
+    {
       "path": "mods/BetterAdvancements-Fabric-26.3-0.6.0.78.jar",
       "url": "https://cdn.modrinth.com/data/Q2OqKxDG/versions/Y2FyQ15a/BetterAdvancements-Fabric-26.3-0.6.0.78.jar",
       "size": 105885,
@@ -56,6 +63,27 @@
       "policy": "managed"
     },
     {
+      "path": "mods/Clumps-fabric-26.3-26.3.2.jar",
+      "url": "https://cdn.modrinth.com/data/Wnxd13zP/versions/J4I1wxJZ/Clumps-fabric-26.3-26.3.2.jar",
+      "size": 20154,
+      "sha256": "8c72b1505a11ad93ed19b5a914eb6a036da92eb323d58da288bef36c19ed7624",
+      "policy": "managed"
+    },
+    {
+      "path": "mods/continuity-3.0.1+26.3.jar",
+      "url": "https://cdn.modrinth.com/data/1IjD5062/versions/Jt2sCWTQ/continuity-3.0.1%2B26.3.jar",
+      "size": 1002033,
+      "sha256": "429fb0946118e86cce8ace8b57d07e1971088fb3f8115439bb0f2f12df14f511",
+      "policy": "managed"
+    },
+    {
+      "path": "mods/Controlling-fabric-26.3-26.3.3.jar",
+      "url": "https://cdn.modrinth.com/data/xv94TkTM/versions/4QeVlQxd/Controlling-fabric-26.3-26.3.3.jar",
+      "size": 86861,
+      "sha256": "d28a8a95c4f9a560f96ed7eb88bcb4fa54ae43e1e7e187aaffab758716d0999b",
+      "policy": "managed"
+    },
+    {
       "path": "mods/coolrain-1.4.0-26.3.jar",
       "url": "https://cdn.modrinth.com/data/iDyqnQLT/versions/K9R06E1l/coolrain-1.4.0-26.3.jar",
       "size": 4140002,
@@ -63,10 +91,10 @@
       "policy": "managed"
     },
     {
-      "path": "mods/CreativeCore_FABRIC_v2.14.18_mc26.3.jar",
-      "url": "https://cdn.modrinth.com/data/OsZiaDHq/versions/VO7NZXF8/CreativeCore_FABRIC_v2.14.18_mc26.3.jar",
-      "size": 1387629,
-      "sha256": "699047bbabcba8f3f6d1d236534d06dee6ea42402b651edf85b1305098ec90ad",
+      "path": "mods/CreativeCore_FABRIC_v2.14.19_mc26.3.jar",
+      "url": "https://cdn.modrinth.com/data/OsZiaDHq/versions/GO707F1h/CreativeCore_FABRIC_v2.14.19_mc26.3.jar",
+      "size": 1387788,
+      "sha256": "2022bc57161e62ca670af133b29747676b30ffe6e37176a398f5d8abecea419b",
       "policy": "managed"
     },
     {
@@ -140,6 +168,13 @@
       "policy": "managed"
     },
     {
+      "path": "mods/fallingleaves-2.0.8+26.3.jar",
+      "url": "https://cdn.modrinth.com/data/WhbRG4iK/versions/5i0SxXxj/fallingleaves-2.0.8%2B26.3.jar",
+      "size": 181764,
+      "sha256": "0cd1fe186a3353fb45a5b1d76627adc58650769847d2c6b183bbec2c4bdac992",
+      "policy": "managed"
+    },
+    {
       "path": "mods/FarmersDelight-26.3-3.6.27+refabricated.jar",
       "url": "https://cdn.modrinth.com/data/7vxePowz/versions/hTNvMewX/FarmersDelight-26.3-3.6.27%2Brefabricated.jar",
       "size": 3486296,
@@ -179,6 +214,13 @@
       "url": "https://github.com/pjampjam/HLMC-Reborn/releases/download/pack-v1.5.4/holylois-auth-ui-1.0.2+26.3.jar",
       "size": 21486,
       "sha256": "15b03cc38c8db43c5f9ff83e659bf8c76930cf16071656fdcc350c9033afa782",
+      "policy": "managed"
+    },
+    {
+      "path": "mods/holylois-extras-1.0.0+26.3.jar",
+      "url": "https://github.com/pjampjam/HLMC-Reborn/releases/download/pack-v1.7.0/holylois-extras-1.0.0+26.3.jar",
+      "size": 165758,
+      "sha256": "a7601f918d397d19a670652e4acce71156e970052a9b87663a7d8594e9f98592",
       "policy": "managed"
     },
     {
@@ -252,6 +294,20 @@
       "policy": "managed"
     },
     {
+      "path": "mods/lambdynamiclights-4.13.0+26.3.jar",
+      "url": "https://cdn.modrinth.com/data/yBW8D80W/versions/rylKnJ4M/lambdynamiclights-4.13.0%2B26.3.jar",
+      "size": 1345715,
+      "sha256": "b7550288423affed86370acd80d064876d7e256f5489461b7ff7941627552ab2",
+      "policy": "managed"
+    },
+    {
+      "path": "mods/LegendaryTooltips-26.3-fabric-1.6.3.jar",
+      "url": "https://cdn.modrinth.com/data/atHH8NyV/versions/Yqi0k5XH/LegendaryTooltips-26.3-fabric-1.6.3.jar",
+      "size": 67549,
+      "sha256": "cf27a8a04fe7ae120f4fde750c563c399ae55131b4d86090e98b19f5ed9ad04f",
+      "policy": "managed"
+    },
+    {
       "path": "mods/libIPN-fabric-26.3-6.9.0.jar",
       "url": "https://cdn.modrinth.com/data/onSQdWhM/versions/aKBFonyQ/libIPN-fabric-26.3-6.9.0.jar",
       "size": 640902,
@@ -280,6 +336,13 @@
       "policy": "managed"
     },
     {
+      "path": "mods/mcw-holidays-1.1.2-mc26.3fabric.jar",
+      "url": "https://cdn.modrinth.com/data/rH20L2Lp/versions/qvlKsLBm/mcw-holidays-1.1.2-mc26.3fabric.jar",
+      "size": 984934,
+      "sha256": "95d1c7934a76885e699c1113c5b0c3e0edb3ae6baec4c7e86508cca99381e2b5",
+      "policy": "managed"
+    },
+    {
       "path": "mods/modmenu-21.0.0.jar",
       "url": "https://cdn.modrinth.com/data/mOgUt4GM/versions/kyy7dbrZ/modmenu-21.0.0.jar",
       "size": 856779,
@@ -287,10 +350,10 @@
       "policy": "managed"
     },
     {
-      "path": "mods/moreculling-fabric-26.3-1.9.0-beta.1.jar",
-      "url": "https://cdn.modrinth.com/data/51shyZVL/versions/zL2UEFXS/moreculling-fabric-26.3-1.9.0-beta.1.jar",
-      "size": 291201,
-      "sha256": "c4de66e6af14421e43ea4fd73380bf085d4eae7396aad59e2fa168f2d86b68fb",
+      "path": "mods/moreculling-fabric-26.3-1.9.0.jar",
+      "url": "https://cdn.modrinth.com/data/51shyZVL/versions/t7vAlfgO/moreculling-fabric-26.3-1.9.0.jar",
+      "size": 294320,
+      "sha256": "4739cf1bba326d538247b565a0200f926b2c56bf0e1106495335eec4d8528b0c",
       "policy": "managed"
     },
     {
@@ -315,10 +378,24 @@
       "policy": "managed"
     },
     {
+      "path": "mods/Prism-26.3-fabric-1.1.3.jar",
+      "url": "https://cdn.modrinth.com/data/1OE8wbN0/versions/ETN2U7Rc/Prism-26.3-fabric-1.1.3.jar",
+      "size": 60462,
+      "sha256": "2abadba0325de2e50d428f6275d7c21a67c6b4a3fa3020f06c127f0523e0dbb5",
+      "policy": "managed"
+    },
+    {
       "path": "mods/puzzleslib-v26.3.9-mc26.3.x+fabric.jar",
       "url": "https://cdn.modrinth.com/data/QAGBst4M/versions/r8taBxu6/puzzleslib-v26.3.9-mc26.3.x%2Bfabric.jar",
       "size": 1100133,
       "sha256": "a9a2d95b08b147ab1b0942b61d8a2ed5376ed22c70c069f5714a6d46e1c53a7f",
+      "policy": "managed"
+    },
+    {
+      "path": "mods/RoughlyEnoughItems-26.3.823.jar",
+      "url": "https://cdn.modrinth.com/data/nfn13YXA/versions/ePn2dRJ1/RoughlyEnoughItems-26.3.823.jar",
+      "size": 2421403,
+      "sha256": "7d69284c21af1fd95fb1da44ba80edaac60f4c74dca241a8364dd019f3158224",
       "policy": "managed"
     },
     {
@@ -333,6 +410,20 @@
       "url": "https://cdn.modrinth.com/data/Co8e7VJI/versions/XVjILglK/runeforged-fabric-26.3-0.2.3.jar",
       "size": 1769195,
       "sha256": "cc251d29d8bd3116f5bc5a78fbf86813d22b1a61aec28d070b03bb35a7a1eac8",
+      "policy": "managed"
+    },
+    {
+      "path": "mods/Searchables-fabric-26.3-1.0.2.jar",
+      "url": "https://cdn.modrinth.com/data/fuuu3xnx/versions/RlPMfNdS/Searchables-fabric-26.3-1.0.2.jar",
+      "size": 79608,
+      "sha256": "00f9d7f18e7edeb19b843266209d8aaceb591492ad594b8769360cc48297ea4e",
+      "policy": "managed"
+    },
+    {
+      "path": "mods/shulkerboxtooltip-fabric-5.4.2+26.3.jar",
+      "url": "https://cdn.modrinth.com/data/2M01OLQq/versions/Cj9VEeGt/shulkerboxtooltip-fabric-5.4.2%2B26.3.jar",
+      "size": 422719,
+      "sha256": "5bf3c3a59315480122a910ed21ca77f59f42a85d4d31e75c3a4c70e711034601",
       "policy": "managed"
     },
     {
@@ -354,6 +445,13 @@
       "url": "https://cdn.modrinth.com/data/qyVF9oeo/versions/9loJgQlO/sound-physics-remastered-fabric-1.5.1%2B26.3.jar",
       "size": 201641,
       "sha256": "a27bb5e02315b5c9dafefd2763ca1a427b8de4f66c5b500678e368f3668324ae",
+      "policy": "managed"
+    },
+    {
+      "path": "mods/status-effect-bars-1.0.12.jar",
+      "url": "https://cdn.modrinth.com/data/x02cBj9Y/versions/aAXJqboy/status-effect-bars-1.0.12.jar",
+      "size": 44942,
+      "sha256": "8cb64d13fb73ae1dff415734b980bca0f858311ffa010c8a21522113a9dddee5",
       "policy": "managed"
     },
     {
@@ -522,12 +620,49 @@
   ],
   "defaults": {
     "path": "defaults.zip",
-    "url": "https://github.com/pjampjam/HLMC-Reborn/releases/download/pack-v1.6.0/defaults.zip",
-    "size": 52635,
-    "sha256": "8748dbedbf0ca1ae5ca357ab2ba05676c5d5983a187f38468d0a23ffe626efff",
+    "url": "https://github.com/pjampjam/HLMC-Reborn/releases/download/pack-v1.7.0/defaults.zip",
+    "size": 52917,
+    "sha256": "5334218d90e10208440f382022f058e45c4b1e29dd7ec95760100ca64edce675",
     "policy": "seed"
   },
   "history": [
+    {
+      "version": "1.7.0",
+      "date": "2026-10-03",
+      "summary": "Boombox radio, daily gifts and the Holy Lootbox, achievements, an auction house, holiday decorations, recipe viewer and many fixes.",
+      "added": [
+        "Holy Lois Extras: a boombox that plays internet radio to everyone nearby through voice chat",
+        "Macaw's Holidays: Christmas trees, lights, garlands, presents and Halloween decorations",
+        "Roughly Enough Items: look up any recipe, including cooking and furniture",
+        "Legendary Tooltips, LambDynamicLights, Falling Leaves, Continuity, Status Effect Bars, Shulker Box Tooltip, Controlling and Clumps",
+        "Server: daily login gifts with a Holy Lootbox every 7th day, a Holy Lois achievement tab, an auction house (/ah), Tab leaderboards, structure discoveries, holiday events and death coordinates"
+      ],
+      "removed": [
+        "Server: quote of the day and the bot wall page in Tab",
+        "Vein mining shapes other than shapeless"
+      ],
+      "updated": [
+        "Descriptions for 19 modded enchantments",
+        "Minimap uses vanilla map colors and removes a death point when you reach it",
+        "Fixed chest flicker with shaders, key clashes (J opens the world map again) and the mod count on the title screen",
+        "Time and weather pause while nobody is online; the player locator bar is off"
+      ]
+    },
+    {
+      "version": "1.6.1",
+      "date": "2026-10-03",
+      "summary": "New dungeons, taverns and towns to explore, custom music discs and small fixes.",
+      "added": [
+        "Server: Dungeons and Taverns plus Towns and Towers in newly explored land, with Runeforged loot in their chests",
+        "Server: custom music on discs and goat horns with /audioplayer (plays through voice chat)"
+      ],
+      "removed": [],
+      "updated": [
+        "MoreCulling 1.9.0 (final release) and CreativeCore 2.14.19",
+        "One sleeping player now skips the night",
+        "Tab list: Latvian name days and the daily bot wall"
+      ]
+    },
     {
       "version": "1.6.0",
       "date": "2026-10-03",

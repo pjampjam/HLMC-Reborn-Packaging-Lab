@@ -4,7 +4,7 @@ A Windows launcher and updater for the Holy Lois modpack. Choose Minecraft Launc
 
 ## Download
 
-[Download HolyLoisReborn.exe 1.2.0](https://github.com/pjampjam/HLMC-Reborn-Packaging-Lab/releases/download/v1.2.0/HolyLoisReborn.exe) - about 67 MB. Windows x64, with its .NET runtime included.
+[Download HolyLoisReborn.exe 1.2.1](https://github.com/pjampjam/HLMC-Reborn-Packaging-Lab/releases/download/v1.2.1/HolyLoisReborn.exe) - about 67 MB. Windows x64, with its .NET runtime included.
 
 This is the full release. Existing preview installations move to the standard HolyLoisReborn folder, and owned launcher profiles and shortcuts lose their Preview names. The original small installers in HLMC-Reborn remain withdrawn. Do not download those older installers.
 
@@ -12,9 +12,18 @@ This is the full release. Existing preview installations move to the standard Ho
 2. Close Minecraft, then click Install Holy Lois.
 3. Click Play beneath the logo. In Minecraft Launcher, select Holy Lois: Reborn. In SKlauncher, open Library and select Holy Lois: Reborn. Click Install there once to prepare Minecraft and Java, then Play.
 
-Already using Holy Lois? Close and reopen your installed app or its shortcut. Its signed app-stable channel updates it to 1.2.0 before showing the main window. You do not need another installer. An old downloaded copy hands off to the newer installed version after its verified update.
+Already using Holy Lois? Close and reopen your installed app or its shortcut. Its signed app-stable channel updates it to 1.2.1 before showing the main window. You do not need another installer. An old downloaded copy hands off to the newer installed version after its verified update.
 
 The app is unsigned by a Windows publisher certificate. SmartScreen may show Unknown publisher. Local scans and previous user download tests do not guarantee every antivirus result. If Defender detects a threat, stop and report the detection rather than adding an exclusion.
+
+## Version 1.2.1
+
+- A Discord button under the address (a Website button appears once the site has its domain).
+- Live server status under the address: a green dot and address when the server is online with the number of players, gold while it is restarting and red when it is offline. Hover it to see who is online.
+- How to play lists the current commands (/tpahere, /spawn, /warp, /rules, /audioplayer) and every map, voice, zoom and vein-mining key.
+- Known key clashes are fixed once per pack update without touching other controls: the world map moves from M back to J when M is voice mute, and the voice icon and creative toolbar keys give way to the minimap and zoom. F3 debug combinations never count as clashes.
+- Xaero minimap settings from the pack change only the options they list, so personal minimap choices stay.
+- Pack 1.7.0 adds Macaw's Holidays, Legendary Tooltips, LambDynamicLights, Falling Leaves, Continuity, Shulker Box Tooltip, Status Effect Bars and Controlling, and fixes chest flicker with shaders.
 
 ## Version 1.2.0
 

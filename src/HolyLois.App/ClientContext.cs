@@ -145,7 +145,7 @@ public sealed class ClientContext
             defaultsBytes = await File.ReadAllBytesAsync(await downloader.GetAsync(bundle, null, token), token);
         var defaults = PackFeed.ReadDefaults(defaultsBytes);
         await Installer.InstallAsync(Manifest, defaults, progress, token);
-        ServerList.Ensure(Instance, Manifest.Server, Asset("server-icon.png"));
+        ServerList.Ensure(Instance, ServerAddress.Public, Asset("server-icon.png"), Manifest.Server);
         AtomicFiles.Write(SafePaths.Resolve(Instance, "holylois-instance.json"), Encoding.ASCII.GetBytes("{\"instance\":\"holylois-reborn-26.3\"}"));
         if (Settings.Launcher == "sk")
         {

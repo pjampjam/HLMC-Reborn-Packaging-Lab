@@ -17,6 +17,9 @@ public partial class MainWindow : ThemedWindow
     private readonly Stopwatch operationTime = new();
     private readonly DispatcherTimer progressClock = new() { Interval = TimeSpan.FromSeconds(1) };
     private string progressDetail = "";
+    private readonly DispatcherTimer statusTimer = new() { Interval = TimeSpan.FromSeconds(30) };
+    private DateTime lastOnline = DateTime.MinValue;
+    private bool pinging;
     public MainWindow(ClientContext context)
     {
         this.context = context; InitializeComponent();
@@ -24,16 +27,37 @@ public partial class MainWindow : ThemedWindow
         LanguageChoice.SelectedIndex = context.Settings.Language == "en" ? 1 : context.Settings.Language == "lv" ? 2 : 0;
         Closing += OnClosing; 
         UpdateStatus.Text = T("AutoCheck"); StatusText.Text = AppUpdates.Notice ?? T("StartHint"); Refresh();
-        Loaded += async (_, _) => { await LauncherDiscovery.WarmAsync(); if (IsClosed || Dispatcher.HasShutdownStarted) return; Refresh(); if (!context.IsIsolated) { await Task.Run(context.CleanInstalledDownloads); if (IsClosed || Dispatcher.HasShutdownStarted) return; await CheckUpdates(); if (!IsClosed) updateTimer.Start(); } };
-        updateTimer.Tick += async (_, _) => await CheckUpdates(); Closed += (_, _) => { updateTimer.Stop(); progressClock.Stop(); };
+        Loaded += async (_, _) => { await LauncherDiscovery.WarmAsync(); if (IsClosed || Dispatcher.HasShutdownStarted) return; Refresh(); if (!context.IsIsolated) { await Task.Run(context.CleanInstalledDownloads); if (IsClosed || Dispatcher.HasShutdownStarted) return; await CheckUpdates(); if (!IsClosed) updateTimer.Start(); await PingServer(); if (!IsClosed) statusTimer.Start(); } };
+        updateTimer.Tick += async (_, _) => await CheckUpdates(); statusTimer.Tick += async (_, _) => await PingServer();
+        Closed += (_, _) => { updateTimer.Stop(); progressClock.Stop(); statusTimer.Stop(); };
     }
     private static string T(string key) => Localize.Text(key);
+    private async Task PingServer()
+    {
+        if (pinging || IsClosed) return;
+        pinging = true;
+        try
+        {
+            var ping = await ServerStatus.PingAsync(context.Manifest.Server, CancellationToken.None);
+            if (IsClosed || Dispatcher.HasShutdownStarted) return;
+            if (ping is not null) lastOnline = DateTime.UtcNow;
+            // A short outage right after the server was seen online is nearly always a restart.
+            var restarting = ping is null && DateTime.UtcNow - lastOnline < TimeSpan.FromMinutes(4);
+            var brush = (Brush)FindResource(ping is not null ? "Success" : restarting ? "Gold" : "Danger");
+            ServerDot.Fill = brush; AddressText.Foreground = brush;
+            ServerStateText.Text = ping is not null ? string.Format(T("ServerOnline"), ping.Online, ping.Max) : T(restarting ? "ServerRestarting" : "ServerOffline");
+            ServerBadge.ToolTip = ping is null ? T(restarting ? "ServerRestartingHint" : "ServerOfflineHint")
+                : ping.Players.Length > 0 ? T("ServerWho") + "\n" + string.Join("\n", ping.Players) : T("ServerNobody");
+        }
+        finally { pinging = false; }
+    }
     private void Refresh()
     {
         // A settings action can shut down the app before its modal dialog returns.
         if (IsClosed || Dispatcher.HasShutdownStarted || Dispatcher.HasShutdownFinished) return;
         var sk = context.Settings.Launcher == "sk";
         AppVersion.Text = T("App") + " " + AppUpdates.RunningVersion.ToString(3) + "";
+        WebsiteButton.Visibility = WebsiteUrl.Length > 0 ? Visibility.Visible : Visibility.Collapsed; LinkGrid.Columns = WebsiteUrl.Length > 0 ? 2 : 1; DiscordButton.Margin = new Thickness(0, 0, WebsiteUrl.Length > 0 ? 4 : 0, 0);
         ReleaseLabel.Text = "Minecraft 26.3 / Fabric 0.19.5 / " + T("Version") + " " + context.Manifest.Version;
         SizeLabel.Text = $"{context.Manifest.Files.Count(f => f.Path.StartsWith("mods/"))} {T("Mods")}  -  {context.Manifest.Files.Sum(f => f.Size) / 1048576:N0} MB";
         OfficialSelected.Visibility = sk ? Visibility.Hidden : Visibility.Visible; SkSelected.Visibility = sk ? Visibility.Visible : Visibility.Hidden;
@@ -147,7 +171,11 @@ public partial class MainWindow : ThemedWindow
     private void GetLauncher_Click(object sender, RoutedEventArgs e) { ClientContext.OpenUrl(context.Settings.Launcher == "sk" ? "https://next.skmedix.pl/downloads" : "https://www.minecraft.net/download"); StatusText.Text = T("BrowserDownload"); }
     private void Settings_Click(object sender, RoutedEventArgs e) { if (cancellation is null) new SettingsWindow(context).ShowModal(this); Refresh(); }
     private void GameFolder_Click(object sender, RoutedEventArgs e) { Directory.CreateDirectory(context.Instance); Process.Start(new ProcessStartInfo("explorer.exe") { UseShellExecute = true, ArgumentList = { context.Instance } }); }
-    private void CopyAddress_Click(object sender, RoutedEventArgs e) { Clipboard.SetText(context.Manifest.Server); StatusText.Text = T("Copied"); }
+    // The website button appears once the site has its own address.
+    private const string DiscordUrl = "https://discord.gg/FzBJSZwY2c", WebsiteUrl = "https://holylois.com";
+    private void Discord_Click(object sender, RoutedEventArgs e) => Process.Start(new ProcessStartInfo(DiscordUrl) { UseShellExecute = true });
+    private void Website_Click(object sender, RoutedEventArgs e) { if (WebsiteUrl.Length > 0) Process.Start(new ProcessStartInfo(WebsiteUrl) { UseShellExecute = true }); }
+    private void CopyAddress_Click(object sender, RoutedEventArgs e) { Clipboard.SetText(ServerAddress.Public); StatusText.Text = T("Copied"); }
     private void DisableShaders_Click(object sender, RoutedEventArgs e) { if (cancellation is not null) return; try { context.DisableShaders(); StatusText.Text = T("Disabled"); } catch (Exception ex) { StatusText.Text = Localize.Error(ex); } }
     private void OnClosing(object? sender, CancelEventArgs e) { if (cancellation is not null) { e.Cancel = true; cancellation.Cancel(); StatusText.Text = T("Cancelled"); } }
 }

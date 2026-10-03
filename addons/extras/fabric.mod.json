@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "id": "holylois-extras",
+  "version": "1.0.0",
+  "name": "Holy Lois Extras",
+  "description": "Holy Lois boombox (internet radio through Simple Voice Chat) and small client tweaks",
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "holylois.boombox.Boombox"
+    ],
+    "voicechat": [
+      "holylois.boombox.BoomboxPlugin"
+    ],
+    "client": [
+      "holylois.boombox.VeinMineTweaks"
+    ]
+  },
+  "jars": [
+    {
+      "file": "META-INF/jars/jlayer-1.0.1-holylois.jar"
+    }
+  ],
+  "depends": {
+    "minecraft": "26.3",
+    "fabricloader": ">=0.19.5",
+    "fabric-api": "*",
+    "voicechat": ">=2.6"
+  },
+  "mixins": [
+    "holylois-extras.mixins.json"
+  ],
+  "suggests": {
+    "liteminer": "*"
+  }
+}

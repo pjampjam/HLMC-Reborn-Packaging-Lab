@@ -1,0 +1,1 @@
+{"required": false, "minVersion": "0.8", "package": "holylois.boombox.mixins", "compatibilityLevel": "JAVA_25", "client": ["LiteminerScrollMixin"], "injectors": {"defaultRequire": 0}}

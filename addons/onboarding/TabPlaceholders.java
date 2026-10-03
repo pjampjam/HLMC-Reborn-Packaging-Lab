@@ -6,14 +6,10 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 
 /** Loaded only when Placeholder API is present, so the addon still runs without it. */
-final class QuotePlaceholder {
-    private QuotePlaceholder() {}
+final class TabPlaceholders {
+    private TabPlaceholders() {}
 
     static void register() {
-        Placeholders.registerServer(Identifier.fromNamespaceAndPath("holylois", "quote"),
-            (context, argument) -> PlaceholderResult.value(Component.literal(Quotes.text(Quotes.today()))));
-        Placeholders.registerServer(Identifier.fromNamespaceAndPath("holylois", "quote_author"),
-            (context, argument) -> PlaceholderResult.value(Component.literal(Quotes.author(Quotes.today()))));
         Placeholders.registerServer(Identifier.fromNamespaceAndPath("holylois", "nameday"), (context, argument) -> {
             String names = NameDays.join(NameDays.today());
             return PlaceholderResult.value(Component.literal(names.isEmpty() ? "no name day today" : names));
@@ -22,5 +18,14 @@ final class QuotePlaceholder {
             (context, argument) -> PlaceholderResult.value(Component.literal(String.format("%,d", BotWall.get().today))));
         Placeholders.registerServer(Identifier.fromNamespaceAndPath("holylois", "bots_latest"),
             (context, argument) -> PlaceholderResult.value(Component.literal(BotWall.latest(BotWall.get()))));
+        // %holylois:top title% advances the viewer's category when the page reappears; %holylois:top 1..3% are the rows.
+        Placeholders.registerServer(Identifier.fromNamespaceAndPath("holylois", "top"), (context, argument) -> {
+            if (!context.hasServerPlayer()) return PlaceholderResult.invalid("No player");
+            var category = Leaderboards.view(context.serverPlayer().getUUID(), context.server().getTickCount());
+            String arg = argument == null ? "title" : argument.strip();
+            if (arg.equals("title")) return PlaceholderResult.value(Component.literal(category.title()));
+            try { return PlaceholderResult.value(Component.literal(Leaderboards.row(category, Integer.parseInt(arg)))); }
+            catch (NumberFormatException error) { return PlaceholderResult.invalid("Use title, 1, 2 or 3"); }
+        });
     }
 }

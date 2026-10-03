@@ -1,0 +1,16 @@
+{
+  "enchantment.nemos_enchantments.camouflage.desc": "Монстры замечают тебя с меньшего расстояния.",
+  "enchantment.nemos_enchantments.climber.desc": "Быстрее лазаешь по лестницам и строительным лесам.",
+  "enchantment.nemos_enchantments.collector.desc": "Добытые блоки сразу попадают в инвентарь.",
+  "enchantment.nemos_enchantments.farmers_knowledge.desc": "Не даёт собрать урожай, пока он не созрел.",
+  "enchantment.nemos_enchantments.felling.desc": "Срубает всё дерево, если сломать одно бревно.",
+  "enchantment.nemos_enchantments.head_hunter.desc": "Убитые мобы могут уронить свою голову.",
+  "enchantment.nemos_enchantments.magma_walker.desc": "Превращает лаву рядом в магму, пока ты идёшь.",
+  "enchantment.nemos_enchantments.reaper.desc": "Собирает сразу несколько растений рядом.",
+  "enchantment.nemos_enchantments.replanting.desc": "Сажает собранные растения заново.",
+  "enchantment.nemos_enchantments.snow_walker.desc": "Позволяет ходить по рыхлому снегу.",
+  "enchantment.nemos_enchantments.soul_binding.desc": "Привязанные к душе вещи остаются у тебя после смерти.",
+  "enchantment.nemos_enchantments.soul_touch.desc": "Позволяет забрать спавнер монстров.",
+  "enchantment.nemos_enchantments.sprinter.desc": "Увеличивает скорость передвижения.",
+  "enchantment.nemos_enchantments.wisdom.desc": "Блоки и мобы дают на 50% больше опыта за уровень."
+}
