@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "version": "1.7.1",
+  "version": "1.7.5",
   "minecraft": "26.3",
   "fabric": "0.19.5",
   "java": 25,
@@ -98,17 +98,17 @@
       "policy": "managed"
     },
     {
-      "path": "mods/dynamic-fps-3.11.10+minecraft-26.3.0-fabric.jar",
-      "url": "https://cdn.modrinth.com/data/LQ3K71Q1/versions/Jwq069rR/dynamic-fps-3.11.10%2Bminecraft-26.3.0-fabric.jar",
-      "size": 189474,
-      "sha256": "a186d7cdfa3738935cb8425026d118013916fdcfbc060e4397d22368d0bb6594",
-      "policy": "managed"
-    },
-    {
       "path": "mods/DistantHorizons-3.3.4-26.3-fabric-neoforge.jar",
       "url": "https://cdn.modrinth.com/data/uCdwusMi/versions/TGgEbP9A/DistantHorizons-3.3.4-26.3-fabric-neoforge.jar",
       "size": 28476894,
       "sha256": "ba3e5c85a765a109219831df99b99ef5cfcdee05b2dfa6796116993bd48d3947",
+      "policy": "managed"
+    },
+    {
+      "path": "mods/dynamic-fps-3.11.10+minecraft-26.3.0-fabric.jar",
+      "url": "https://cdn.modrinth.com/data/LQ3K71Q1/versions/Jwq069rR/dynamic-fps-3.11.10%2Bminecraft-26.3.0-fabric.jar",
+      "size": 189474,
+      "sha256": "a186d7cdfa3738935cb8425026d118013916fdcfbc060e4397d22368d0bb6594",
       "policy": "managed"
     },
     {
@@ -217,10 +217,10 @@
       "policy": "managed"
     },
     {
-      "path": "mods/holylois-extras-1.0.0+26.3.jar",
-      "url": "https://github.com/pjampjam/HLMC-Reborn/releases/download/pack-v1.7.0/holylois-extras-1.0.0+26.3.jar",
-      "size": 165758,
-      "sha256": "a7601f918d397d19a670652e4acce71156e970052a9b87663a7d8594e9f98592",
+      "path": "mods/holylois-extras-1.3.0+26.3.jar",
+      "url": "https://github.com/pjampjam/HLMC-Reborn/releases/download/pack-v1.7.5/holylois-extras-1.3.0+26.3.jar",
+      "size": 253341,
+      "sha256": "81f9142db0356fef9ed9a037b501f9b8b74e498b11f0a3425da7682325f1fd73",
       "policy": "managed"
     },
     {
@@ -238,13 +238,6 @@
       "policy": "managed"
     },
     {
-      "path": "mods/yet_another_config_lib_v3-3.9.7+26.3-fabric.jar",
-      "url": "https://cdn.modrinth.com/data/1eAoo2KR/versions/s9SjoFu1/yet_another_config_lib_v3-3.9.7%2B26.3-fabric.jar",
-      "size": 1125377,
-      "sha256": "c52d41d444522d9abba994cd4c4ee2e71a065d7c31010f92a9959b80ccb4b0f5",
-      "policy": "managed"
-    },
-    {
       "path": "mods/ImmediatelyFast-Fabric-1.17.1+26.3.jar",
       "url": "https://cdn.modrinth.com/data/5ZwdcRci/versions/3MP9UR23/ImmediatelyFast-Fabric-1.17.1%2B26.3.jar",
       "size": 99586,
@@ -256,13 +249,6 @@
       "url": "https://cdn.modrinth.com/data/O7RBXm3n/versions/y8vT21Sb/InventoryProfilesNext-fabric-26.3-2.3.8.jar",
       "size": 1485260,
       "sha256": "d7e4a0a21427db27d723a48c66af9693cb7f9eddbdcec9a8d32a6bd3dab946b3",
-      "policy": "managed"
-    },
-    {
-      "path": "mods/yosbr-0.1.2.jar",
-      "url": "https://cdn.modrinth.com/data/WwbubTsV/versions/KMOzdYko/yosbr-0.1.2.jar",
-      "size": 17373,
-      "sha256": "db4c744fd71f5617639cb0fdff72378b08d2852004f4045c62090de1bf53afcb",
       "policy": "managed"
     },
     {
@@ -361,6 +347,13 @@
       "url": "https://cdn.modrinth.com/data/DxSJUAv8/versions/XdYcne0f/nemos_enchantments-26.3-1.12.jar",
       "size": 80007,
       "sha256": "2ad0110ece06ce7b4e1c427dbb1df861b03c69c3aac240959705ab2b9ccbe689",
+      "policy": "managed"
+    },
+    {
+      "path": "mods/open-parties-and-claims-fabric-26.3-0.31.6.jar",
+      "url": "https://cdn.modrinth.com/data/gF3BGWvG/versions/1SiR1p7h/open-parties-and-claims-fabric-26.3-0.31.6.jar",
+      "size": 1892693,
+      "sha256": "e32ba2775ad61a614222f823369fa4208372d487f97578a76087c9e9d6464428",
       "policy": "managed"
     },
     {
@@ -480,6 +473,20 @@
       "url": "https://cdn.modrinth.com/data/NcUtCpym/versions/UleMm8za/xaeroworldmap-fabric-26.3-1.46.4.jar",
       "size": 1480980,
       "sha256": "22d8748cf2ee1d92083f1713b9857d8ebf178c79199cd248e44d7bd6076887c8",
+      "policy": "managed"
+    },
+    {
+      "path": "mods/yet_another_config_lib_v3-3.9.7+26.3-fabric.jar",
+      "url": "https://cdn.modrinth.com/data/1eAoo2KR/versions/s9SjoFu1/yet_another_config_lib_v3-3.9.7%2B26.3-fabric.jar",
+      "size": 1125377,
+      "sha256": "c52d41d444522d9abba994cd4c4ee2e71a065d7c31010f92a9959b80ccb4b0f5",
+      "policy": "managed"
+    },
+    {
+      "path": "mods/yosbr-0.1.2.jar",
+      "url": "https://cdn.modrinth.com/data/WwbubTsV/versions/KMOzdYko/yosbr-0.1.2.jar",
+      "size": 17373,
+      "sha256": "db4c744fd71f5617639cb0fdff72378b08d2852004f4045c62090de1bf53afcb",
       "policy": "managed"
     },
     {
@@ -620,12 +627,90 @@
   ],
   "defaults": {
     "path": "defaults.zip",
-    "url": "https://github.com/pjampjam/HLMC-Reborn/releases/download/pack-v1.7.1/defaults.zip",
-    "size": 52918,
-    "sha256": "f068435dbc5bdc0ae027e74ec6427066735dd7602d5d21b20f4537ae1622aa19",
+    "url": "https://github.com/pjampjam/HLMC-Reborn/releases/download/pack-v1.7.5/defaults.zip",
+    "size": 53046,
+    "sha256": "fff4f18d365943e0f07707660965b81a97cc6b5d17b98e8dd97e92101509e847",
     "policy": "seed"
   },
   "history": [
+    {
+      "version": "1.7.5",
+      "date": "2026-10-04",
+      "summary": "Boombox volume and new stations, a smarter R key and tool swaps, /home picks your main home, portals that bring you back and a bigger world.",
+      "added": [
+        "Boombox: sneak + scroll changes the volume (1-10, louder also reaches further), music notes float while it plays, and 6 new stations: dubstep, drum and bass, trap, lo-fi, hardstyle and techno",
+        "Crown window icon and the Holy Lois: Reborn window title",
+        "Server: /structures tells you which structure you are standing in",
+        "Server: an outdated pack gets a clear \"update in the Holy Lois launcher\" message instead of errors"
+      ],
+      "removed": [
+        "Server: the recovery compass recipe (your death point is on the minimap)"
+      ],
+      "updated": [
+        "R on an item shows its recipe, R on an empty slot sorts, never both",
+        "A broken tool is replaced by the same kind of tool, unenchanted and most worn first, with a soft chime instead of the alarm",
+        "Enchantment descriptions show only while you hold Shift",
+        "No more flickering lines between glass blocks with shaders",
+        "First person: the body sits a little further forward and stays out of view while you sleep",
+        "The game keeps 30 FPS in the background (was 1) and the recipe list scrolls instead of using pages",
+        "Clicking a command in chat (tpa accept, homes, warps) runs it right away without the confirm screen",
+        "Server: with several homes, /home goes to the one named home (any capitals); names that differ only in capitals are refused, and /Home works too",
+        "Server: walking back through a Nether portal takes you to the portal you came from",
+        "Server: world border 20000 (10000 blocks out from the centre); the land is pre-generated while the server is empty and the web map follows the border",
+        "Tab shows the player count like the server list",
+        "Correction: the world map opens with J (the 1.7.4 notes said M). Claiming needs no team; name your land with ' then Player config then Claimed Area Name"
+      ]
+    },
+    {
+      "version": "1.7.4",
+      "date": "2026-10-04",
+      "summary": "Land and zones: claim land right on the map, see whose land you are on, and fair fights.",
+      "added": [
+        "Land claims on the world map (Open Parties and Claims): press M, right-click a chunk and claim it. 16 chunks free, more by playing or with coins (/claims)",
+        "Teams: /oparties create and /oparties invite NAME, your team can build on your land",
+        "Zone titles at the top of the screen: the biome and whose land you are on (or Wilderness)",
+        "Server: /support MESSAGE reaches pjampjam on Discord right away, /report for problems with players, /donate for the wallets"
+      ],
+      "removed": [],
+      "updated": [
+        "/rtp never drops you into or next to someone's land",
+        "PvP: logging out during a fight kills you, PvP deaths leave the loot for the winner and add no minimap death marker",
+        "Normal deaths: your drops stay 30 minutes and only you can pick them up for the first 5"
+      ]
+    },
+    {
+      "version": "1.7.3",
+      "date": "2026-10-04",
+      "summary": "Achievement tabs really switch now, and a placed boombox looks like a boombox.",
+      "added": [
+        "Server: /support also lists TRON, labels Bitcoin as SegWit and explains each network when you hover it"
+      ],
+      "removed": [],
+      "updated": [
+        "Achievement tabs switch with a left click again (1.7.2 broke them for everyone, sorry about that)",
+        "A placed boombox shows its real texture instead of a pink and black cube",
+        "Game and mod text uses plain hyphens everywhere"
+      ]
+    },
+    {
+      "version": "1.7.2",
+      "date": "2026-10-04",
+      "summary": "Set your boombox down, achievement tabs that work, daily coin button and smarter tool swapping.",
+      "added": [
+        "Boombox: set it down on any block and it keeps playing for everyone nearby (right-click to switch station, sneak with an empty hand to turn it off)",
+        "Server: a [Claim] button for your daily coins when you log in, /support, and seven new achievements"
+      ],
+      "removed": [
+        "The extra \"Hold Shift\" enchantment line (descriptions show directly)"
+      ],
+      "updated": [
+        "Achievement tabs switch again with Num Lock or Caps Lock on, and Holy Lois comes first, then the vanilla tabs in order",
+        "Game music pauses while a boombox plays nearby; a dropped boombox stops right away",
+        "Recipe viewer: the item list appears only while you search, and the developer Tags tab is hidden",
+        "Plain tools are used until they break and then swapped; enchanted gear is swapped just before it breaks, with an alert",
+        "First-person body sits a little further back, so looking down no longer shows the inside of your neck"
+      ]
+    },
     {
       "version": "1.7.1",
       "date": "2026-10-03",
