@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "holylois:block/boombox"
+    },
+    "facing=east": {
+      "model": "holylois:block/boombox",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "holylois:block/boombox",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "holylois:block/boombox",
+      "y": 270
+    }
+  }
+}

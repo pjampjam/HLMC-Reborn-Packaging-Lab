@@ -1,5 +1,6 @@
 {
   "item.holylois.boombox": "Бумбокс",
-  "item.holylois.boombox.tip1": "ПКМ: включить или следующая станция",
-  "item.holylois.boombox.tip2": "Shift + ПКМ: выключить. Играет, пока в руке."
+  "item.holylois.boombox.tip1": "ПКМ: включить или следующая станция. Присесть + ПКМ: выключить",
+  "item.holylois.boombox.tip2": "Используйте на блоке, чтобы поставить. Играет в руке или на земле",
+  "block.holylois.boombox": "Бумбокс"
 }

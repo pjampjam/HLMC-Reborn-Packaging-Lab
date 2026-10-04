@@ -15,11 +15,11 @@ public final class BoomboxPlugin implements VoicechatPlugin {
         registration.registerEvent(VoicechatServerStartedEvent.class, event -> {
             var api = event.getVoicechat();
             api.registerVolumeCategory(api.volumeCategoryBuilder().setId(CATEGORY).setName("Boombox")
-                .setDescription("Music from boomboxes held by players nearby").build());
+                .setDescription("Music from boomboxes nearby, held or placed").build());
             Boombox.voice = api;
         });
         registration.registerEvent(VoicechatServerStoppedEvent.class, event -> {
-            for (var id : java.util.List.copyOf(Boombox.sessions.keySet())) Boombox.stop(id);
+            Boombox.stopAll();
             Boombox.voice = null;
         });
     }

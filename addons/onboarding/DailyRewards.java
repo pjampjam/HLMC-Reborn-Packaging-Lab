@@ -8,7 +8,10 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.HoverEvent;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket;
 import net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket;
 import net.minecraft.network.protocol.game.ClientboundSetTitlesAnimationPacket;
@@ -83,19 +86,28 @@ public final class DailyRewards {
     static int dayOfWeek(int streak) { return (streak - 1) % 7 + 1; }
     static int tier(int streak) { return Math.min(3, 1 + (streak - 1) / 7); }
 
-    /** Called once per session after login. Returns the streak, or -1 when today's gift was already claimed. */
+    /**
+     * Called once per session after login: today's gift card with the week's streak bar, plus a click-to-claim button
+     * while EconomyCraft's /daily coins are still waiting. Returns the streak, or -1 when today's gift was already claimed.
+     */
     int claim(MinecraftServer server, ServerPlayer player) {
         if (file == null) return -1;
         var entry = state.players.computeIfAbsent(player.getUUID().toString(), id -> new Entry());
         int streak = nextStreak(entry.last, entry.streak, today());
-        if (streak < 0) return -1;
+        long coins = Economy.unclaimedDaily(server, player.getUUID());
+        if (streak < 0) {
+            if (coins > 0) player.sendSystemMessage(Component.literal("✦ Your " + coins + " daily coins are waiting  ").withStyle(ChatFormatting.GOLD)
+                .append(claimButton("[ Claim ]")));
+            return -1;
+        }
         entry.last = today().toString(); entry.streak = streak; entry.best = Math.max(entry.best, streak);
         int day = dayOfWeek(streak), tier = tier(streak);
-        Component message;
+        var message = Component.literal("✦ Daily gift  ").withStyle(ChatFormatting.GOLD).append(bar(day))
+            .append(Component.literal("  day " + day + "/7" + (streak > 7 ? ", " + streak + " days in a row" : "")).withStyle(ChatFormatting.GRAY));
         if (day == 7) {
             give(player, lootbox(tier, player.getGameProfile().name()));
             entry.lootboxes++;
-            message = Component.literal("✦ Daily gift, day 7/7: a ").withStyle(ChatFormatting.GOLD)
+            message.append(Component.literal("\n  A ").withStyle(ChatFormatting.GOLD))
                 .append(Component.literal("Holy Lootbox").withStyle(ChatFormatting.YELLOW, ChatFormatting.BOLD))
                 .append(Component.literal(" (tier " + tier + ")! Right-click it to open.").withStyle(ChatFormatting.GOLD));
             title(player, Component.literal("Holy Lootbox").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD),
@@ -106,14 +118,28 @@ public final class DailyRewards {
             var gift = options.get(random.nextInt(options.size()));
             int count = Math.max(1, (int)Math.round(gift.count() * (1 + 0.5 * (tier - 1))));
             give(player, new ItemStack(BuiltInRegistries.ITEM.getValue(Identifier.parse(gift.item())), count));
-            message = Component.literal("✦ Daily gift, day " + day + "/7: ").withStyle(ChatFormatting.GOLD)
-                .append(Component.literal(count + " " + gift.label()).withStyle(ChatFormatting.YELLOW))
+            message.append(Component.literal("\n  " + count + " " + gift.label()).withStyle(ChatFormatting.YELLOW))
                 .append(Component.literal(". " + (7 - day) + (7 - day == 1 ? " day" : " days") + " until your Holy Lootbox.").withStyle(ChatFormatting.GRAY));
             player.level().playSound(null, player.blockPosition(), SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 0.5f, 1.2f);
         }
+        if (coins > 0) message.append(Component.literal("\n  ")).append(claimButton("[ Claim " + coins + " daily coins ]"));
         player.sendSystemMessage(message);
         save();
         return streak;
+    }
+
+    /** Seven boxes for the week: claimed days gold, the rest dark gray, the lootbox day a star. */
+    static MutableComponent bar(int day) {
+        var bar = Component.empty();
+        for (int i = 1; i <= 7; i++)
+            bar.append(Component.literal(i == 7 ? "✦" : "■").withStyle(i > day ? ChatFormatting.DARK_GRAY : i == 7 ? ChatFormatting.YELLOW : ChatFormatting.GOLD));
+        return bar;
+    }
+
+    private static MutableComponent claimButton(String label) {
+        return Component.literal(label).withStyle(style -> style.withColor(ChatFormatting.GREEN).withBold(true)
+            .withClickEvent(new ClickEvent.RunCommand("/daily"))
+            .withHoverEvent(new HoverEvent.ShowText(Component.literal("Click to claim (runs /daily)"))));
     }
 
     int lootboxesOpened(ServerPlayer player) {
@@ -139,10 +165,10 @@ public final class DailyRewards {
         return data == null ? 0 : data.copyTag().getIntOr(LOOTBOX_KEY, 0);
     }
 
-    /** Opens a lootbox held by the player. Returns true when the stack was a lootbox. */
-    boolean open(MinecraftServer server, ServerPlayer player, ItemStack stack) {
+    /** Opens a lootbox held by the player: -1 when the stack is not a lootbox, 1 with a named special item, else 0. */
+    int open(MinecraftServer server, ServerPlayer player, ItemStack stack) {
         int tier = lootboxTier(stack);
-        if (tier <= 0) return false;
+        if (tier <= 0) return -1;
         stack.shrink(1);
         var rewards = new ArrayList<ItemStack>();
         String name = player.getGameProfile().name();
@@ -167,7 +193,7 @@ public final class DailyRewards {
                 .append(special.getHoverName().copy().withStyle(ChatFormatting.GOLD))
                 .append(Component.literal("!").withStyle(ChatFormatting.GRAY)), false);
         LOG.info("{} opened a tier {} Holy Lootbox: {}", name, tier, summary);
-        return true;
+        return special != null ? 1 : 0;
     }
 
     record Loot(String item, int min, int max, int weight, int minTier) {}

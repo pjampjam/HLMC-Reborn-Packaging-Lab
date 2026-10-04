@@ -54,7 +54,10 @@ public final class HolyLois implements ModInitializer {
     @Override public void onInitialize() {
         PayloadTypeRegistry.clientboundPlay().register(AuthStatus.TYPE, AuthStatus.CODEC);
         if (net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("placeholder-api")) TabPlaceholders.register();
-        net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback.EVENT.register((dispatcher, registries, environment) -> BotWallCommand.register(dispatcher));
+        net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback.EVENT.register((dispatcher, registries, environment) -> {
+            BotWallCommand.register(dispatcher);
+            SupportCommand.register(dispatcher);
+        });
         ServerLifecycleEvents.SERVER_STARTED.register(this::load);
         net.fabricmc.fabric.api.event.player.UseItemCallback.EVENT.register((player, level, hand) ->
             player instanceof net.minecraft.server.level.ServerPlayer sp && openLootbox(sp, sp.getItemInHand(hand))
@@ -259,6 +262,7 @@ public final class HolyLois implements ModInitializer {
             .withStyle(style -> style.withColor(ChatFormatting.RED).withBold(false)));
         var nameDay = NameDays.today();
         var own = NameDays.celebrating(nameDay, player.getGameProfile().name());
+        if (own.isPresent()) Achievements.award(player.level().getServer(), player, "fun/name_day", "done");
         if (own.isPresent()) message.append(Component.literal("\nDaudz laimes vārda dienā, " + own.get() + "! Happy name day!")
             .withStyle(style -> style.withColor(ChatFormatting.LIGHT_PURPLE).withBold(true).withItalic(false)));
         else if (!nameDay.isEmpty()) message.append(Component.literal("\nToday is the Latvian name day of " + NameDays.join(nameDay) + ".")
@@ -286,7 +290,9 @@ public final class HolyLois implements ModInitializer {
     private boolean openLootbox(net.minecraft.server.level.ServerPlayer player, net.minecraft.world.item.ItemStack stack) {
         if (DailyRewards.lootboxTier(stack) <= 0) return false;
         var server = player.level().getServer();
-        if (daily.open(server, player, stack)) Achievements.award(server, player, "daily/unboxed", "done");
+        int opened = daily.open(server, player, stack);
+        if (opened >= 0) Achievements.award(server, player, "daily/unboxed", "done");
+        if (opened == 1) Achievements.award(server, player, "daily/jackpot", "done");
         return true;
     }
 }

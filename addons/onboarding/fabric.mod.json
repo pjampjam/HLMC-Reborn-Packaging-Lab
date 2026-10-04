@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
   "id": "holylois-onboarding",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "name": "Holy Lois Onboarding",
-  "description": "Server login, safe random placement, a 30-minute death-loot grace period, death coordinates, welcome messages, Tab leaderboards and structure discoveries for Holy Lois: Reborn",
+  "description": "Server login, safe random placement, a 30-minute death-loot grace period, death coordinates, welcome messages, Tab leaderboards, structure discoveries, daily gifts and /support for Holy Lois: Reborn",
   "environment": "server",
   "license": "MIT",
   "entrypoints": {
@@ -23,6 +23,7 @@
     "holylois-onboarding.mixins.json"
   ],
   "suggests": {
-    "placeholder-api": "*"
+    "placeholder-api": "*",
+    "economycraft": "*"
   }
 }

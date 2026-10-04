@@ -41,7 +41,10 @@ public final class OnboardingTest {
             &&Achievements.chairStyle("mcwfurnitures:oak_chair").equals("chair")&&Achievements.chairStyle("mcwfurnitures:oak_table")==null&&Achievements.chairStyle("minecraft:oak_stairs")==null,"Chair styles are recognised");
         check(ServerEvents.holiday(java.time.LocalDate.of(2026,11,18)).key().equals("independence")&&ServerEvents.holiday(java.time.LocalDate.of(2026,6,23)).key().equals("ligo")
             &&ServerEvents.holiday(java.time.LocalDate.of(2026,12,25)).lootbox()&&ServerEvents.holiday(java.time.LocalDate.of(2026,10,4))==null,"Latvian holidays by Riga date");
-        System.out.println("Passed 27 onboarding, greeting, name day, bot wall, leaderboard, discovery, death, daily reward, chair and holiday checks");
+        check(DailyRewards.bar(3).getString().equals("■■■■■■✦")&&DailyRewards.bar(3).getSiblings().size()==7,"Streak bar has seven boxes ending in the lootbox star");
+        var support=SupportCommand.message().getString();
+        check(SupportCommand.WALLETS.size()==5&&SupportCommand.WALLETS.stream().allMatch(w->support.contains(w.address()))&&support.contains("never buys anything"),"Support lists every address and promises no perks");
+        System.out.println("Passed 29 onboarding, greeting, name day, bot wall, leaderboard, discovery, death, daily reward, chair, holiday and support checks");
     }
     private static void check(boolean value,String message) {if(!value)throw new AssertionError(message);}
 }
