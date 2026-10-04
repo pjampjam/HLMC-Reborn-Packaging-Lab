@@ -46,6 +46,6 @@ for (namespace, language), entries in files.items():
     target = Path("assets") / namespace / "lang" / f"{language}.json"
     target.parent.mkdir(parents=True, exist_ok=True)
     text = json.dumps(entries, ensure_ascii=False, indent=2) + "\n"
-    assert "—" not in text
+    assert "\u2014" not in text
     target.write_text(text, encoding="utf-8")
 print(len(D), "enchantments described in", len(files), "language files")

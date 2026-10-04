@@ -1,4 +1,4 @@
-"""Draws the boombox textures: the 16x16 item (also the placed block's front) plus the block's side, top and handle."""
+"""Draws the boombox textures: the 16x16 item plus the block's front (same picture), side, top and handle."""
 import struct, sys, zlib
 from pathlib import Path
 
@@ -42,7 +42,8 @@ def png(path, scale, grid=None):
 
 png("assets/holylois/textures/item/boombox.png", 1)
 Path("assets/holylois/textures/block").mkdir(parents=True, exist_ok=True)
-for name, grid in [("boombox_side", SIDE), ("boombox_top", TOP), ("boombox_handle", HANDLE)]:
+# 26.3 keeps block and item textures in separate atlases: a block model may only use block textures, so the front is a copy.
+for name, grid in [("boombox_front", GRID), ("boombox_side", SIDE), ("boombox_top", TOP), ("boombox_handle", HANDLE)]:
     assert all(len(row) == 16 for row in grid) and len(grid) == 16
     png(f"assets/holylois/textures/block/{name}.png", 1, grid)
 png(sys.argv[1] if len(sys.argv) > 1 else "boombox-preview.png", 16)

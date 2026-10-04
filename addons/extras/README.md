@@ -20,7 +20,10 @@ Built on the server with `compile-extras.py` against the installed Minecraft 26.
 
 ## Client fixes
 
-- Better Advancements 0.6.0.78 ignored tab clicks whenever Num Lock or Caps Lock was on; tabs now switch on any left click.
+- Better Advancements 0.6.0.78 ignored tab clicks whenever Num Lock or Caps Lock was on (upstream issue #260); tabs now
+  switch on any left click. 26.3 numbers mouse buttons from 1, so left click is button 1 (1.1.0 checked for 0).
+- The placed boombox uses `block/boombox_front`: 26.3 block models cannot use item-atlas textures.
+- Translated text (vanilla and mods) shows a plain hyphen wherever a translation used an em dash (`LanguageDashMixin`).
 - Advancement tabs are ordered: Holy Lois, then Minecraft, Nether, End, Adventure, Husbandry, then mods alphabetically.
 - Nemo's Enchantments' own "Hold Shift" descriptions are skipped; Enchantment Descriptions shows them directly.
 - One-time REI defaults before mods load (`ClientDefaults`): the item list shows only while searching and the developer

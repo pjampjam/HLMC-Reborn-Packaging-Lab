@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "holylois-extras",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "name": "Holy Lois Extras",
   "description": "Holy Lois boombox (internet radio through Simple Voice Chat, held or placed) and small client fixes",
   "license": "MIT",

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "holylois-onboarding",
-  "version": "1.6.0",
+  "version": "1.6.1",
   "name": "Holy Lois Onboarding",
   "description": "Server login, safe random placement, a 30-minute death-loot grace period, death coordinates, welcome messages, Tab leaderboards, structure discoveries, daily gifts and /support for Holy Lois: Reborn",
   "environment": "server",

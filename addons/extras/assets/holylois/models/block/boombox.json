@@ -2,7 +2,7 @@
   "parent": "minecraft:block/block",
   "textures": {
     "particle": "holylois:block/boombox_top",
-    "front": "holylois:item/boombox",
+    "front": "holylois:block/boombox_front",
     "side": "holylois:block/boombox_side",
     "top": "holylois:block/boombox_top",
     "handle": "holylois:block/boombox_handle"
