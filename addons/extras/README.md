@@ -1,6 +1,6 @@
 # Holy Lois Extras
 
-A boombox for Holy Lois: Reborn that plays internet radio to everyone within 24 blocks through Simple Voice Chat.
+A boombox for Holy Lois: Reborn that plays internet radio to everyone in earshot (16 blocks at volume 1 up to 48 at volume 10) through Simple Voice Chat.
 
 - Held (either hand): right-click the air to play or switch station, sneak + right-click to turn it off. The sound
   follows the player. It stops at once when it leaves the inventory and two seconds after it is no longer held.
@@ -28,6 +28,17 @@ Built on the server with `compile-extras.py` against the installed Minecraft 26.
 - Nemo's Enchantments' own "Hold Shift" descriptions are skipped; Enchantment Descriptions shows them directly.
 - One-time REI defaults before mods load (`ClientDefaults`): the item list shows only while searching and the developer
   Tags tab is hidden. Each change runs once and only while REI's original value is still set.
+
+- Tool swap (`ToolSwap`, 1.3.1): when the held pickaxe, axe, shovel, hoe, sword or shears breaks, an unenchanted spare of the same kind is
+  swapped into the hand slot (lowest material first, then the most worn; spares with 5% or less durability are skipped; enchanted
+  tools are never chosen). Inventory Profiles Next treats these tools as blacklisted (`IpnToolSkipMixin`) so only one system acts.
+- `R` on an empty slot sorts and no longer also opens a REI recipe: `IpnSortKeyMixin` stamps the key press, `ReiSortGuardMixin`
+  swallows REI's handling of that same press.
+- FirstPerson (`FirstPersonFixes`): the body offset is shortened by a raycast when a wall is behind the player, and the body is
+  switched off while sleeping (the mod skips its own offset in bed) and back on afterwards unless the player turned it off.
+- Shader lights (`ShaderLights`, reflection only): while an Iris shader pack is on, LambDynamicLights is set to OFF (shader packs light
+  held and dropped torches in the right colour); the player's own mode is stored in `config/holylois-ldl-restore.txt` and restored
+  when shaders are switched off, also after a restart.
 
 ## Vein mining tweak
 

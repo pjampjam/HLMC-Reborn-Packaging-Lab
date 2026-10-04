@@ -1,9 +1,18 @@
 {
   "schemaVersion": 1,
   "id": "holylois-auth-ui",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "name": "Holy Lois Login",
   "description": "A masked password form backed by server EasyAuth and simple durability tooltips. No saved credentials.",
+  "authors": [
+    "pjampjam"
+  ],
+  "contact": {
+    "homepage": "https://holylois.com",
+    "sources": "https://github.com/pjampjam/HLMC-Reborn-Packaging-Lab",
+    "issues": "https://github.com/pjampjam/HLMC-Reborn-Packaging-Lab/issues"
+  },
+  "icon": "icon.png",
   "environment": "client",
   "license": "MIT",
   "entrypoints": {
@@ -19,5 +28,14 @@
     "java": ">=25",
     "fabricloader": ">=0.19.5",
     "fabric-api": "*"
+  },
+  "custom": {
+    "modmenu": {
+      "parent": "holylois-extras",
+      "links": {
+        "modmenu.discord": "https://discord.gg/FzBJSZwY2c",
+        "modmenu.donate": "https://holylois.com/donate"
+      }
+    }
   }
 }

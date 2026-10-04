@@ -25,7 +25,9 @@ public abstract class IpnSortKeyMixin {
         if (mouse.isLeftPressed() || mouse.isRightPressed() || mouse.isMiddlePressed()) return;
         if (mc.gui.screen() instanceof ContainerHoverAccessor screen) {
             var slot = screen.holyLoisHoveredSlot();
-            if (slot != null && slot.hasItem()) callback.cancel();
+            if (slot != null && slot.hasItem()) { callback.cancel(); return; }
         }
+        // The sort runs on this key press; REI must not also open a recipe for the item the sort just put under the cursor.
+        holylois.boombox.ToolSwap.sortRanAt = System.nanoTime();
     }
 }

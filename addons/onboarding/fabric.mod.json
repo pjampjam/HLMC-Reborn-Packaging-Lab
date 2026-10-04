@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "holylois-onboarding",
-  "version": "1.7.1",
+  "version": "1.7.2",
   "name": "Holy Lois Onboarding",
   "description": "Server login, claim-safe random placement and /rtp, land claims shop (/claims), combat tag, death-loot grace period, death coordinates, welcome messages, Tab leaderboards, structure discoveries, daily gifts, /donate, /support and /report for Holy Lois: Reborn",
   "authors": [

@@ -83,7 +83,7 @@ public final class Boombox implements ModInitializer {
         public int maxPlaying = 6;
     }
 
-    record Session(RadioStream stream, AudioPlayer player, AudioChannel channel, int station, long[] lastHeld) {}
+    record Session(RadioStream stream, AudioPlayer player, AudioChannel channel, int station, long[] lastHeld, float[] range) {}
     record Spot(String dimension, int x, int y, int z) {
         static Spot of(Level level, BlockPos pos) { return new Spot(level.dimension().identifier().toString(), pos.getX(), pos.getY(), pos.getZ()); }
         BlockPos pos() { return new BlockPos(x, y, z); }
@@ -183,13 +183,16 @@ public final class Boombox implements ModInitializer {
         CustomData.set(DataComponents.CUSTOM_DATA, stack, tag);
     }
 
-    /** Volume 5 is the old fixed loudness; 10 is about 1.8x as loud and reaches 20% further. */
+    static final float MIN_RANGE = 16f, MAX_RANGE = 48f;
+
+    /** Volume 5 is the old fixed loudness; 10 is about 1.8x as loud. Volume 1 carries 16 blocks and volume 10 carries 48. */
     static float gain(int volume) { return config.volume * (0.2f + 0.16f * volume); }
-    static float range(int volume) { return config.distance * (0.8f + 0.04f * volume); }
+    static float range(int volume) { return MIN_RANGE + (MAX_RANGE - MIN_RANGE) * (Math.clamp(volume, 1, 10) - 1) / 9f; }
 
     private static void apply(Session session, int volume) {
         if (session == null) return;
         session.stream().gain = gain(volume);
+        session.range()[0] = range(volume);
         if (session.channel() instanceof de.maxhenkel.voicechat.api.audiochannel.EntityAudioChannel entity) entity.setDistance(range(volume));
         if (session.channel() instanceof de.maxhenkel.voicechat.api.audiochannel.LocationalAudioChannel located) located.setDistance(range(volume));
     }
@@ -282,7 +285,7 @@ public final class Boombox implements ModInitializer {
         var audio = voice.createAudioPlayer(channel, voice.createEncoder(), stream::next);
         stream.start();
         audio.startPlaying();
-        return new Session(stream, audio, channel, index, new long[] {0});
+        return new Session(stream, audio, channel, index, new long[] {0}, new float[] {range(volume)});
     }
 
     private static void tuned(ServerPlayer player, int index) {
@@ -346,7 +349,7 @@ public final class Boombox implements ModInitializer {
                 level.setBlock(pos, state.setValue(BoomboxBlock.PLAYING, false), 3);
                 continue;
             }
-            double reach = config.distance + 8;
+            double reach = MAX_RANGE + 8;
             boolean listener = level.players().stream().anyMatch(p -> p.position().distanceToSqr(spot.center()) < reach * reach);
             if (!listener) stopSpeaker(spot);
             else if (session == null && voice != null && playing() < config.maxPlaying)
@@ -362,18 +365,19 @@ public final class Boombox implements ModInitializer {
         if (now % 20 == 0) tellListeners(server);
     }
 
+    private static double square(float value) { return (double) value * value; }
+
     /** Clients pause the game music while a boombox plays within earshot; two at once earns Surround Sound. */
     private static void tellListeners(MinecraftServer server) {
         for (var player : server.getPlayerList().getPlayers()) {
             int heard = 0;
-            double range = config.distance * config.distance;
             for (var entry : sessions.entrySet()) {
                 var owner = server.getPlayerList().getPlayer(entry.getKey());
-                if (owner != null && owner.level() == player.level() && owner.position().distanceToSqr(player.position()) < range) heard++;
+                if (owner != null && owner.level() == player.level() && owner.position().distanceToSqr(player.position()) < square(entry.getValue().range()[0])) heard++;
             }
             var dimension = player.level().dimension().identifier().toString();
-            for (var spot : speakers.keySet())
-                if (spot.dimension().equals(dimension) && spot.center().distanceToSqr(player.position()) < range) heard++;
+            for (var entry : speakers.entrySet())
+                if (entry.getKey().dimension().equals(dimension) && entry.getKey().center().distanceToSqr(player.position()) < square(entry.getValue().range()[0])) heard++;
             if (heard >= 2) award(player, "music/surround_sound");
             boolean near = heard > 0;
             if (sentNear.getOrDefault(player.getUUID(), false) != near && ServerPlayNetworking.canSend(player, BoomboxNear.TYPE)) {

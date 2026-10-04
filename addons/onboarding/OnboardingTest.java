@@ -17,6 +17,8 @@ public final class OnboardingTest {
         check(wall.today==1647&&wall.top.get(0).count==9,"Bot wall snapshot parses");
         check(BotWall.latest(wall).equals("admin, cevil, ubuntu"),"Bot names are cleaned and limited to three");
         check(BotWall.clean("aaaaaaaaaaaaaaaaaaaaaaaa").length()==16&&BotWall.latest(BotWall.parse("{}")).equals("nobody yet"),"Long or missing bot names are safe");
+        check(Discoveries.name("epic:small_plains_dungeon").equals("Small Plains Dungeon")&&Discoveries.name("epic:large_ice_dungeon").equals("Large Ice Dungeon")&&Discoveries.name("epic:sand_obelisk").equals("Sand Obelisk"),"Epic Dungeons are announced with their size");
+        check(Discoveries.name("nova_structures:small_undead_crypt").equals("Small Undead Crypt")&&Discoveries.name("nova_structures:small_conduit_ruin_cold")==null,"Small crypts are announced, small ruins stay quiet");
         check(Discoveries.name("nova_structures:tavern_spruce").equals("Tavern")&&Discoveries.name("minecraft:ancient_city").equals("Ancient City"),"Notable structures get friendly names");
         check(Discoveries.name("towns_and_towers:exclusives/pillager_outpost_tudor").equals("Pillager Outpost")&&Discoveries.name("nova_structures:illager_manor").equals("Illager Manor"),"Modded names are cleaned");
         check(Discoveries.name("nova_structures:village_birch")==null&&Discoveries.name("minecraft:village_plains")==null&&Discoveries.name("nova_structures:well_oak")==null
@@ -54,7 +56,7 @@ public final class OnboardingTest {
         check(inRing,"Random teleport stays between 250 and 1800 blocks from spawn");
         check(SupportCommand.category("grief someone broke my farm").equals("grief")&&SupportCommand.category("BUG chest eats items").equals("bug")&&SupportCommand.category("hello?").equals("other"),"Support request categories come from the first word");
         check(CombatTag.BLOCKED.contains("rtp")&&CombatTag.BLOCKED.contains("home")&&!CombatTag.BLOCKED.contains("support"),"Combat blocks teleports but never /support");
-        System.out.println("Passed 36 onboarding, greeting, name day, bot wall, leaderboard, discovery, death, daily reward, chair, holiday, donate, land, rtp, support and combat checks");
+        System.out.println("Passed 38 onboarding, greeting, name day, bot wall, leaderboard, discovery, death, daily reward, chair, holiday, donate, land, rtp, support and combat checks");
     }
     private static void check(boolean value,String message) {if(!value)throw new AssertionError(message);}
 }

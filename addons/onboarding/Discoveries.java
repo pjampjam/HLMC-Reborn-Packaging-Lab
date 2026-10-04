@@ -36,6 +36,9 @@ public final class Discoveries {
         "(village|hamlet|^well_|camp|small_|firewatch|wreckage|mimic|cave_hut|underground_house|wild_ruin|witch_hut"
         + "|desert_ruins|jungle_ruins|^remnant_(?!taiga_castle|big_remnant))");
 
+    // Small crypts count as dungeons even though other small_ structures stay quiet.
+    private static final Pattern CRYPTS = Pattern.compile("^small_(creeping|undead)_crypt$");
+
     private final Map<String, Found> found = new HashMap<>();
     private Path file;
 
@@ -45,6 +48,9 @@ public final class Discoveries {
         String namespace = colon < 0 ? "minecraft" : id.substring(0, colon), path = id.substring(colon + 1);
         if (namespace.equals("minecraft")) return VANILLA.get(path);
         path = path.substring(path.lastIndexOf('/') + 1);
+        // Epic Dungeons are underground dungeons of every size: all of them are worth an announcement (small_ would hide them).
+        if (namespace.equals("epic")) return path.equals("large_dungeon") ? "Large Plains Dungeon" : title(path);
+        if (CRYPTS.matcher(path).find()) return title(path);
         if (QUIET.matcher(path).find()) return null;
         if (path.startsWith("tavern_")) return "Tavern";
         if (path.startsWith("pillager_outpost")) return "Pillager Outpost";

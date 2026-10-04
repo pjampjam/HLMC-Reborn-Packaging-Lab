@@ -6,6 +6,7 @@ public final class BoomboxTest {
         if (!RadioStream.IcyStream.title("StreamTitle='Artist - Song';StreamUrl='';").equals("Artist - Song")) throw new AssertionError("ICY title");
         if (!PackCheck.older("1.7.4", "1.7.5") || PackCheck.older("1.7.5", "1.7.5") || PackCheck.older("1.10.0", "1.9.9") || !PackCheck.older("1.7", "1.7.1"))
             throw new AssertionError("pack version compare");
+        if (Boombox.range(1) != 16f || Boombox.range(10) != 48f || Boombox.range(5) <= Boombox.range(4) || Boombox.range(99) != 48f) throw new AssertionError("boombox range 16 to 48");
         int ok = 0;
         for (var station : new Boombox.Config().stations.subList(0, Math.min(args.length > 0 ? Integer.parseInt(args[0]) : 3, new Boombox.Config().stations.size()))) {
             var stream = new RadioStream(station.url, 0.55f);
