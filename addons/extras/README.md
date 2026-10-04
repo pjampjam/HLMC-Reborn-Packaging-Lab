@@ -36,9 +36,10 @@ Built on the server with `compile-extras.py` against the installed Minecraft 26.
   swallows REI's handling of that same press.
 - FirstPerson (`FirstPersonFixes`): the body offset is shortened by a raycast when a wall is behind the player, and the body is
   switched off while sleeping (the mod skips its own offset in bed) and back on afterwards unless the player turned it off.
-- Shader lights (`ShaderLights`, reflection only): while an Iris shader pack is on, LambDynamicLights is set to OFF (shader packs light
-  held and dropped torches in the right colour); the player's own mode is stored in `config/holylois-ldl-restore.txt` and restored
-  when shaders are switched off, also after a restart.
+- Shader lights (`ShaderLights`, reflection only): when the Iris shader state changes (and once at start) LambDynamicLights is set to
+  match: with a shader pack on the first-person light is off (the pack lights held items in the right colour) while dropped items and
+  mobs keep their light; with shaders off everything is on, including the first-person light. A mode of OFF is switched to FANCY.
+- Bed camera (`BedCameraMixin`): in bed the first-person camera is lifted 0.3 and moved 0.3 forward so it is not inside the head.
 
 ## Vein mining tweak
 

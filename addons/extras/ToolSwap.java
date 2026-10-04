@@ -88,7 +88,7 @@ public final class ToolSwap {
         long now = System.currentTimeMillis();
         if (now - lastNotice > 1500) {
             lastNotice = now;
-            player.sendOverlayMessage(Component.literal("⛏ Swapped in ").withStyle(ChatFormatting.GOLD).append(name));
+            player.sendOverlayMessage(Component.literal("⛏ Switched to ").withStyle(ChatFormatting.GOLD).append(name));
             mc.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.AMETHYST_BLOCK_CHIME, 1.3f, 0.45f));
         }
     }

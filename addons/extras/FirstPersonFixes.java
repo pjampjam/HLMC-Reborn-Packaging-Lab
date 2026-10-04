@@ -14,6 +14,8 @@ import net.minecraft.world.phys.Vec3;
  */
 final class FirstPersonFixes {
     private static boolean hiddenByUs;
+    /** How close the body centre may come to a wall behind you; small, so the body may sink into the wall a little. */
+    private static final double WALL_GAP = 0.1;
 
     static void register() {
         FirstPersonAPI.registerPlayerHandler((PlayerOffsetHandler) (player, delta, base, offset) -> {
@@ -22,9 +24,9 @@ final class FirstPersonFixes {
             Vec3 from = player.getPosition(delta), direction = new Vec3(offset.x / length, 0, offset.z / length);
             double room = length;
             for (double height : new double[] {0.3, 0.9, 1.5}) {
-                Vec3 start = from.add(0, height, 0), end = start.add(direction.scale(length + 0.35));
+                Vec3 start = from.add(0, height, 0), end = start.add(direction.scale(length + WALL_GAP));
                 var hit = player.level().clip(new ClipContext(start, end, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, player));
-                if (hit.getType() == HitResult.Type.BLOCK) room = Math.min(room, Math.max(0, start.distanceTo(hit.getLocation()) - 0.35));
+                if (hit.getType() == HitResult.Type.BLOCK) room = Math.min(room, Math.max(0, start.distanceTo(hit.getLocation()) - WALL_GAP));
             }
             return room >= length ? offset : new Vec3(offset.x * room / length, offset.y, offset.z * room / length);
         });
