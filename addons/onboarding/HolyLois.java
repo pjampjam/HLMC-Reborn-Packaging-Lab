@@ -46,6 +46,9 @@ public final class HolyLois implements ModInitializer {
     private final Discoveries discoveries = new Discoveries();
     private final DailyRewards daily = new DailyRewards();
     private final ServerEvents events = new ServerEvents();
+    private final Claims claims = new Claims();
+    private final RandomTeleport rtp = new RandomTeleport();
+    private final SupportCommand support = new SupportCommand();
     public static final class State {
         public int version = 1;
         public Set<UUID> completed = new HashSet<>();
@@ -56,7 +59,10 @@ public final class HolyLois implements ModInitializer {
         if (net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("placeholder-api")) TabPlaceholders.register();
         net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback.EVENT.register((dispatcher, registries, environment) -> {
             BotWallCommand.register(dispatcher);
-            SupportCommand.register(dispatcher);
+            DonateCommand.register(dispatcher);
+            support.register(dispatcher);
+            claims.register(dispatcher);
+            rtp.register(dispatcher);
         });
         ServerLifecycleEvents.SERVER_STARTED.register(this::load);
         net.fabricmc.fabric.api.event.player.UseItemCallback.EVENT.register((player, level, hand) ->
@@ -70,7 +76,13 @@ public final class HolyLois implements ModInitializer {
             // Vanilla clears the new player's spawn config if their bed/anchor is unusable.
             if (AuthPolicy.randomRespawn(alive, newPlayer.getRespawnConfig() != null))
                 randomRespawns.add(newPlayer.getUUID());
-            if (!alive) deathNotice(oldPlayer, newPlayer);
+            if (!alive) deathNotice(oldPlayer, newPlayer, CombatTag.lastDeathWasPvp(newPlayer.getUUID()));
+        });
+        ServerLivingEntityEvents.AFTER_DAMAGE.register((entity,source,baseDamage,damage,blocked) -> {
+            if (entity instanceof net.minecraft.server.level.ServerPlayer player && damage > 0) safely("combat tag", () -> CombatTag.onDamage(player, source));
+        });
+        ServerLivingEntityEvents.AFTER_DEATH.register((entity,source) -> {
+            if (entity instanceof net.minecraft.server.level.ServerPlayer player) safely("combat death", () -> CombatTag.diedInPvp(player));
         });
         ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity,source,amount) -> {
             if (entity instanceof net.minecraft.server.level.ServerPlayer player) {
@@ -86,6 +98,8 @@ public final class HolyLois implements ModInitializer {
             if (!state.completed.contains(id) && state.pending.add(id)) save();
         });
         ServerPlayConnectionEvents.DISCONNECT.register((handler,server) -> {
+            safely("combat logout", () -> CombatTag.onDisconnect(server, handler.player));
+            rtp.forget(handler.player.getUUID());
             authenticatedSamples.remove(handler.player.getUUID());
             failures.remove(handler.player.getUUID());
             welcomed.remove(handler.player.getUUID());
@@ -109,6 +123,7 @@ public final class HolyLois implements ModInitializer {
         discoveries.load(server, server.getWorldPath(LevelResource.ROOT));
         daily.load(server.getWorldPath(LevelResource.ROOT));
         events.load(server.getWorldPath(LevelResource.ROOT));
+        claims.load(server);
         try {
             if (Files.exists(stateFile)) {
                 state = JSON.fromJson(Files.readString(stateFile),State.class);
@@ -160,6 +175,9 @@ public final class HolyLois implements ModInitializer {
         if (server.getTickCount()%200 == 0) loadRules();
         if (server.getTickCount()%2400 == 0) Leaderboards.refreshAsync();
         safely("events", () -> events.tick(server));
+        safely("rtp", () -> rtp.tick(server, rtpRadius));
+        safely("combat", () -> CombatTag.tick(server));
+        if (server.getTickCount()%6000 == 0) for (var player : server.getPlayerList().getPlayers()) safely("claims", () -> claims.refresh(player));
         for (var player : server.getPlayerList().getPlayers()) {
             var id = player.getUUID();
             boolean auth = ((PlayerAuth)player).easyAuth$isAuthenticated();
@@ -177,12 +195,9 @@ public final class HolyLois implements ModInitializer {
             String name = player.getGameProfile().name();
             if (!name.matches("[A-Za-z0-9_]{3,16}")) continue;
             try {
-                // Vanilla spreadplayers finds a safe surface, rejecting fire and liquid.
+                // Safe surface via spreadplayers, never in or next to a land claim.
                 // The maintenance job expands this radius only after disk verification.
-                int result = server.getCommands().getDispatcher().execute(
-                    "spreadplayers 0 0 0 " + rtpRadius + " false " + name,
-                    server.createCommandSourceStack().withLevel(server.overworld()).withSuppressedOutput());
-                if (result < 1) throw new IllegalStateException("spreadplayers did not teleport the player");
+                if (!rtp.place(server, player, rtpRadius)) throw new IllegalStateException("No safe unclaimed spot found");
                 state.pending.remove(id);
                 state.completed.add(id);
                 arrivalProtection(server,id);
@@ -209,10 +224,7 @@ public final class HolyLois implements ModInitializer {
             boolean authenticated = auth.easyAuth$isAuthenticated();
             if (authenticated && randomRespawns.contains(id)) {
                 try {
-                    int result = server.getCommands().getDispatcher().execute(
-                        "spreadplayers 0 0 0 " + rtpRadius + " false " + player.getGameProfile().name(),
-                        server.createCommandSourceStack().withLevel(server.overworld()).withSuppressedOutput());
-                    if (result < 1) throw new IllegalStateException("No safe respawn location");
+                    if (!rtp.place(server, player, rtpRadius)) throw new IllegalStateException("No safe respawn location");
                     randomRespawns.remove(id);
                     arrivalProtection(server,id);
                 } catch (Exception error) {
@@ -238,14 +250,19 @@ public final class HolyLois implements ModInitializer {
     static String deathText(int x, int y, int z, String dimension) {
         return "You died at " + x + ", " + y + ", " + z + dimension + ".";
     }
-    private void deathNotice(net.minecraft.server.level.ServerPlayer oldPlayer, net.minecraft.server.level.ServerPlayer newPlayer) {
+    private void deathNotice(net.minecraft.server.level.ServerPlayer oldPlayer, net.minecraft.server.level.ServerPlayer newPlayer, boolean pvp) {
+        if (pvp) {
+            // PvP deaths: no coordinates and no lock, the loot belongs to whoever wins the fight.
+            newPlayer.sendSystemMessage(Component.literal("☠ You died in a fight. Your loot was left for the winner.").withStyle(ChatFormatting.RED));
+            return;
+        }
         var level = oldPlayer.level();
         String dimension = level.dimension() == Level.NETHER ? " in the Nether" : level.dimension() == Level.END ? " in the End" : " in the Overworld";
         var pos = oldPlayer.blockPosition();
         var message = Component.literal("☠ ").withStyle(ChatFormatting.RED)
             .append(Component.literal(deathText(pos.getX(), pos.getY(), pos.getZ(), dimension)).withStyle(ChatFormatting.WHITE));
         if (!level.getGameRules().get(net.minecraft.world.level.gamerules.GameRules.KEEP_INVENTORY))
-            message.append(Component.literal("\nYour drops are protected for 30 minutes while the area is loaded. The death point on your minimap disappears when you get there.")
+            message.append(Component.literal("\nYour drops stay for 30 minutes while the area is loaded, and only you can pick them up for the first 5. The death point on your minimap disappears when you get there.")
                 .withStyle(ChatFormatting.GRAY));
         newPlayer.sendSystemMessage(message);
     }
@@ -255,6 +272,7 @@ public final class HolyLois implements ModInitializer {
     private void welcome(net.minecraft.server.level.ServerPlayer player, boolean firstJoin) {
         if (player.level().getServer().getTickCount() < placingUntil.getOrDefault(player.getUUID(),0)) return;
         if (!welcomed.add(player.getUUID())) return;
+        safely("claims", () -> claims.refresh(player));
         int online = player.level().getServer().getPlayerList().getPlayerCount();
         var message = Component.literal(greeting(firstJoin, player.getGameProfile().name()))
             .withStyle(ChatFormatting.GOLD,ChatFormatting.BOLD);
@@ -269,7 +287,7 @@ public final class HolyLois implements ModInitializer {
             .withStyle(style -> style.withColor(ChatFormatting.LIGHT_PURPLE).withBold(false).withItalic(false)));
         if (online > 1) message.append(Component.literal("\n" + (online - 1) + (online == 2 ? " friend is" : " friends are") + " online. Hold Tab to see who.")
             .withStyle(style -> style.withColor(ChatFormatting.GREEN).withBold(false)));
-        message.append(Component.literal("\n/home set base | /rtp | /tpa NAME | /ah auction house | /daily coins")
+        message.append(Component.literal("\n/home set base | /rtp | /tpa NAME | /claims land | /ah auction house | /daily coins | /support help")
                 .withStyle(style -> style.withColor(ChatFormatting.YELLOW).withBold(false)))
             .append(Component.literal("\nV: voice | Caps Lock: talk | Tab: server stats")
                 .withStyle(style -> style.withColor(ChatFormatting.AQUA).withBold(false)));

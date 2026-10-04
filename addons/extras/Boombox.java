@@ -104,6 +104,7 @@ public final class Boombox implements ModInitializer {
         CreativeModeTabEvents.modifyOutputEvent(ResourceKey.create(Registries.CREATIVE_MODE_TAB, Identifier.withDefaultNamespace("tools_and_utilities")))
             .register(output -> output.accept(ITEM));
         PayloadTypeRegistry.clientboundPlay().register(BoomboxNear.TYPE, BoomboxNear.CODEC);
+        PvpDeath.register();
         loadConfig();
         // Right-click in the air plays the held boombox; right-click on a block places it (BlockItem).
         UseItemCallback.EVENT.register((player, level, hand) -> {

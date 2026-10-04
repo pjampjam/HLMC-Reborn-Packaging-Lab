@@ -2,5 +2,13 @@
   "item.holylois.boombox": "Бумбокс",
   "item.holylois.boombox.tip1": "ПКМ: включить или следующая станция. Присесть + ПКМ: выключить",
   "item.holylois.boombox.tip2": "Используйте на блоке, чтобы поставить. Играет в руке или на земле",
-  "block.holylois.boombox": "Бумбокс"
+  "block.holylois.boombox": "Бумбокс",
+  "holylois.zone.wilderness": "Дикие земли",
+  "holylois.zone.land": "Земли %s",
+  "holylois.zone.named": "%1$s (%2$s)",
+  "holylois.zone.server": "Земли сервера",
+  "holylois.zone.abandoned": "Заброшенные земли",
+  "holylois.zone.dimension.minecraft.overworld": "Обычный мир",
+  "holylois.zone.dimension.minecraft.the_nether": "Незер",
+  "holylois.zone.dimension.minecraft.the_end": "Энд"
 }

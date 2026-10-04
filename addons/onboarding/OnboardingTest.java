@@ -42,9 +42,19 @@ public final class OnboardingTest {
         check(ServerEvents.holiday(java.time.LocalDate.of(2026,11,18)).key().equals("independence")&&ServerEvents.holiday(java.time.LocalDate.of(2026,6,23)).key().equals("ligo")
             &&ServerEvents.holiday(java.time.LocalDate.of(2026,12,25)).lootbox()&&ServerEvents.holiday(java.time.LocalDate.of(2026,10,4))==null,"Latvian holidays by Riga date");
         check(DailyRewards.bar(3).getString().equals("■■■■■■✦")&&DailyRewards.bar(3).getSiblings().size()==7,"Streak bar has seven boxes ending in the lootbox star");
-        var support=SupportCommand.message().getString();
-        check(SupportCommand.WALLETS.size()==6&&SupportCommand.WALLETS.stream().anyMatch(w->w.address().startsWith("T")&&w.label().equals("TRON"))&&SupportCommand.WALLETS.stream().allMatch(w->support.contains(w.address()))&&support.contains("never buys anything"),"Support lists every address and promises no perks");
-        System.out.println("Passed 29 onboarding, greeting, name day, bot wall, leaderboard, discovery, death, daily reward, chair, holiday and support checks");
+        var support=DonateCommand.message().getString();
+        check(DonateCommand.WALLETS.size()==6&&DonateCommand.WALLETS.stream().anyMatch(w->w.address().startsWith("T")&&w.label().equals("TRON"))&&DonateCommand.WALLETS.stream().allMatch(w->support.contains(w.address()))&&support.contains("never buys anything"),"Support lists every address and promises no perks");
+        var land=new Claims.Config();
+        check(Claims.price(land,0)==500&&Claims.price(land,9)==1759&&Claims.price(land,19)==7116,"Chunk prices start at 500 and grow 15% each");
+        check(Claims.cost(land,0,3)==500+575+661&&Claims.refund(land,3,1)==Math.round(661*0.5),"Buying several chunks adds up; selling refunds half of the last price");
+        check(Claims.earned(land,0)==0&&Claims.earned(land,72000L*2)==1&&Claims.earned(land,72000L*1000)==48,"One free chunk per two hours played, capped at 48");
+        check(Claims.ticksToNext(land,72000L*3)==72000&&Claims.ticksToNext(land,72000L*1000)==-1,"Time to the next earned chunk");
+        var ring=new java.util.Random(7); boolean inRing=true;
+        for(int i=0;i<2000;i++){int[] xz=RandomTeleport.spot(ring,250,1800);double d=Math.hypot(xz[0],xz[1]);inRing&=d>=249&&d<=1801;}
+        check(inRing,"Random teleport stays between 250 and 1800 blocks from spawn");
+        check(SupportCommand.category("grief someone broke my farm").equals("grief")&&SupportCommand.category("BUG chest eats items").equals("bug")&&SupportCommand.category("hello?").equals("other"),"Support request categories come from the first word");
+        check(CombatTag.BLOCKED.contains("rtp")&&CombatTag.BLOCKED.contains("home")&&!CombatTag.BLOCKED.contains("support"),"Combat blocks teleports but never /support");
+        System.out.println("Passed 36 onboarding, greeting, name day, bot wall, leaderboard, discovery, death, daily reward, chair, holiday, donate, land, rtp, support and combat checks");
     }
     private static void check(boolean value,String message) {if(!value)throw new AssertionError(message);}
 }

@@ -1,56 +1,90 @@
 package holylois;
 
+import com.google.gson.JsonObject;
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
-import net.minecraft.network.chat.MutableComponent;
-import java.net.URI;
-import java.util.List;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.Level;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import java.util.*;
 
-/** /support: how to chip in for the server. Donations never buy anything in game (Minecraft server rules). */
+/**
+ * /support MESSAGE asks the staff for help, /report PLAYER REASON reports someone. Both go to the private Discord #support
+ * channel (the bot reads the HOLYLOIS-SUPPORT log line and pings the owner) and to online operators in game.
+ */
 final class SupportCommand {
-    private SupportCommand() {}
+    private static final Logger LOG = LoggerFactory.getLogger("HolyLois");
+    static final int COOLDOWN_SECONDS = 300;
+    static final List<String> CATEGORIES = List.of("bug", "help", "grief", "other");
+    private final Map<String, Long> lastUse = new HashMap<>();
 
-    /** label is shown in chat; help appears when hovering the label or the address. */
-    record Wallet(String label, String address, String help) {}
-    // Public receiving addresses of the server owner.
-    static final List<Wallet> WALLETS = List.of(
-        new Wallet("NEAR", "holylois.near", "NEAR Protocol. holylois.near is a readable account name: send NEAR or tokens on NEAR."),
-        new Wallet("Solana", "Lv4hNPTamrenSL8DA9gwun4p1vQ4dT6v2EtHkCKFxvj", "Solana network: SOL or Solana tokens such as USDC."),
-        new Wallet("TON", "UQAyixj0K6K9Nm2quzxM29VK5c2c-sjB1jKVKjhO1XNF7V92", "The Open Network (Telegram wallets): TON or USDT on TON."),
-        new Wallet("TRON", "TWWuxbKAtJccPUBP8St2GnTHJJvRkhmBZH", "TRON network: TRX or USDT (TRC-20). Send only on TRON."),
-        new Wallet("Bitcoin (SegWit)", "bc1q27h48nld84vp86ry6m5feu02yztrk9l7m3095f",
-            "Native SegWit address (starts with bc1). Every modern Bitcoin wallet can send to it. Only BTC on the Bitcoin network."),
-        new Wallet("EVM", "0xE161999E0779267689cB9F74f7beC0f7eB9b1c2A",
-            "One address for every EVM network: Ethereum, Base, Arbitrum, Optimism, BNB Chain, Polygon. "
-                + "Send ETH, USDC, USDT and similar; choose the network in your wallet."));
-
-    static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
-        dispatcher.register(Commands.literal("support").executes(context -> {
-            context.getSource().sendSystemMessage(message());
-            return 1;
-        }));
+    void register(CommandDispatcher<CommandSourceStack> dispatcher) {
+        dispatcher.register(Commands.literal("support")
+            .executes(context -> { usage(context.getSource().getPlayerOrException()); return 1; })
+            .then(Commands.argument("message", StringArgumentType.greedyString())
+                .executes(context -> send(context.getSource().getPlayerOrException(), "help", null, StringArgumentType.getString(context, "message")))));
+        dispatcher.register(Commands.literal("report")
+            .then(Commands.argument("player", EntityArgument.player())
+                .then(Commands.argument("reason", StringArgumentType.greedyString())
+                    .executes(context -> send(context.getSource().getPlayerOrException(), "report",
+                        EntityArgument.getPlayer(context, "player").getGameProfile().name(), StringArgumentType.getString(context, "reason"))))));
     }
 
-    static MutableComponent message() {
-        var text = Component.literal("♥ Support Holy Lois").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)
-            .append(Component.literal("\nHoly Lois is run by pjampjam for friends. If you want to help with the domain and future upgrades, "
-                + "you can send crypto to one of these. It never buys anything in game; it just keeps the lights on.")
-                .withStyle(style -> style.withColor(ChatFormatting.GRAY).withBold(false)));
-        for (var wallet : WALLETS)
-            text.append(Component.literal("\n" + wallet.label() + ": ").withStyle(style -> style.withColor(ChatFormatting.YELLOW).withBold(false)
-                    .withHoverEvent(new HoverEvent.ShowText(Component.literal(wallet.help())))))
-                .append(Component.literal(wallet.address()).withStyle(style -> style.withColor(ChatFormatting.WHITE).withBold(false)
-                    .withClickEvent(new ClickEvent.CopyToClipboard(wallet.address()))
-                    .withHoverEvent(new HoverEvent.ShowText(Component.literal("Click to copy\n").withStyle(ChatFormatting.YELLOW)
-                        .append(Component.literal(wallet.help()).withStyle(ChatFormatting.GRAY))))));
-        text.append(Component.literal("\nHover a network for details, click an address to copy it. Thank you! ").withStyle(style -> style.withColor(ChatFormatting.GRAY).withBold(false)))
-            .append(Component.literal("holylois.com/support").withStyle(style -> style.withColor(ChatFormatting.AQUA).withBold(false).withUnderlined(true)
-                .withClickEvent(new ClickEvent.OpenUrl(URI.create("https://holylois.com/support")))));
-        return text;
+    private static void usage(ServerPlayer player) {
+        player.sendSystemMessage(Component.literal("✦ Need help?").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)
+            .append(Component.literal("\n/support MESSAGE - pjampjam gets it on Discord right away and replies in game."
+                + "\nStart with bug, help or grief if it fits, e.g. /support grief someone broke my farm"
+                + "\n/report PLAYER REASON - report a player privately. /donate - help pay for the server.")
+                .withStyle(style -> style.withColor(ChatFormatting.YELLOW).withBold(false))));
+    }
+
+    /** First word as category when it is one of CATEGORIES, otherwise "other". */
+    static String category(String message) {
+        String first = message.strip().split("\\s+", 2)[0].toLowerCase(Locale.ROOT);
+        return CATEGORIES.contains(first) ? first : "other";
+    }
+
+    private int send(ServerPlayer player, String kind, String target, String message) {
+        message = message.strip();
+        if (message.length() < 3) { usage(player); return 0; }
+        String key = kind + ":" + player.getUUID();
+        long now = System.currentTimeMillis() / 1000;
+        long wait = COOLDOWN_SECONDS - (now - lastUse.getOrDefault(key, 0L));
+        if (wait > 0) {
+            player.sendSystemMessage(Component.literal("You can send another " + (kind.equals("report") ? "report" : "request") + " in " + (wait / 60) + " min " + (wait % 60) + " s.").withStyle(ChatFormatting.RED));
+            return 0;
+        }
+        lastUse.put(key, now);
+        var level = player.level();
+        String dimension = level.dimension() == Level.NETHER ? "Nether" : level.dimension() == Level.END ? "End" : "Overworld";
+        var json = new JsonObject();
+        json.addProperty("kind", kind);
+        json.addProperty("player", player.getGameProfile().name());
+        if (target != null) json.addProperty("target", target);
+        json.addProperty("category", kind.equals("report") ? "report" : category(message));
+        json.addProperty("message", message.length() > 500 ? message.substring(0, 500) : message);
+        json.addProperty("dimension", dimension);
+        json.addProperty("x", player.getBlockX()); json.addProperty("y", player.getBlockY()); json.addProperty("z", player.getBlockZ());
+        LOG.info("HOLYLOIS-SUPPORT {}", json);
+        String name = player.getGameProfile().name();
+        var note = Component.literal(kind.equals("report") ? "[Report] " : "[Help] ").withStyle(ChatFormatting.RED, ChatFormatting.BOLD)
+            .append(Component.literal(name + (target != null ? " about " + target : "") + ": " + message).withStyle(style -> style.withColor(ChatFormatting.YELLOW).withBold(false)
+                .withClickEvent(new ClickEvent.SuggestCommand("/tp " + name))
+                .withHoverEvent(new HoverEvent.ShowText(Component.literal(dimension + " " + player.getBlockX() + ", " + player.getBlockY() + ", " + player.getBlockZ() + "\nClick to teleport there")))));
+        var server = level.getServer();
+        for (var other : server.getPlayerList().getPlayers())
+            if (other != player && Commands.hasPermission(Commands.LEVEL_GAMEMASTERS).test(other.createCommandSourceStack())) other.sendSystemMessage(note);
+        player.sendSystemMessage(Component.literal(kind.equals("report")
+            ? "✦ Report sent privately to the staff. Thank you."
+            : "✦ Sent! pjampjam gets it on Discord now and will reply here or there.").withStyle(ChatFormatting.GREEN));
+        return 1;
     }
 }

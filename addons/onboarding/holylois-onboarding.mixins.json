@@ -4,8 +4,9 @@
   "package": "holylois.mixins",
   "compatibilityLevel": "JAVA_25",
   "mixins": [
+    "CombatCommandMixin",
+    "DeathDropsMixin",
     "DeathLootMixin",
-    "DeathNoticeMixin",
     "LiteminerShapeMixin"
   ],
   "injectors": {

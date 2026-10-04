@@ -2,5 +2,13 @@
   "item.holylois.boombox": "Skaļrunis",
   "item.holylois.boombox.tip1": "Labais klikšķis: ieslēgt vai nākamā stacija. Pietupies + labais klikšķis: izslēgt",
   "item.holylois.boombox.tip2": "Lieto uz bloka, lai noliktu. Skan rokās vai nolikta",
-  "block.holylois.boombox": "Skaļrunis"
+  "block.holylois.boombox": "Skaļrunis",
+  "holylois.zone.wilderness": "Savvaļa",
+  "holylois.zone.land": "%s zemes",
+  "holylois.zone.named": "%1$s (%2$s)",
+  "holylois.zone.server": "Servera zemes",
+  "holylois.zone.abandoned": "Pamestas zemes",
+  "holylois.zone.dimension.minecraft.overworld": "Virszeme",
+  "holylois.zone.dimension.minecraft.the_nether": "Nether",
+  "holylois.zone.dimension.minecraft.the_end": "Beigas"
 }

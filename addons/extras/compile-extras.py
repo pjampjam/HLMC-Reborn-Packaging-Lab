@@ -8,7 +8,8 @@ if not jl.exists(): jl.write_bytes(urllib.request.urlopen(JLAYER, timeout=60).re
 sha1 = hashlib.sha1(jl.read_bytes()).hexdigest()
 expected = urllib.request.urlopen(JLAYER + '.sha1', timeout=30).read().decode().split()[0]
 assert sha1 == expected, ('jlayer checksum', sha1, expected)
-jars = list((r / 'libraries').rglob('*.jar')) + list((r / 'versions').rglob('*.jar')) + list((r / 'mods').glob('*.jar')) + [jl, pathlib.Path('/home/ubuntu/holylois-client/minecraft-26.3-client.jar')]
+# extra/: mods not installed live yet (e.g. Open Parties and Claims for the zone titles).
+jars = list((w / 'extra').glob('*.jar')) + list((r / 'libraries').rglob('*.jar')) + list((r / 'versions').rglob('*.jar')) + list((r / 'mods').glob('*.jar')) + [jl, pathlib.Path('/home/ubuntu/holylois-client/minecraft-26.3-client.jar')]
 seen = set()
 def nested(p):
     with zipfile.ZipFile(p) as z:

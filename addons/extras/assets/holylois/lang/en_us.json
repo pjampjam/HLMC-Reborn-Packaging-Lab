@@ -2,5 +2,13 @@
   "item.holylois.boombox": "Boombox",
   "item.holylois.boombox.tip1": "Right-click: play or next station. Sneak + right-click: off",
   "item.holylois.boombox.tip2": "Use on a block to set it down. Plays while held or placed",
-  "block.holylois.boombox": "Boombox"
+  "block.holylois.boombox": "Boombox",
+  "holylois.zone.wilderness": "Wilderness",
+  "holylois.zone.land": "%s's land",
+  "holylois.zone.named": "%1$s (%2$s)",
+  "holylois.zone.server": "Server land",
+  "holylois.zone.abandoned": "Abandoned land",
+  "holylois.zone.dimension.minecraft.overworld": "The Overworld",
+  "holylois.zone.dimension.minecraft.the_nether": "The Nether",
+  "holylois.zone.dimension.minecraft.the_end": "The End"
 }
