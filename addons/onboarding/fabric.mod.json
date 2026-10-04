@@ -4,6 +4,15 @@
   "version": "1.7.0",
   "name": "Holy Lois Onboarding",
   "description": "Server login, claim-safe random placement and /rtp, land claims shop (/claims), combat tag, death-loot grace period, death coordinates, welcome messages, Tab leaderboards, structure discoveries, daily gifts, /donate, /support and /report for Holy Lois: Reborn",
+  "authors": [
+    "pjampjam"
+  ],
+  "contact": {
+    "homepage": "https://holylois.com",
+    "sources": "https://github.com/pjampjam/HLMC-Reborn-Packaging-Lab",
+    "issues": "https://holylois.com/support"
+  },
+  "icon": "icon.png",
   "environment": "server",
   "license": "MIT",
   "entrypoints": {
@@ -27,5 +36,13 @@
   "suggests": {
     "placeholder-api": "*",
     "economycraft": "*"
+  },
+  "custom": {
+    "modmenu": {
+      "links": {
+        "modmenu.discord": "https://discord.gg/FzBJSZwY2c",
+        "modmenu.donate": "https://holylois.com/donate"
+      }
+    }
   }
 }

@@ -25,7 +25,7 @@ subprocess.run(['rm', '-rf', str(classes)], check=True); classes.mkdir()
 sources = sorted(w.glob('*.java'))
 if subprocess.run([java, '-m', 'jdk.compiler/com.sun.tools.javac.Main', '-proc:none', '-Xlint:-options', '-source', '25', '-target', '25',
                    '-cp', cp, '-d', str(classes), *map(str, sources)]).returncode: raise SystemExit('javac failed')
-if subprocess.run([java, '-cp', str(classes) + ':' + cp, 'holylois.boombox.BoomboxTest', '8']).returncode: raise SystemExit('BoomboxTest failed')
+if subprocess.run([java, '-cp', str(classes) + ':' + cp, 'holylois.boombox.BoomboxTest', '16']).returncode: raise SystemExit('BoomboxTest failed')
 # Fabric only loads nested jars that carry their own fabric.mod.json, so JLayer gets a small wrapper.
 wrapped = io.BytesIO()
 with zipfile.ZipFile(jl) as src, zipfile.ZipFile(wrapped, 'w', zipfile.ZIP_DEFLATED) as dst:

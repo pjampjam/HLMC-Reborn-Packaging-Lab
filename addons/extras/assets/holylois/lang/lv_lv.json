@@ -1,7 +1,7 @@
 {
   "item.holylois.boombox": "Skaļrunis",
   "item.holylois.boombox.tip1": "Labais klikšķis: ieslēgt vai nākamā stacija. Pietupies + labais klikšķis: izslēgt",
-  "item.holylois.boombox.tip2": "Lieto uz bloka, lai noliktu. Skan rokās vai nolikta",
+  "item.holylois.boombox.tip2": "Shift + peles ritenis: skaļums. Lieto uz bloka, lai noliktu",
   "block.holylois.boombox": "Skaļrunis",
   "holylois.zone.wilderness": "Savvaļa",
   "holylois.zone.land": "%s zemes",

@@ -1,7 +1,7 @@
 {
   "item.holylois.boombox": "Boombox",
   "item.holylois.boombox.tip1": "Right-click: play or next station. Sneak + right-click: off",
-  "item.holylois.boombox.tip2": "Use on a block to set it down. Plays while held or placed",
+  "item.holylois.boombox.tip2": "Sneak + scroll: volume. Use on a block to set it down",
   "block.holylois.boombox": "Boombox",
   "holylois.zone.wilderness": "Wilderness",
   "holylois.zone.land": "%s's land",

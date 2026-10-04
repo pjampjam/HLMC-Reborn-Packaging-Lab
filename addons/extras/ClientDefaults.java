@@ -26,6 +26,8 @@ public final class ClientDefaults implements PreLaunchEntrypoint {
                 if (done.add("rei-hide-idle")) text = text.replace("\"hideEntryPanelIfIdle\": false", "\"hideEntryPanelIfIdle\": true");
                 // The developer "Tags" tab is hidden from recipe views.
                 if (done.add("rei-hide-tags")) text = text.replace("\"hiddenCategories\": []", "\"hiddenCategories\": [\"minecraft:plugins/tag\"]");
+                // A scrolling list instead of pages: no arrows and no "0/1" counter, only the search bar.
+                if (done.add("rei-scrolling")) text = text.replace("\"scrollingEntryListWidget\": false", "\"scrollingEntryListWidget\": true");
                 if (!text.equals(before)) Files.writeString(rei, text, StandardCharsets.UTF_8);
             }
             Files.write(marker, done);

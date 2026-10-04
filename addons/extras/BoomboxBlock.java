@@ -2,7 +2,9 @@ package holylois.boombox;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.context.BlockPlaceContext;
@@ -25,20 +27,29 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 public final class BoomboxBlock extends HorizontalDirectionalBlock {
     static final BooleanProperty PLAYING = BooleanProperty.create("playing");
     static final IntegerProperty STATION = IntegerProperty.create("station", 0, 15);
+    static final IntegerProperty VOLUME = IntegerProperty.create("volume", 1, 10);
     private static final VoxelShape NORTH_SOUTH = Block.box(1, 0, 5, 15, 8, 11), EAST_WEST = Block.box(5, 0, 1, 11, 8, 15);
 
     BoomboxBlock(Properties properties) {
         super(properties);
-        registerDefaultState(stateDefinition.any().setValue(FACING, Direction.NORTH).setValue(PLAYING, false).setValue(STATION, 0));
+        registerDefaultState(stateDefinition.any().setValue(FACING, Direction.NORTH).setValue(PLAYING, false).setValue(STATION, 0).setValue(VOLUME, Boombox.DEFAULT_VOLUME));
     }
 
     @Override protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-        builder.add(FACING, PLAYING, STATION);
+        builder.add(FACING, PLAYING, STATION, VOLUME);
     }
 
     @Override public BlockState getStateForPlacement(BlockPlaceContext context) {
         int station = Math.min(15, Math.max(0, Boombox.station(context.getItemInHand())));
-        return defaultBlockState().setValue(FACING, context.getHorizontalDirection().getOpposite()).setValue(STATION, station);
+        return defaultBlockState().setValue(FACING, context.getHorizontalDirection().getOpposite()).setValue(STATION, station)
+            .setValue(VOLUME, Boombox.volume(context.getItemInHand()));
+    }
+
+    /** Music notes rise from a playing boombox, a few more when it is turned up. */
+    @Override public void animateTick(BlockState state, Level level, BlockPos pos, RandomSource random) {
+        if (!state.getValue(PLAYING) || random.nextInt(14) >= 2 + state.getValue(VOLUME) / 2) return;
+        level.addParticle(ParticleTypes.NOTE, pos.getX() + 0.2 + random.nextDouble() * 0.6, pos.getY() + 0.75,
+            pos.getZ() + 0.2 + random.nextDouble() * 0.6, random.nextInt(25) / 24.0, 0, 0);
     }
 
     @Override protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {

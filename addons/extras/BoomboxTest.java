@@ -4,6 +4,8 @@ package holylois.boombox;
 public final class BoomboxTest {
     public static void main(String[] args) throws Exception {
         if (!RadioStream.IcyStream.title("StreamTitle='Artist - Song';StreamUrl='';").equals("Artist - Song")) throw new AssertionError("ICY title");
+        if (!PackCheck.older("1.7.4", "1.7.5") || PackCheck.older("1.7.5", "1.7.5") || PackCheck.older("1.10.0", "1.9.9") || !PackCheck.older("1.7", "1.7.1"))
+            throw new AssertionError("pack version compare");
         int ok = 0;
         for (var station : new Boombox.Config().stations.subList(0, Math.min(args.length > 0 ? Integer.parseInt(args[0]) : 3, new Boombox.Config().stations.size()))) {
             var stream = new RadioStream(station.url, 0.55f);

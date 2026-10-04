@@ -23,7 +23,8 @@ final class RadioStream implements Runnable {
     static final int FRAME = 960, RATE = 48000;
 
     private final String url;
-    private final float gain;
+    /** Changed live by the volume control; applies from the next decoded frame. */
+    volatile float gain;
     private final BlockingQueue<short[]> frames = new ArrayBlockingQueue<>(75);
     private volatile boolean running = true;
     volatile String nowPlaying = "";

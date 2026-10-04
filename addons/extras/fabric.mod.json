@@ -1,9 +1,21 @@
 {
   "schemaVersion": 1,
   "id": "holylois-extras",
-  "version": "1.2.0",
-  "name": "Holy Lois Extras",
+  "version": "1.3.0",
+  "name": "Holy Lois",
+  "provides": [
+    "holylois"
+  ],
   "description": "Holy Lois boombox (internet radio through Simple Voice Chat, held or placed), zone titles (biome and land claim) and small client fixes",
+  "authors": [
+    "pjampjam"
+  ],
+  "contact": {
+    "homepage": "https://holylois.com",
+    "sources": "https://github.com/pjampjam/HLMC-Reborn-Packaging-Lab",
+    "issues": "https://holylois.com/support"
+  },
+  "icon": "assets/holylois/icon.png",
   "license": "MIT",
   "environment": "*",
   "entrypoints": {
@@ -44,5 +56,13 @@
   },
   "recommends": {
     "openpartiesandclaims": "*"
+  },
+  "custom": {
+    "modmenu": {
+      "links": {
+        "modmenu.discord": "https://discord.gg/FzBJSZwY2c",
+        "modmenu.donate": "https://holylois.com/donate"
+      }
+    }
   }
 }

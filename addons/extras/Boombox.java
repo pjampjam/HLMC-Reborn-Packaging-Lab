@@ -55,11 +55,12 @@ import java.util.*;
 public final class Boombox implements ModInitializer {
     static final Logger LOG = LoggerFactory.getLogger("HolyLoisBoombox");
     static final Identifier ID = Identifier.fromNamespaceAndPath("holylois", "boombox");
-    static final String STATION_KEY = "holylois_station";
+    static final String STATION_KEY = "holylois_station", VOLUME_KEY = "holylois_volume";
+    static final int DEFAULT_VOLUME = 5;
     private static final Gson JSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Path CONFIG = Path.of("config", "holylois-boombox.json");
-    static Item ITEM;
-    static BoomboxBlock BLOCK;
+    public static Item ITEM;
+    public static BoomboxBlock BLOCK;
     static volatile VoicechatServerApi voice;
 
     public static final class Station { public String name, url; Station() {} Station(String n, String u) { name = n; url = u; } }
@@ -71,12 +72,18 @@ public final class Boombox implements ModInitializer {
             new Station("TOP radio", "https://topradio.live.advailo.com/topradio/mp3/icecast.audio"),
             new Station("Radio Paradise", "https://stream.radioparadise.com/mp3-128"),
             new Station("SomaFM Groove Salad", "https://ice2.somafm.com/groovesalad-128-mp3"),
-            new Station("SomaFM Lush", "https://ice2.somafm.com/lush-128-mp3")));
+            new Station("SomaFM Lush", "https://ice2.somafm.com/lush-128-mp3"),
+            new Station("SomaFM Dub Step Beyond", "https://ice2.somafm.com/dubstep-128-mp3"),
+            new Station("Bassdrive (drum and bass)", "http://ice.bassdrive.net/stream"),
+            new Station("laut.fm Trap", "https://stream.laut.fm/trap"),
+            new Station("laut.fm Lo-fi", "https://stream.laut.fm/lofi"),
+            new Station("laut.fm Hardstyle", "https://stream.laut.fm/hardstyle"),
+            new Station("laut.fm Techno", "https://stream.laut.fm/techno")));
         public float distance = 24f, volume = 0.55f;
         public int maxPlaying = 6;
     }
 
-    record Session(RadioStream stream, AudioPlayer player, int station, long[] lastHeld) {}
+    record Session(RadioStream stream, AudioPlayer player, AudioChannel channel, int station, long[] lastHeld) {}
     record Spot(String dimension, int x, int y, int z) {
         static Spot of(Level level, BlockPos pos) { return new Spot(level.dimension().identifier().toString(), pos.getX(), pos.getY(), pos.getZ()); }
         BlockPos pos() { return new BlockPos(x, y, z); }
@@ -105,6 +112,9 @@ public final class Boombox implements ModInitializer {
             .register(output -> output.accept(ITEM));
         PayloadTypeRegistry.clientboundPlay().register(BoomboxNear.TYPE, BoomboxNear.CODEC);
         PvpDeath.register();
+        PackCheck.register();
+        PayloadTypeRegistry.serverboundPlay().register(BoomboxVolume.TYPE, BoomboxVolume.CODEC);
+        ServerPlayNetworking.registerGlobalReceiver(BoomboxVolume.TYPE, (payload, context) -> changeVolume(context.player(), payload));
         loadConfig();
         // Right-click in the air plays the held boombox; right-click on a block places it (BlockItem).
         UseItemCallback.EVENT.register((player, level, hand) -> {
@@ -161,6 +171,54 @@ public final class Boombox implements ModInitializer {
         return data == null ? 0 : data.copyTag().getIntOr(STATION_KEY, 0);
     }
 
+    static int volume(ItemStack stack) {
+        var data = stack.get(DataComponents.CUSTOM_DATA);
+        return Math.clamp(data == null ? DEFAULT_VOLUME : data.copyTag().getIntOr(VOLUME_KEY, DEFAULT_VOLUME), 1, 10);
+    }
+
+    private static void setTag(ItemStack stack, String key, int value) {
+        var data = stack.get(DataComponents.CUSTOM_DATA);
+        var tag = data == null ? new CompoundTag() : data.copyTag();
+        tag.putInt(key, value);
+        CustomData.set(DataComponents.CUSTOM_DATA, stack, tag);
+    }
+
+    /** Volume 5 is the old fixed loudness; 10 is about 1.8x as loud and reaches 20% further. */
+    static float gain(int volume) { return config.volume * (0.2f + 0.16f * volume); }
+    static float range(int volume) { return config.distance * (0.8f + 0.04f * volume); }
+
+    private static void apply(Session session, int volume) {
+        if (session == null) return;
+        session.stream().gain = gain(volume);
+        if (session.channel() instanceof de.maxhenkel.voicechat.api.audiochannel.EntityAudioChannel entity) entity.setDistance(range(volume));
+        if (session.channel() instanceof de.maxhenkel.voicechat.api.audiochannel.LocationalAudioChannel located) located.setDistance(range(volume));
+    }
+
+    /** Sneak + scroll from the client: the placed boombox in reach, or the one in hand. */
+    private static void changeVolume(ServerPlayer player, BoomboxVolume request) {
+        int volume;
+        if (request.pos() != null) {
+            var level = player.level();
+            var pos = request.pos();
+            if (player.position().distanceToSqr(Vec3.atCenterOf(pos)) > 64 || !level.isLoaded(pos)) return;
+            var state = level.getBlockState(pos);
+            if (!state.is(BLOCK)) return;
+            volume = Math.clamp(state.getValue(BoomboxBlock.VOLUME) + request.step(), 1, 10);
+            if (volume == state.getValue(BoomboxBlock.VOLUME)) { actionBar(player, volumeText(volume)); return; }
+            level.setBlock(pos, state.setValue(BoomboxBlock.VOLUME, volume), 3);
+            apply(speakers.get(Spot.of(level, pos)), volume);
+        } else {
+            var stack = player.getMainHandItem().is(ITEM) ? player.getMainHandItem() : player.getOffhandItem();
+            if (!stack.is(ITEM)) return;
+            volume = Math.clamp(volume(stack) + request.step(), 1, 10);
+            setTag(stack, VOLUME_KEY, volume);
+            apply(sessions.get(player.getUUID()), volume);
+        }
+        actionBar(player, volumeText(volume));
+    }
+
+    private static String volumeText(int volume) { return "♪ Volume " + "|".repeat(volume) + " ".repeat(10 - volume) + " " + volume + "/10"; }
+
     private static int stationCount() { return Math.min(16, config.stations.size()); }
     private static int playing() { return sessions.size() + speakers.size(); }
 
@@ -175,9 +233,8 @@ public final class Boombox implements ModInitializer {
         int next = Math.floorMod(current == null ? station(stack) : current.station() + 1, stationCount());
         if (current == null && playing() >= config.maxPlaying) { actionBar(player, "Too many boomboxes are playing right now"); return; }
         stop(id);
-        var tag = new CompoundTag(); tag.putInt(STATION_KEY, next);
-        CustomData.set(DataComponents.CUSTOM_DATA, stack, tag);
-        var session = open(voice.createEntityAudioChannel(UUID.randomUUID(), voice.fromEntity(player)), next);
+        setTag(stack, STATION_KEY, next);
+        var session = open(voice.createEntityAudioChannel(UUID.randomUUID(), voice.fromEntity(player)), next, volume(stack));
         if (session == null) { actionBar(player, "Voice chat could not open a channel"); return; }
         session.lastHeld()[0] = player.level().getServer().getTickCount();
         sessions.put(id, session);
@@ -203,29 +260,29 @@ public final class Boombox implements ModInitializer {
         level.setBlock(pos, state.setValue(BoomboxBlock.PLAYING, true).setValue(BoomboxBlock.STATION, next), 3);
         stopSpeaker(spot);
         if (placed.add(spot)) savePlaced();
-        if (!startSpeaker((ServerLevel)level, spot, next)) { actionBar(player, "Voice chat could not open a channel"); return; }
+        if (!startSpeaker((ServerLevel)level, spot, next, state.getValue(BoomboxBlock.VOLUME))) { actionBar(player, "Voice chat could not open a channel"); return; }
         tuned(player, next);
     }
 
-    private static boolean startSpeaker(ServerLevel level, Spot spot, int station) {
+    private static boolean startSpeaker(ServerLevel level, Spot spot, int station, int volume) {
         var center = spot.center();
         var session = open(voice.createLocationalAudioChannel(UUID.randomUUID(), voice.fromServerLevel(level),
-            voice.createPosition(center.x, center.y, center.z)), station);
+            voice.createPosition(center.x, center.y, center.z)), station, volume);
         if (session == null) return false;
         speakers.put(spot, session);
         return true;
     }
 
-    private static Session open(AudioChannel channel, int index) {
+    private static Session open(AudioChannel channel, int index, int volume) {
         if (channel == null) return null;
         channel.setCategory(BoomboxPlugin.CATEGORY);
-        if (channel instanceof de.maxhenkel.voicechat.api.audiochannel.EntityAudioChannel entity) entity.setDistance(config.distance);
-        if (channel instanceof de.maxhenkel.voicechat.api.audiochannel.LocationalAudioChannel located) located.setDistance(config.distance);
-        var stream = new RadioStream(config.stations.get(index).url, config.volume);
+        if (channel instanceof de.maxhenkel.voicechat.api.audiochannel.EntityAudioChannel entity) entity.setDistance(range(volume));
+        if (channel instanceof de.maxhenkel.voicechat.api.audiochannel.LocationalAudioChannel located) located.setDistance(range(volume));
+        var stream = new RadioStream(config.stations.get(index).url, gain(volume));
         var audio = voice.createAudioPlayer(channel, voice.createEncoder(), stream::next);
         stream.start();
         audio.startPlaying();
-        return new Session(stream, audio, index, new long[] {0});
+        return new Session(stream, audio, channel, index, new long[] {0});
     }
 
     private static void tuned(ServerPlayer player, int index) {
@@ -293,7 +350,7 @@ public final class Boombox implements ModInitializer {
             boolean listener = level.players().stream().anyMatch(p -> p.position().distanceToSqr(spot.center()) < reach * reach);
             if (!listener) stopSpeaker(spot);
             else if (session == null && voice != null && playing() < config.maxPlaying)
-                startSpeaker(level, spot, Math.floorMod(state.getValue(BoomboxBlock.STATION), stationCount()));
+                startSpeaker(level, spot, Math.floorMod(state.getValue(BoomboxBlock.STATION), stationCount()), state.getValue(BoomboxBlock.VOLUME));
             if (session != null && now % 40 == 0) {
                 String song = session.stream().nowPlaying;
                 var text = "♪ " + config.stations.get(session.station()).name + (song.isEmpty() ? "" : " - " + song);

@@ -14,5 +14,7 @@ public final class BoomboxClient implements ClientModInitializer {
         ClientPlayNetworking.registerGlobalReceiver(BoomboxNear.TYPE, (payload, context) -> near = payload.near());
         ClientPlayNetworking.registerGlobalReceiver(PvpDeath.TYPE, (payload, context) -> skipDeathpointUntil = System.currentTimeMillis() + 60_000);
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> { near = false; skipDeathpointUntil = 0; });
+        if (net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("firstperson")) FirstPersonSleep.register();
+        PackCheckClient.register();
     }
 }

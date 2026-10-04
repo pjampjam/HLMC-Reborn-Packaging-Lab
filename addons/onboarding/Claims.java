@@ -123,8 +123,8 @@ final class Claims {
                     .withClickEvent(new ClickEvent.SuggestCommand("/claims buy 1"))
                     .withHoverEvent(new HoverEvent.ShowText(Component.literal("Each extra chunk costs " + Math.round((config.priceGrowth - 1) * 100) + "% more than the last")))));
         }
-        text.append(line("\nHow to claim: open the world map (M), right-click a chunk and choose Claim, or stand in it and use /oclaims claim. "
-                + "Teams: /oparties create, then /oparties invite NAME.", ChatFormatting.AQUA).withStyle(s -> s.withBold(false)));
+        text.append(line("\nHow to claim: open the world map (J), right-click a chunk and choose Claim, or stand in it and use /oclaims claim. "
+                + "Name it: press ' and set Claimed Area Name in your player config. Teams: /oparties create, then /oparties invite NAME.", ChatFormatting.AQUA).withStyle(s -> s.withBold(false)));
         player.sendSystemMessage(text);
     }
 
