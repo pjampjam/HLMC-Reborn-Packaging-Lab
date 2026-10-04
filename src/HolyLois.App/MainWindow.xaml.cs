@@ -86,15 +86,52 @@ public partial class MainWindow : ThemedWindow
         PlayLabel.Foreground = (Brush)FindResource(ready ? "OnGreen" : "Text");
         PlayLabel.Text = T("Play"); PlayLauncherLabel.Text = sk ? "SKlauncher" : "Minecraft Launcher"; PlayHint.Text = T(ready ? "PlayReadyHint" : context.CanPlay ? "PlayMissingLauncher" : "PlayInstallHint");
         PlayButton.Foreground = PlayLabel.Foreground; PlayLauncherLabel.Foreground = PlayLabel.Foreground; PlayButton.FontWeight = FontWeights.SemiBold;
+        RefreshNews(available);
+        // One card per release: gold version, summary, then one bullet per change so long notes stay readable.
         HistoryPanel.Children.Clear();
         foreach (var item in context.Manifest.History ?? [])
         {
-            HistoryPanel.Children.Add(new TextBlock { Text = item.Version + "  -  " + item.Date, FontWeight = FontWeights.SemiBold, Margin = new Thickness(0, 10, 0, 5) });
-            HistoryPanel.Children.Add(new TextBlock { Text = item.Summary, FontSize = 12 });
-            foreach (var group in new[] { ("Added", item.Added), ("Removed", item.Removed), ("Updated", item.Updated) })
-                if (group.Item2.Length > 0) HistoryPanel.Children.Add(new TextBlock { Text = T(group.Item1) + ": " + string.Join(", ", group.Item2), FontSize = 12, Margin = new Thickness(0, 5, 0, 0) });
+            var card = new StackPanel();
+            var head = new TextBlock { FontSize = 14, FontWeight = FontWeights.SemiBold };
+            head.Inlines.Add(new System.Windows.Documents.Run(item.Version) { Foreground = (Brush)FindResource("Gold") });
+            head.Inlines.Add(new System.Windows.Documents.Run("   " + item.Date) { Foreground = (Brush)FindResource("Muted"), FontWeight = FontWeights.Normal, FontSize = 12 });
+            card.Children.Add(head);
+            card.Children.Add(new TextBlock { Text = item.Summary, FontSize = 13, Margin = new Thickness(0, 4, 0, 0) });
+            foreach (var (name, lines) in new[] { ("Added", item.Added), ("Updated", item.Updated), ("Removed", item.Removed) })
+            {
+                if (lines.Length == 0) continue;
+                card.Children.Add(new TextBlock { Text = T(name), FontSize = 12, FontWeight = FontWeights.SemiBold, Foreground = (Brush)FindResource("Muted"), Margin = new Thickness(0, 9, 0, 1) });
+                foreach (var line in lines) card.Children.Add(Bullet(line));
+            }
+            HistoryPanel.Children.Add(new Border { Child = card, Background = (Brush)FindResource("Canvas"), BorderBrush = (Brush)FindResource("Line"), BorderThickness = new Thickness(1),
+                CornerRadius = (CornerRadius)FindResource("Radius"), Padding = new Thickness(14, 12, 14, 12), Margin = new Thickness(0, 0, 0, 10) });
         }
         if (HistoryPanel.Children.Count == 0) HistoryPanel.Children.Add(new TextBlock { Text = T("NoHistory") });
+    }
+    // The newest release at the top of the page; it turns gold with its own Update button while an update waits.
+    private void RefreshNews(bool available)
+    {
+        var latest = context.Manifest.History?.FirstOrDefault();
+        NewsCard.Visibility = latest is null ? Visibility.Collapsed : Visibility.Visible;
+        if (latest is null) return;
+        NewsEyebrow.Text = available ? latest.Date : T("LatestNews") + "  -  " + latest.Version + "  -  " + latest.Date;
+        NewsTitle.Text = available ? string.Format(T("UpdateReady"), context.Manifest.Version) : latest.Summary;
+        NewsCard.BorderBrush = (Brush)FindResource(available ? "Gold" : "Line");
+        NewsCard.Background = (Brush)FindResource(available ? "GoldSoft" : "SurfaceRaised");
+        NewsUpdateButton.Visibility = available ? Visibility.Visible : Visibility.Collapsed;
+        NewsUpdateButton.IsEnabled = cancellation is null;
+        NewsHighlights.Children.Clear();
+        if (available) NewsHighlights.Children.Add(new TextBlock { Text = latest.Summary, FontSize = 13, Margin = new Thickness(0, 0, 0, 2) });
+        foreach (var line in latest.Added.Concat(latest.Updated).Take(3)) NewsHighlights.Children.Add(Bullet(line));
+        if (available) NewsHighlights.Children.Add(new TextBlock { Text = T("UpdateReadyHint"), FontSize = 12, Foreground = (Brush)FindResource("Muted"), Margin = new Thickness(0, 9, 0, 0) });
+    }
+    private Grid Bullet(string text)
+    {
+        var row = new Grid { Margin = new Thickness(0, 3, 0, 0) };
+        row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(16) }); row.ColumnDefinitions.Add(new ColumnDefinition());
+        row.Children.Add(new TextBlock { Text = "•", FontSize = 12, Foreground = (Brush)FindResource("Gold") });
+        var body = new TextBlock { Text = text, FontSize = 12 }; Grid.SetColumn(body, 1); row.Children.Add(body);
+        return row;
     }
     private void Language_Changed(object sender, SelectionChangedEventArgs e)
     {
@@ -149,7 +186,7 @@ public partial class MainWindow : ThemedWindow
         catch (Exception ex) { StatusText.Text = Localize.Error(ex); Progress.Foreground = (Brush)FindResource("Danger"); ProgressDetails.Text = T("Error"); }
         finally { cancellation.Dispose(); cancellation = null; SetBusy(false); Refresh(); }
     }
-    private void SetBusy(bool busy) { Progress.IsIndeterminate = busy; if (busy) { operationTime.Restart(); progressClock.Start(); progressDetail = T("Checking"); Progress.Value = 0; Progress.Foreground = (Brush)FindResource("ActionGreen"); ProgressDetails.Visibility = Visibility.Visible; ProgressDetails.Text = T("Checking"); } if (!busy) { progressClock.Stop(); operationTime.Stop(); } SettingsButton.IsEnabled = !busy; LauncherActions.IsEnabled = !busy; LinkSkButton.IsEnabled = RebuildSkButton.IsEnabled = InstallButton.IsEnabled = OfficialCard.IsEnabled = SkCard.IsEnabled = LanguageChoice.IsEnabled = !busy; CheckUpdatesButton.IsEnabled = !busy && !checking; PlayButton.IsEnabled = !busy && context.CanPlay && context.DetectLauncher() is not null; CancelButton.Visibility = busy ? Visibility.Visible : Visibility.Collapsed; }
+    private void SetBusy(bool busy) { Progress.IsIndeterminate = busy; if (busy) { operationTime.Restart(); progressClock.Start(); progressDetail = T("Checking"); Progress.Value = 0; Progress.Foreground = (Brush)FindResource("ActionGreen"); ProgressDetails.Visibility = Visibility.Visible; ProgressDetails.Text = T("Checking"); } if (!busy) { progressClock.Stop(); operationTime.Stop(); } SettingsButton.IsEnabled = !busy; LauncherActions.IsEnabled = !busy; LinkSkButton.IsEnabled = RebuildSkButton.IsEnabled = InstallButton.IsEnabled = NewsUpdateButton.IsEnabled = OfficialCard.IsEnabled = SkCard.IsEnabled = LanguageChoice.IsEnabled = !busy; CheckUpdatesButton.IsEnabled = !busy && !checking; PlayButton.IsEnabled = !busy && context.CanPlay && context.DetectLauncher() is not null; CancelButton.Visibility = busy ? Visibility.Visible : Visibility.Collapsed; }
     private void Cancel_Click(object sender, RoutedEventArgs e) => cancellation?.Cancel();
     private void Play_Click(object sender, RoutedEventArgs e) { try { context.OpenLauncher(); StatusText.Text = T(context.Settings.Launcher == "sk" ? "SkLinked" : "OfficialHint"); } catch (Exception ex) { StatusText.Text = Localize.Error(ex); } }
     private async void Locate_Click(object sender, RoutedEventArgs e)

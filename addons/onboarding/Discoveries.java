@@ -115,6 +115,26 @@ public final class Discoveries {
         }
     }
 
+    /** /structures: which structures the player is standing in, with their ids, so new ones can be named or announced. */
+    static int here(ServerPlayer player) {
+        var level = player.level();
+        var registry = level.registryAccess().lookupOrThrow(Registries.STRUCTURE);
+        var pos = player.blockPosition();
+        var text = Component.literal("Structures here: ").withStyle(ChatFormatting.GOLD);
+        int count = 0;
+        for (var structure : level.structureManager().getAllStructuresAt(pos).keySet()) {
+            var start = level.structureManager().getStructureWithPieceAt(pos.getX(), pos.getY(), pos.getZ(), structure);
+            var id = registry.getKey(structure);
+            if (id == null || start == null || !start.isValid()) continue;
+            String name = name(id.toString());
+            text.append(Component.literal((count++ == 0 ? "" : ", ") + (name == null ? id + " (not announced)" : name + " (" + id + ")"))
+                .withStyle(ChatFormatting.YELLOW));
+        }
+        if (count == 0) text.append(Component.literal("none").withStyle(ChatFormatting.GRAY));
+        player.sendSystemMessage(text);
+        return count;
+    }
+
     private void save() {
         try {
             var state = new State();

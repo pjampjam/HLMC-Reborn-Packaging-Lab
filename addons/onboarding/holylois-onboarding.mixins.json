@@ -7,7 +7,10 @@
     "CombatCommandMixin",
     "DeathDropsMixin",
     "DeathLootMixin",
-    "LiteminerShapeMixin"
+    "LiteminerShapeMixin",
+    "HomeShortcutMixin",
+    "HomeNameMixin",
+    "PortalReturnMixin"
   ],
   "injectors": {
     "defaultRequire": 1

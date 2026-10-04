@@ -108,7 +108,11 @@
     "PlayMissingLauncher": "Find or install your Minecraft launcher.",
     "CleanDownloads": "Clear completed downloads",
     "CleaningDownloads": "Clearing verified download copies...",
-    "CleanedDownloads": "Cleared {0:N0} MB. Game files, settings and the rollback copy were kept."
+    "CleanedDownloads": "Cleared {0:N0} MB. Game files, settings and the rollback copy were kept.",
+    "LatestNews": "Latest update",
+    "UpdateReady": "Update {0} is ready",
+    "UpdateReadyHint": "Close Minecraft, then click Update now. Your settings, keybinds and worlds stay as they are.",
+    "UpdateNow": "Update now"
   },
   "ru": {
     "PlayTitle": "Играть в Holy Lois",
@@ -219,7 +223,11 @@
     "PlayMissingLauncher": "Найдите или установите лаунчер Minecraft.",
     "CleanDownloads": "Очистить завершённые загрузки",
     "CleaningDownloads": "Очистка проверенных копий загрузок...",
-    "CleanedDownloads": "Освобождено {0:N0} МБ. Файлы игры, настройки и копия для восстановления сохранены."
+    "CleanedDownloads": "Освобождено {0:N0} МБ. Файлы игры, настройки и копия для восстановления сохранены.",
+    "LatestNews": "Последнее обновление",
+    "UpdateReady": "Обновление {0} готово",
+    "UpdateReadyHint": "Закройте Minecraft и нажмите «Обновить». Настройки, клавиши и миры останутся как есть.",
+    "UpdateNow": "Обновить"
   },
   "lv": {
     "PlayTitle": "Spēlēt Holy Lois",
@@ -330,6 +338,10 @@
     "PlayMissingLauncher": "Atrodiet vai instalējiet Minecraft palaidēju.",
     "CleanDownloads": "Notīrīt pabeigtās lejupielādes",
     "CleaningDownloads": "Tiek notīrītas pārbaudīto lejupielāžu kopijas...",
-    "CleanedDownloads": "Atbrīvoti {0:N0} MB. Spēles faili, iestatījumi un atkopšanas kopija ir saglabāti."
+    "CleanedDownloads": "Atbrīvoti {0:N0} MB. Spēles faili, iestatījumi un atkopšanas kopija ir saglabāti.",
+    "LatestNews": "Jaun\u0101kais atjaunin\u0101jums",
+    "UpdateReady": "Atjaunin\u0101jums {0} ir gatavs",
+    "UpdateReadyHint": "Aizver Minecraft un nospied Atjaunin\u0101t. Iestat\u012bjumi, tausti\u0146i un pasaules paliek k\u0101 bija.",
+    "UpdateNow": "Atjaunin\u0101t"
   }
 }

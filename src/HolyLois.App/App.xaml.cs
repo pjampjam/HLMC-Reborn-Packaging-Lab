@@ -167,6 +167,11 @@ public partial class App : Application
                 context.SetLanguage("lv"); window = new MainWindow(context); Render(window,data,"launcher-design-lv.png",1060,748);
                 Shutdown(0); return;
             }
+            if (args.Contains("--render-history-preview")) {
+                if (data is null) throw new ArgumentException("History rendering requires an isolated --data-dir.");
+                var window = new MainWindow(context); window.HistoryExpander.IsExpanded = true; Render(window,data,"launcher-history.png",1060,2600);
+                Shutdown(0); return;
+            }
             if (args.Contains("--render-ready-preview")) {
                 if (data is null || !context.CanPlay) throw new ArgumentException("Ready rendering requires an installed isolated fixture.");
                 await LauncherDiscovery.WarmAsync();

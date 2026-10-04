@@ -63,6 +63,8 @@ public final class HolyLois implements ModInitializer {
             support.register(dispatcher);
             claims.register(dispatcher);
             rtp.register(dispatcher);
+            HomeAlias.register(dispatcher);
+            dispatcher.register(net.minecraft.commands.Commands.literal("structures").executes(context -> Discoveries.here(context.getSource().getPlayerOrException())));
         });
         ServerLifecycleEvents.SERVER_STARTED.register(this::load);
         net.fabricmc.fabric.api.event.player.UseItemCallback.EVENT.register((player, level, hand) ->
