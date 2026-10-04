@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "version": "1.7.5",
+  "version": "1.7.8",
   "minecraft": "26.3",
   "fabric": "0.19.5",
   "java": 25,
@@ -210,24 +210,24 @@
       "policy": "managed"
     },
     {
-      "path": "mods/holylois-auth-ui-1.0.2+26.3.jar",
-      "url": "https://github.com/pjampjam/HLMC-Reborn/releases/download/pack-v1.5.4/holylois-auth-ui-1.0.2+26.3.jar",
-      "size": 21486,
-      "sha256": "15b03cc38c8db43c5f9ff83e659bf8c76930cf16071656fdcc350c9033afa782",
+      "path": "mods/holylois-auth-ui-1.0.3+26.3.jar",
+      "url": "https://github.com/pjampjam/HLMC-Reborn/releases/download/pack-v1.7.6/holylois-auth-ui-1.0.3+26.3.jar",
+      "size": 27233,
+      "sha256": "c72c42076e532e4eeebc66264419dcb7cc8aa87cebea99097bf8091b6b4918ef",
       "policy": "managed"
     },
     {
-      "path": "mods/holylois-extras-1.3.0+26.3.jar",
-      "url": "https://github.com/pjampjam/HLMC-Reborn/releases/download/pack-v1.7.5/holylois-extras-1.3.0+26.3.jar",
-      "size": 253341,
-      "sha256": "81f9142db0356fef9ed9a037b501f9b8b74e498b11f0a3425da7682325f1fd73",
+      "path": "mods/holylois-extras-1.4.0+26.3.jar",
+      "url": "https://github.com/pjampjam/HLMC-Reborn/releases/download/pack-v1.7.8/holylois-extras-1.4.0+26.3.jar",
+      "size": 289310,
+      "sha256": "3cdec193b6b73bfa918e77b34c4e88b7ec22edce603f41190aca112bf533fe21",
       "policy": "managed"
     },
     {
-      "path": "mods/holylois-glint-preload-1.0.0+26.3.jar",
-      "url": "https://github.com/pjampjam/HLMC-Reborn/releases/download/pack-v1.4.0/holylois-glint-preload-1.0.0+26.3.jar",
-      "size": 1924,
-      "sha256": "b120e403e93d3a0e26bf6d989105cd20aeb791391d437a6c4fb4dcf16a3f288f",
+      "path": "mods/holylois-glint-preload-1.0.1+26.3.jar",
+      "url": "https://github.com/pjampjam/HLMC-Reborn/releases/download/pack-v1.7.6/holylois-glint-preload-1.0.1+26.3.jar",
+      "size": 7676,
+      "sha256": "e6904fe952b4ae95203e78fe0069fc4c87bf142d75f62c6b155ea369330653f9",
       "policy": "managed"
     },
     {
@@ -627,12 +627,59 @@
   ],
   "defaults": {
     "path": "defaults.zip",
-    "url": "https://github.com/pjampjam/HLMC-Reborn/releases/download/pack-v1.7.5/defaults.zip",
+    "url": "https://github.com/pjampjam/HLMC-Reborn/releases/download/pack-v1.7.8/defaults.zip",
     "size": 53046,
     "sha256": "fff4f18d365943e0f07707660965b81a97cc6b5d17b98e8dd97e92101509e847",
     "policy": "seed"
   },
   "history": [
+    {
+      "version": "1.7.8",
+      "date": "2026-10-04",
+      "summary": "A sharp new crown icon on the game window, a server that only lets the Holy Lois pack in, and clearer dungeon achievements.",
+      "added": [
+        "The server checks that everyone plays the Holy Lois pack: a player with extra mods is turned away with a message that says how to fix it. Shaders, resource packs and your own settings stay yours",
+        "Launcher Play button: moves extra mods out of the Holy Lois folder (kept, not deleted), repairs changed pack files and switches the pack resource packs back on"
+      ],
+      "removed": [],
+      "updated": [
+        "The Minecraft window and taskbar icon is now the Holy Lois crown, drawn pixel-perfect so it is crisp at every size",
+        "New server icon in the multiplayer list",
+        "Clearer achievement texts for Discoverer, Dungeon Delver, Deeper Still and Odd Pillar"
+      ]
+    },
+    {
+      "version": "1.7.7",
+      "date": "2026-10-04",
+      "summary": "Fixes from the 1.7.6 test: the first-person body can sink into a wall a little, a clear view in bed, dynamic lights that follow your shader setting, and a friendlier tool swap line.",
+      "added": [],
+      "removed": [],
+      "updated": [
+        "Tool swap says \"Switched to Iron Pickaxe\"",
+        "First person: the body may sink into a wall a little instead of being pushed all the way forward",
+        "In bed the camera is lifted a little above the pillow so your eyes are not inside your head",
+        "Dynamic lights follow the shader state: with a shader pack on, the first-person light is off (the shader lights what you hold) and dropped torches and mobs still glow; with shaders off, dynamic lights are fully on, including the first-person light. If they were switched off, they are switched back on"
+      ]
+    },
+    {
+      "version": "1.7.6",
+      "date": "2026-10-04",
+      "summary": "Dungeon achievements, a boombox that reaches much further, tool swaps that leave your enchanted tools alone and a handful of fixes.",
+      "added": [
+        "Server: every dungeon (small, medium, large, obelisks) is announced when someone first finds it, with new achievements: Dungeon Delver, Deeper Still, Dungeon Master and Odd Pillar",
+        "Server: dungeon chests can now drop Runeforged runes, the treasure rooms the best ones"
+      ],
+      "removed": [],
+      "updated": [
+        "Boombox: the range now goes from 16 blocks (volume 1) to 48 blocks (volume 10)",
+        "A broken tool is replaced by an unenchanted spare of the same kind (lowest material first). Enchanted tools are never swapped in for you",
+        "R on an empty slot sorts without also opening a recipe",
+        "First person: the body steps forward when a wall is behind you and stays hidden while you sleep",
+        "Torches light yellow with a shader pack on (dynamic lights pause while shaders are on and come back when they are off)",
+        "Holy Lois mods now show the logo, author and links in Mod Menu",
+        "Server list line shortened so it fits"
+      ]
+    },
     {
       "version": "1.7.5",
       "date": "2026-10-04",

@@ -7,6 +7,11 @@ public final class BoomboxTest {
         if (!PackCheck.older("1.7.4", "1.7.5") || PackCheck.older("1.7.5", "1.7.5") || PackCheck.older("1.10.0", "1.9.9") || !PackCheck.older("1.7", "1.7.1"))
             throw new AssertionError("pack version compare");
         if (Boombox.range(1) != 16f || Boombox.range(10) != 48f || Boombox.range(5) <= Boombox.range(4) || Boombox.range(99) != 48f) throw new AssertionError("boombox range 16 to 48");
+        var mods = ModCheck.parse("{\"mode\":\"enforce\",\"exempt\":[\"Owner\"],\"allowed\":[\"fabricloader\",\"sodium\",\"holylois-extras\"]}");
+        var verdict = ModCheck.check(mods, java.util.List.of("fabricloader", "sodium", "xray", "meteor-client"));
+        if (!verdict.unknown().equals(new java.util.TreeSet<>(java.util.List.of("meteor-client", "xray"))) || !verdict.missing().equals(new java.util.TreeSet<>(java.util.List.of("holylois-extras")))
+            || !mods.legacy().equals("allow") || !mods.missing().equals("warn") || !mods.exempt().contains("Owner")) throw new AssertionError("mod check verdict");
+        if (!ModCheck.check(mods, java.util.List.of("fabricloader", "sodium", "holylois-extras")).unknown().isEmpty()) throw new AssertionError("mod check clean client");
         int ok = 0;
         for (var station : new Boombox.Config().stations.subList(0, Math.min(args.length > 0 ? Integer.parseInt(args[0]) : 3, new Boombox.Config().stations.size()))) {
             var stream = new RadioStream(station.url, 0.55f);

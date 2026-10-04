@@ -10,6 +10,9 @@ final class PackCheckClient {
     static void register() {
         ClientConfigurationNetworking.registerGlobalReceiver(PackCheck.Request.TYPE,
             (request, context) -> context.responseSender().sendPacket(new PackCheck.Reply(installed())));
+        // The mod list for the server's mod check: every loaded mod id, including the ones inside other jars.
+        ClientConfigurationNetworking.registerGlobalReceiver(ModCheck.Request.TYPE, (request, context) -> context.responseSender().sendPacket(
+            new ModCheck.Reply(FabricLoader.getInstance().getAllMods().stream().map(mod -> mod.getMetadata().getId()).sorted().toList())));
     }
 
     private static String installed() {

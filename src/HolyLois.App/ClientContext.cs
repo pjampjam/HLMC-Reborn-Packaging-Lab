@@ -197,6 +197,12 @@ public sealed class ClientContext
             : new[] { Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "SKlauncher", "SKlauncher.exe"), Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "sklauncher", "SKlauncher.exe") };
         return paths.FirstOrDefault(File.Exists) ?? LauncherDiscovery.Registered(Settings.Launcher);
     }
+    public GuardReport Guard()
+    {
+        if (IsIsolated || !CanPlay || IsGameOrLauncherRunning(false)) return GuardReport.Empty;
+        try { return ModGuard.Run(Instance, StatePath, Manifest); }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { return GuardReport.Empty; }
+    }
     public void OpenLauncher()
     {
         if (!CanPlay) throw new IOException("Finish Verify & update before opening your launcher.");

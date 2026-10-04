@@ -41,6 +41,24 @@ Built on the server with `compile-extras.py` against the installed Minecraft 26.
   mobs keep their light; with shaders off everything is on, including the first-person light. A mode of OFF is switched to FANCY.
 - Bed camera (`BedCameraMixin`): in bed the first-person camera is lifted 0.3 and moved 0.3 forward so it is not inside the head.
 
+## Mod check
+
+Holy Lois runs on its pack and nothing else. While a player joins (configuration phase, next to the pack check) the client reports its
+mod ids and the server compares them with `config/holylois-mods.json`:
+
+```
+{"mode": "enforce" | "warn" | "off", "missing": "warn" | "kick", "legacy": "allow" | "block", "exempt": ["name"], "allowed": ["modid"]}
+```
+
+- A mod that is not in `allowed` turns the player away (mode `enforce`) with a message in English, Russian and Latvian that names the mods
+  and points to Repair / check files in the launcher. In mode `warn` it is only logged.
+- A missing allowed mod is only logged until `missing` is `kick`.
+- A client too old to answer is let in while `legacy` is `allow`. Names in `exempt` skip the check (the owner's workshop profile).
+- No file, an empty `allowed` list or mode `off` means no check. Shaders, resource packs and settings are never part of it.
+- This stops accidents and casual extras, not a determined cheat client, which can fake its list. The launcher moves extra jars out of the
+  game folder and repairs changed pack files when Play is pressed.
+- The `allowed` list is the mod ids of the pack, including libraries nested inside jars: `work/make-mod-allowlist.py`.
+
 ## Vein mining tweak
 
 LiteMiner on Holy Lois is shapeless only. On the client this mod removes the shape name from the LiteMiner HUD (only the

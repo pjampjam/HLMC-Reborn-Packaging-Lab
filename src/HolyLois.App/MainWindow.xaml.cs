@@ -188,7 +188,24 @@ public partial class MainWindow : ThemedWindow
     }
     private void SetBusy(bool busy) { Progress.IsIndeterminate = busy; if (busy) { operationTime.Restart(); progressClock.Start(); progressDetail = T("Checking"); Progress.Value = 0; Progress.Foreground = (Brush)FindResource("ActionGreen"); ProgressDetails.Visibility = Visibility.Visible; ProgressDetails.Text = T("Checking"); } if (!busy) { progressClock.Stop(); operationTime.Stop(); } SettingsButton.IsEnabled = !busy; LauncherActions.IsEnabled = !busy; LinkSkButton.IsEnabled = RebuildSkButton.IsEnabled = InstallButton.IsEnabled = NewsUpdateButton.IsEnabled = OfficialCard.IsEnabled = SkCard.IsEnabled = LanguageChoice.IsEnabled = !busy; CheckUpdatesButton.IsEnabled = !busy && !checking; PlayButton.IsEnabled = !busy && context.CanPlay && context.DetectLauncher() is not null; CancelButton.Visibility = busy ? Visibility.Visible : Visibility.Collapsed; }
     private void Cancel_Click(object sender, RoutedEventArgs e) => cancellation?.Cancel();
-    private void Play_Click(object sender, RoutedEventArgs e) { try { context.OpenLauncher(); StatusText.Text = T(context.Settings.Launcher == "sk" ? "SkLinked" : "OfficialHint"); } catch (Exception ex) { StatusText.Text = Localize.Error(ex); } }
+    private async void Play_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var report = context.Guard(); var note = "";
+            if (report.Moved.Length > 0) note += string.Format(T("GuardMoved"), report.Moved.Length) + " ";
+            if (report.PacksRestored) note += T("GuardPacks") + " ";
+            if (report.Damaged.Length > 0)
+            {
+                await RunInstallAsync(false);
+                if (context.Guard().Damaged.Length > 0) { StatusText.Text = T("GuardFailed"); return; }
+                note += T("GuardRepaired") + " ";
+            }
+            context.OpenLauncher();
+            StatusText.Text = note + T(context.Settings.Launcher == "sk" ? "SkLinked" : "OfficialHint");
+        }
+        catch (Exception ex) { StatusText.Text = Localize.Error(ex); }
+    }
     private async void Locate_Click(object sender, RoutedEventArgs e)
     {
         if (cancellation is not null) return;

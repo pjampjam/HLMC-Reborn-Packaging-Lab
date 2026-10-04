@@ -440,6 +440,30 @@ tests.Add(("Installed download cleanup proves both copies and preserves personal
     Check(File.ReadAllText(Path.Combine(game,changed.Path))=="personal" && File.ReadAllText(Path.Combine(cache,"personal.txt"))=="keep","Personal content changed.");return Task.CompletedTask;
 }));
 
+tests.Add(("Mod guard moves foreign jars aside, flags damaged mods and re-enables pack resource packs", () => {
+    var game = Dir("guard-game"); var state = Dir("guard-state");
+    var good = FileSpec("mods/good.jar", "good"); var worn = FileSpec("mods/worn.jar", "worn"); var gone = FileSpec("mods/gone.jar", "gone");
+    var pack = FileSpec("resourcepacks/Holy.zip", "pack");
+    var manifest = Manifest(good, worn, gone, pack);
+    Directory.CreateDirectory(Path.Combine(game, "mods", "nested")); Directory.CreateDirectory(Path.Combine(game, "resourcepacks")); Directory.CreateDirectory(Path.Combine(game, "shaderpacks"));
+    File.WriteAllText(Path.Combine(game, good.Path), "good"); File.WriteAllText(Path.Combine(game, worn.Path), "changed");
+    File.WriteAllText(Path.Combine(game, "mods", "xray.jar"), "cheat"); File.WriteAllText(Path.Combine(game, "mods", "nested", "Extra.JAR"), "extra");
+    File.WriteAllText(Path.Combine(game, "mods", "notes.txt"), "keep"); File.WriteAllText(Path.Combine(game, "shaderpacks", "mine.zip"), "shader");
+    File.WriteAllText(Path.Combine(game, "options.txt"), "keybind:x\nresourcePacks:[\"vanilla\"]\n");
+    Check(ModGuard.FindUnknownMods(game, manifest).SequenceEqual(new[] { "mods/nested/Extra.JAR", "mods/xray.jar" }), "Foreign jars were not listed exactly.");
+    var report = ModGuard.Run(game, state, manifest);
+    Check(report.Moved.Length == 2 && !File.Exists(Path.Combine(game, "mods", "xray.jar")) && !File.Exists(Path.Combine(game, "mods", "nested", "Extra.JAR")), "Foreign jars stayed in mods.");
+    Check(Directory.GetFiles(Path.Combine(state, "quarantine"), "xray.jar", SearchOption.AllDirectories).Length == 1, "Moved jar was not kept in quarantine.");
+    Check(File.Exists(Path.Combine(game, "mods", "notes.txt")) && File.Exists(Path.Combine(game, "shaderpacks", "mine.zip")), "Non-mod files or shaders were touched.");
+    Check(report.Damaged.OrderBy(x => x).SequenceEqual(new[] { "mods/gone.jar", "mods/worn.jar" }), "Damaged or missing pack mods were not reported.");
+    Check(report.PacksRestored && File.ReadAllText(Path.Combine(game, "options.txt")).Contains("\"file/Holy.zip\"") && File.ReadAllText(Path.Combine(game, "options.txt")).Contains("keybind:x"), "Resource pack was not re-enabled with settings kept.");
+    Check(ModGuard.Run(game, state, manifest) is { Moved.Length: 0, PacksRestored: false }, "A second run changed things again.");
+    File.WriteAllText(Path.Combine(game, "options.txt"), "garbage");
+    Check(!ModGuard.EnsureResourcePacks(game, manifest) && File.ReadAllText(Path.Combine(game, "options.txt")) == "garbage", "Unreadable options were rewritten.");
+    Check(ModGuard.Run(Path.Combine(root, "guard-missing"), state, manifest).Clean, "A missing instance was not ignored.");
+    return Task.CompletedTask;
+}));
+
 tests.AddRange(SkPathTests.Create(root));
 foreach (var test in tests)
 {
