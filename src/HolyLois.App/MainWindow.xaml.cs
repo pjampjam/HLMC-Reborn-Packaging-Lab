@@ -82,7 +82,7 @@ public partial class MainWindow : ThemedWindow
         // Gold marks the next required step; green appears only when Play will work.
         InstallButton.Style = (Style)FindResource(packReady ? typeof(Button) : "PrimaryButton");
         InstallLabel.Foreground = (Brush)FindResource(packReady ? "Text" : "OnGold");
-        PlayButton.Style = ready ? (Style)FindResource("SuccessButton") : (Style)FindResource(typeof(Button));
+        PlayButton.Style = ready ? (Style)FindResource("PlayButtonStyle") : (Style)FindResource(typeof(Button));
         PlayLabel.Foreground = (Brush)FindResource(ready ? "OnGreen" : "Text");
         PlayLabel.Text = T("Play"); PlayLauncherLabel.Text = sk ? "SKlauncher" : "Minecraft Launcher"; PlayHint.Text = T(ready ? "PlayReadyHint" : context.CanPlay ? "PlayMissingLauncher" : "PlayInstallHint");
         PlayButton.Foreground = PlayLabel.Foreground; PlayLauncherLabel.Foreground = PlayLabel.Foreground; PlayButton.FontWeight = FontWeights.SemiBold;

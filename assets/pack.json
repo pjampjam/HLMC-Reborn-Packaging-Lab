@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "version": "1.7.8",
+  "version": "1.7.9",
   "minecraft": "26.3",
   "fabric": "0.19.5",
   "java": 25,
@@ -217,10 +217,10 @@
       "policy": "managed"
     },
     {
-      "path": "mods/holylois-extras-1.4.0+26.3.jar",
-      "url": "https://github.com/pjampjam/HLMC-Reborn/releases/download/pack-v1.7.8/holylois-extras-1.4.0+26.3.jar",
-      "size": 289310,
-      "sha256": "3cdec193b6b73bfa918e77b34c4e88b7ec22edce603f41190aca112bf533fe21",
+      "path": "mods/holylois-extras-1.4.1+26.3.jar",
+      "url": "https://github.com/pjampjam/HLMC-Reborn/releases/download/pack-v1.7.9/holylois-extras-1.4.1+26.3.jar",
+      "size": 289831,
+      "sha256": "37953bca3ff724b1fc69893aac2fd58db14c8a140686956a74ccbd33218216f9",
       "policy": "managed"
     },
     {
@@ -627,12 +627,23 @@
   ],
   "defaults": {
     "path": "defaults.zip",
-    "url": "https://github.com/pjampjam/HLMC-Reborn/releases/download/pack-v1.7.8/defaults.zip",
+    "url": "https://github.com/pjampjam/HLMC-Reborn/releases/download/pack-v1.7.9/defaults.zip",
     "size": 53046,
     "sha256": "fff4f18d365943e0f07707660965b81a97cc6b5d17b98e8dd97e92101509e847",
     "policy": "seed"
   },
   "history": [
+    {
+      "version": "1.7.9",
+      "date": "2026-10-05",
+      "summary": "A bigger, bolder crown for the Minecraft window icon and a greener Play button in the launcher.",
+      "added": [],
+      "removed": [],
+      "updated": [
+        "The Minecraft window and taskbar icon is bigger: the crown now fills the whole icon, with wider battlements like the logo",
+        "Launcher 1.2.5: a stronger green Play button and the same bigger crown icon"
+      ]
+    },
     {
       "version": "1.7.8",
       "date": "2026-10-04",
