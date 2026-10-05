@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "version": "1.7.10",
+  "version": "1.7.11",
   "minecraft": "26.3",
   "fabric": "0.19.5",
   "java": 25,
@@ -217,10 +217,10 @@
       "policy": "managed"
     },
     {
-      "path": "mods/holylois-extras-1.5.0+26.3.jar",
-      "url": "https://github.com/pjampjam/HLMC-Reborn/releases/download/pack-v1.7.10/holylois-extras-1.5.0+26.3.jar",
-      "size": 284477,
-      "sha256": "46f2c293c1108cb43e7670f8d284ac2474f0d685dd01ed97e0554a5bdbb05a77",
+      "path": "mods/holylois-extras-1.5.1+26.3.jar",
+      "url": "https://github.com/pjampjam/HLMC-Reborn/releases/download/pack-v1.7.11/holylois-extras-1.5.1+26.3.jar",
+      "size": 280076,
+      "sha256": "c1c11beab9cbe4431c93b20b3ac76fb3a62feaf31f42ff563057b559ae853a87",
       "policy": "managed"
     },
     {
@@ -627,12 +627,24 @@
   ],
   "defaults": {
     "path": "defaults.zip",
-    "url": "https://github.com/pjampjam/HLMC-Reborn/releases/download/pack-v1.7.10/defaults.zip",
+    "url": "https://github.com/pjampjam/HLMC-Reborn/releases/download/pack-v1.7.11/defaults.zip",
     "size": 53046,
     "sha256": "fff4f18d365943e0f07707660965b81a97cc6b5d17b98e8dd97e92101509e847",
     "policy": "seed"
   },
   "history": [
+    {
+      "version": "1.7.11",
+      "date": "2026-10-05",
+      "summary": "Quick Play is removed: it never joined the server by itself. Play opens your Minecraft launcher, then join Holy Lois from Multiplayer.",
+      "added": [],
+      "removed": [
+        "Quick Play (launcher 1.2.6 and Holy Lois Extras 1.5.0): in testing the game never joined by itself, so Play did the same as before. Launcher 1.2.7 drops the setting and deletes the leftover holylois-quickplay.json"
+      ],
+      "updated": [
+        "Holy Lois Extras 1.5.1 without the Quick Play part. A real one-click start, where the launcher starts the game itself, is coming later"
+      ]
+    },
     {
       "version": "1.7.10",
       "date": "2026-10-05",
