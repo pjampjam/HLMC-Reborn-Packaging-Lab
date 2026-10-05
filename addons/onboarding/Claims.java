@@ -80,7 +80,7 @@ final class Claims {
         } catch (Exception error) { throw new IllegalStateException("Cannot save Holy Lois claims", error); }
     }
 
-    private long playTicks(ServerPlayer player) { return player.getStats().getValue(Stats.CUSTOM.get(Stats.PLAY_TIME)); }
+    private long playTicks(ServerPlayer player) { return Afk.effectiveTicks(player.getUUID(), player.getStats().getValue(Stats.CUSTOM.get(Stats.PLAY_TIME))); }
     int bought(UUID id) { return data.bought.getOrDefault(id, 0); }
 
     /** Push earned + bought into OPAC. Called on join and every few minutes. */

@@ -12,7 +12,7 @@ public sealed class SettingsWindow : ThemedWindow
 {
     public SettingsWindow(ClientContext context)
     {
-        Title = "Holy Lois: Reborn - Settings"; Width = 610; Height = 650; ResizeMode = ResizeMode.NoResize;
+        Title = "Holy Lois: Reborn - Settings"; Width = 610; Height = 780; ResizeMode = ResizeMode.NoResize;
         WindowStartupLocation = WindowStartupLocation.CenterOwner; Background = (Brush)Application.Current.Resources["SurfaceRaised"]; FontFamily = new FontFamily("Segoe UI");
         var panel = new StackPanel { Margin = new Thickness(28,22,28,24) };
         Text(Localize.Text("Settings"),27,true);
@@ -23,6 +23,11 @@ public sealed class SettingsWindow : ThemedWindow
             var picker = new OpenFileDialog { Title = Localize.Text("ChooseExe"), Filter = "Launcher (*.exe;*.lnk)|*.exe;*.lnk", CheckFileExists = true };
             if (picker.ShowDialog(this) == true) { context.SetLauncher(picker.FileName); path.Text = context.DetectLauncher(); }
         });
+        Text(Localize.Text("PlayMode"),14,true);
+        Text(Localize.Text("PlayModeIntro"),12);
+        Choice("PlayQuick","PlayQuickInfo","Recommended",QuickPlay.Quick,context.Settings.PlayMode == QuickPlay.Quick,true);
+        Choice("PlayStandard","PlayStandardInfo",null,QuickPlay.Standard,context.Settings.PlayMode == QuickPlay.Standard,true);
+        Choice("PlayIntegrated","PlayIntegratedInfo","ComingLater","integrated",false,false);
         Text(Localize.Text("AppFiles"),14,true);
         Action(Localize.Text("OpenAppFolder"), () => Process.Start(new ProcessStartInfo("explorer.exe") { UseShellExecute = true, ArgumentList = { LauncherStartup.InstallRoot } }));
         Action(Localize.Text("CreateDesktop"), () => LauncherStartup.CreateShortcut(LauncherStartup.InstallRoot,true), !context.IsIsolated);
@@ -64,6 +69,16 @@ public sealed class SettingsWindow : ThemedWindow
         Text(Localize.Text("KeepPersonalFiles"),12);
         Content = new ScrollViewer { Content = panel, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled };
         void Text(string text, int size = 13, bool strong = false) => panel.Children.Add(new TextBlock { Text = text, FontSize = size, FontWeight = strong ? FontWeights.SemiBold : FontWeights.Normal, Foreground = (Brush)Application.Current.Resources[strong ? "Gold" : "Muted"], Margin = new Thickness(0,strong ? 16 : 8,0,0) });
+        void Choice(string title, string info, string? badge, string mode, bool selected, bool enabled)
+        {
+            var heading = Localize.Text(title) + (badge is null ? "" : "  -  " + Localize.Text(badge));
+            var text = new StackPanel();
+            text.Children.Add(new TextBlock { Text = heading, FontWeight = FontWeights.SemiBold, Foreground = (Brush)Application.Current.Resources[enabled ? "Text" : "Muted"] });
+            text.Children.Add(new TextBlock { Text = Localize.Text(info), FontSize = 12, TextWrapping = TextWrapping.Wrap, Foreground = (Brush)Application.Current.Resources["Muted"], Margin = new Thickness(0,2,0,0) });
+            var radio = new RadioButton { GroupName = "playmode", Content = text, IsChecked = selected, IsEnabled = enabled, Margin = new Thickness(0,10,0,0) };
+            radio.Checked += (_, _) => { try { context.SetPlayMode(mode); } catch (Exception ex) { AppDialog.Show(this,Localize.Text("Error"),ex.Message); } };
+            panel.Children.Add(radio);
+        }
         void Action(string text, System.Action action, bool enabled = true)
         {
             var button = new Button { Content = text, HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(0,8,0,0), IsEnabled = enabled, FontSize = 13, Padding = new Thickness(14,8,14,8) };

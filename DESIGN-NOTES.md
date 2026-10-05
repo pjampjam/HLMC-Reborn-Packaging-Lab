@@ -28,8 +28,8 @@ All colors now come from named tokens in `App.xaml`; code-built windows read the
 
 | Role | Token | Use |
 | --- | --- | --- |
-| Brand / next step | Gold `#F4C542` on OnGold `#1C1505` | Install, Continue, selection, focus rings, server address |
-| Play / active progress | ActionGreen `#34D27B` on OnGreen `#05200F` | Play when it will work, progress bars |
+| Brand / next step | Gold `#FFE24D` (the logo yellow, same as the website) on OnGold `#1A1500` | Install, Continue, selection, focus rings, server address |
+| Play / active progress | ActionGreen `#22E070` (Play button `#1FE06A`) on OnGreen `#04210F` | Play when it will work, progress bars |
 | Destructive / failure | DangerFill `#C2362F` with white text, Danger `#FF928A` for text | Remove, Cancel, errors |
 | Detected / success | Success `#7ED3A0` | Launcher detection outline |
 

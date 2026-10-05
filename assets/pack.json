@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "version": "1.7.9",
+  "version": "1.7.10",
   "minecraft": "26.3",
   "fabric": "0.19.5",
   "java": 25,
@@ -217,10 +217,10 @@
       "policy": "managed"
     },
     {
-      "path": "mods/holylois-extras-1.4.1+26.3.jar",
-      "url": "https://github.com/pjampjam/HLMC-Reborn/releases/download/pack-v1.7.9/holylois-extras-1.4.1+26.3.jar",
-      "size": 289831,
-      "sha256": "37953bca3ff724b1fc69893aac2fd58db14c8a140686956a74ccbd33218216f9",
+      "path": "mods/holylois-extras-1.5.0+26.3.jar",
+      "url": "https://github.com/pjampjam/HLMC-Reborn/releases/download/pack-v1.7.10/holylois-extras-1.5.0+26.3.jar",
+      "size": 284477,
+      "sha256": "46f2c293c1108cb43e7670f8d284ac2474f0d685dd01ed97e0554a5bdbb05a77",
       "policy": "managed"
     },
     {
@@ -627,12 +627,28 @@
   ],
   "defaults": {
     "path": "defaults.zip",
-    "url": "https://github.com/pjampjam/HLMC-Reborn/releases/download/pack-v1.7.9/defaults.zip",
+    "url": "https://github.com/pjampjam/HLMC-Reborn/releases/download/pack-v1.7.10/defaults.zip",
     "size": 53046,
     "sha256": "fff4f18d365943e0f07707660965b81a97cc6b5d17b98e8dd97e92101509e847",
     "policy": "seed"
   },
   "history": [
+    {
+      "version": "1.7.10",
+      "date": "2026-10-05",
+      "summary": "Quick Play: the launcher now sends you straight into Holy Lois. AFK time stops counting, new icons and a hidden daily code.",
+      "added": [
+        "Quick Play: click Play and the game joins Holy Lois by itself from the title screen, for premium and offline accounts (Settings in the launcher: Quick Play or Standard)",
+        "Launcher 1.2.6: closes Minecraft and its launcher for you when an update needs it, after you press Agree",
+        "/redeem CODE: a secret code of the day is hidden somewhere on holylois.com. One prize per player per day",
+        "New icons for the Minecraft window and the launcher"
+      ],
+      "removed": [],
+      "updated": [
+        "AFK time no longer counts as playing: achievements, land claims, leaderboards, stats and the Tab list skip it",
+        "World generation no longer overloads the server while the border grows"
+      ]
+    },
     {
       "version": "1.7.9",
       "date": "2026-10-05",

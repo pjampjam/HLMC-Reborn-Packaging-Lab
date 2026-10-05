@@ -132,7 +132,7 @@ public partial class App : Application
                     throw new InvalidDataException("The old checker remains embedded.");
                 AtomicFiles.Write(SafePaths.Resolve(root,"first-run-result.txt"),"Self-install verified; no embedded checker; optional shortcuts remain off after repeated setup."u8.ToArray()); Shutdown(0); return;
             }
-            if (args.Contains("--render-settings-preview")) { Render(new SettingsWindow(context),data!,"settings-preview.png",610,650); Shutdown(0); return; }
+            if (args.Contains("--render-settings-preview")) { Render(new SettingsWindow(context),data!,"settings-preview.png",610,900); Shutdown(0); return; }
             if (args.Contains("--render-update-preview")) {
                 if (data is null) throw new ArgumentException("Rendering requires an isolated folder.");
                 var update = new AppUpdateWindow(); update.SetTransfer("Downloading launcher " + AppUpdates.RunningVersion.ToString(3) + "...",37000000,67000000);

@@ -95,11 +95,26 @@ public final class Leaderboards {
             for (var file : files.filter(p -> p.toString().endsWith(".json")).toList()) {
                 try {
                     var root = JsonParser.parseString(Files.readString(file)).getAsJsonObject();
-                    if (root.has("stats")) result.put(file.getFileName().toString().replace(".json", ""), root.getAsJsonObject("stats"));
+                    if (root.has("stats")) {
+                        String uuid = file.getFileName().toString().replace(".json", "");
+                        var stats = root.getAsJsonObject("stats");
+                        withoutAfk(stats, uuid);
+                        result.put(uuid, stats);
+                    }
                 } catch (Exception ignored) {}
             }
         }
         return result;
+    }
+
+    /** Plays AFK time out of the stats copy: play_time minus the AFK ledger. */
+    private static void withoutAfk(JsonObject stats, String uuid) {
+        try {
+            long afk = Afk.seconds(UUID.fromString(uuid));
+            var custom = stats.getAsJsonObject("minecraft:custom");
+            if (afk > 0 && custom != null && custom.has("minecraft:play_time"))
+                custom.addProperty("minecraft:play_time", Afk.effective(custom.get("minecraft:play_time").getAsLong(), afk));
+        } catch (IllegalArgumentException ignored) { /* not a player file */ }
     }
 
     private static Map<String, String> names() throws Exception {

@@ -45,6 +45,7 @@ public final class HolyLois implements ModInitializer {
     private final Map<UUID,Integer> sentMode = new HashMap<>();
     private final Discoveries discoveries = new Discoveries();
     private final DailyRewards daily = new DailyRewards();
+    private final Redeem redeem = new Redeem(daily);
     private final ServerEvents events = new ServerEvents();
     private final Claims claims = new Claims();
     private final RandomTeleport rtp = new RandomTeleport();
@@ -62,11 +63,13 @@ public final class HolyLois implements ModInitializer {
             DonateCommand.register(dispatcher);
             support.register(dispatcher);
             claims.register(dispatcher);
+            redeem.register(dispatcher);
             rtp.register(dispatcher);
             HomeAlias.register(dispatcher);
             dispatcher.register(net.minecraft.commands.Commands.literal("structures").executes(context -> Discoveries.here(context.getSource().getPlayerOrException())));
         });
         ServerLifecycleEvents.SERVER_STARTED.register(this::load);
+        ServerLifecycleEvents.SERVER_STOPPING.register(server -> Afk.save());
         net.fabricmc.fabric.api.event.player.UseItemCallback.EVENT.register((player, level, hand) ->
             player instanceof net.minecraft.server.level.ServerPlayer sp && openLootbox(sp, sp.getItemInHand(hand))
                 ? net.minecraft.world.InteractionResult.SUCCESS : net.minecraft.world.InteractionResult.PASS);
@@ -112,8 +115,8 @@ public final class HolyLois implements ModInitializer {
             Leaderboards.forget(handler.player.getUUID());
         });
         ServerMessageEvents.ALLOW_GAME_MESSAGE.register((server,message,overlay) ->
-            !(message.getContents() instanceof TranslatableContents t
-                && t.getKey().startsWith("multiplayer.player.joined")));
+            !(message.getContents() instanceof TranslatableContents t && t.getKey().startsWith("multiplayer.player.joined"))
+                && Quiet.allow(message));
         ServerTickEvents.END_SERVER_TICK.register(this::tick);
         ServerTickEvents.END_SERVER_TICK.register(this::interfaceTick);
     }
@@ -126,6 +129,8 @@ public final class HolyLois implements ModInitializer {
         daily.load(server.getWorldPath(LevelResource.ROOT));
         events.load(server.getWorldPath(LevelResource.ROOT));
         claims.load(server);
+        Afk.load(server.getWorldPath(LevelResource.ROOT));
+        redeem.load(server);
         try {
             if (Files.exists(stateFile)) {
                 state = JSON.fromJson(Files.readString(stateFile),State.class);
@@ -177,6 +182,7 @@ public final class HolyLois implements ModInitializer {
         if (server.getTickCount()%200 == 0) loadRules();
         if (server.getTickCount()%2400 == 0) Leaderboards.refreshAsync();
         safely("events", () -> events.tick(server));
+        safely("afk", () -> Afk.tick(server));
         safely("rtp", () -> rtp.tick(server, rtpRadius));
         safely("combat", () -> CombatTag.tick(server));
         if (server.getTickCount()%6000 == 0) for (var player : server.getPlayerList().getPlayers()) safely("claims", () -> claims.refresh(player));

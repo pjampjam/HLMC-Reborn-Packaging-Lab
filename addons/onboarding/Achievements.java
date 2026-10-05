@@ -50,7 +50,7 @@ public final class Achievements {
             if (id.getPath().endsWith("_one_cm") && !id.getPath().contains("fall")) centimetres += stats.getValue(Stats.CUSTOM.get(id));
         if (centimetres >= 100L * 100_000) award(server, player, "travel/long_way_home", "done");
         if (centimetres >= 1000L * 100_000) award(server, player, "travel/around_the_world", "done");
-        long hours = stats.getValue(Stats.CUSTOM.get(Stats.PLAY_TIME)) / 72000L;
+        long hours = Afk.effectiveTicks(player.getUUID(), stats.getValue(Stats.CUSTOM.get(Stats.PLAY_TIME))) / 72000L;
         if (hours >= 24) award(server, player, "time/regular", "done");
         if (hours >= 100) award(server, player, "time/resident", "done");
     }

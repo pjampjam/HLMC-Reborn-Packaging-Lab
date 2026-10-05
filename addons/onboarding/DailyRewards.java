@@ -219,8 +219,11 @@ public final class DailyRewards {
     }
 
     /** A named tool or weapon that carries the opener's name. Tier 1: 30%, tier 2: 45%, tier 3: 60%. */
-    private ItemStack special(MinecraftServer server, int tier, String name) {
-        if (random.nextDouble() >= 0.15 + 0.15 * tier) return null;
+    private ItemStack special(MinecraftServer server, int tier, String name) { return special(server, tier, name, false); }
+
+    /** Same named tool, optionally guaranteed (the secret code's legendary prize). */
+    ItemStack special(MinecraftServer server, int tier, String name, boolean force) {
+        if (!force && random.nextDouble() >= 0.15 + 0.15 * tier) return null;
         var enchantments = server.registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
         record Special(net.minecraft.world.item.Item item, String title, List<Map.Entry<ResourceKey<Enchantment>, Integer>> enchants) {}
         var options = List.of(

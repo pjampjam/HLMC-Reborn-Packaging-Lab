@@ -15,6 +15,8 @@ final class Economy {
         return present() ? Bridge.unclaimedDaily(server, id) : -1;
     }
 
+    static boolean available() { return present(); }
+
     static long balance(MinecraftServer server, UUID id) { return present() ? Bridge.balance(server, id) : 0; }
 
     /** Takes coins only if the player has enough; false means nothing changed. */

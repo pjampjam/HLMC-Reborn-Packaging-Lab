@@ -9,6 +9,11 @@ import net.minecraft.resources.Identifier;
 final class TabPlaceholders {
     private TabPlaceholders() {}
 
+    static String duration(long seconds) {
+        long d = seconds / 86400, h = seconds % 86400 / 3600, m = seconds % 3600 / 60;
+        return d > 0 ? d + "d " + h + "h " + m + "m" : h > 0 ? h + "h " + m + "m" : m + "m";
+    }
+
     static void register() {
         Placeholders.registerServer(Identifier.fromNamespaceAndPath("holylois", "nameday"), (context, argument) -> {
             String names = NameDays.join(NameDays.today());
@@ -21,6 +26,13 @@ final class TabPlaceholders {
         // Matches the server list (MiniMOTD "just x more"): always one free slot shown, e.g. 3/4.
         Placeholders.registerServer(Identifier.fromNamespaceAndPath("holylois", "slots"),
             (context, argument) -> PlaceholderResult.value(Component.literal(String.valueOf(context.server().getPlayerCount() + 1))));
+        // Played time without AFK, like %player:playtime% (days, hours, minutes): %holylois:playtime%
+        Placeholders.registerServer(Identifier.fromNamespaceAndPath("holylois", "playtime"), (context, argument) -> {
+            if (!context.hasServerPlayer()) return PlaceholderResult.invalid("No player");
+            var player = context.serverPlayer();
+            long raw = player.getStats().getValue(net.minecraft.stats.Stats.CUSTOM.get(net.minecraft.stats.Stats.PLAY_TIME));
+            return PlaceholderResult.value(Component.literal(duration(Afk.effectiveTicks(player.getUUID(), raw) / 20)));
+        });
         // %holylois:top title% advances the viewer's category when the page reappears; %holylois:top 1..3% are the rows.
         Placeholders.registerServer(Identifier.fromNamespaceAndPath("holylois", "top"), (context, argument) -> {
             if (!context.hasServerPlayer()) return PlaceholderResult.invalid("No player");

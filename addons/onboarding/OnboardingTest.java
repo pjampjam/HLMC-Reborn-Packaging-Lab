@@ -56,7 +56,19 @@ public final class OnboardingTest {
         check(inRing,"Random teleport stays between 250 and 1800 blocks from spawn");
         check(SupportCommand.category("grief someone broke my farm").equals("grief")&&SupportCommand.category("BUG chest eats items").equals("bug")&&SupportCommand.category("hello?").equals("other"),"Support request categories come from the first word");
         check(CombatTag.BLOCKED.contains("rtp")&&CombatTag.BLOCKED.contains("home")&&!CombatTag.BLOCKED.contains("support"),"Combat blocks teleports but never /support");
-        System.out.println("Passed 38 onboarding, greeting, name day, bot wall, leaderboard, discovery, death, daily reward, chair, holiday, donate, land, rtp, support and combat checks");
+        check(Redeem.code("test-secret","2026-10-05").equals("HL-QZB2-QA3Q")&&Redeem.code("test-secret","2026-10-06").equals("HL-7AB3-Z0G0"),"Daily code matches the website's HMAC function");
+        check(Redeem.normalize("hl-qzb2 qa3q").equals(Redeem.normalize("HL-QZB2-QA3Q"))&&Redeem.normalize("HL-0O1I").equals(Redeem.normalize("HL-001L")),"Typed codes ignore case, spaces, dashes and look-alikes");
+        var noon=java.time.LocalDateTime.of(2026,10,6,12,0); var early=java.time.LocalDateTime.of(2026,10,6,0,30);
+        check(Redeem.matches("test-secret","HL-7AB3-Z0G0",noon)&&!Redeem.matches("test-secret","HL-QZB2-QA3Q",noon)&&Redeem.matches("test-secret","HL-QZB2-QA3Q",early)&&!Redeem.matches("test-secret","HL-0000-0000",noon),"Today's code works, yesterday's only until 01:00 UTC");
+        var player=java.util.UUID.fromString("00000000-0000-0000-0000-000000000042");
+        check(Redeem.roll("test-secret",player,"2026-10-05").equals(Redeem.roll("test-secret",player,"2026-10-05")),"The prize cannot be rerolled");
+        var counts=new java.util.HashMap<String,Integer>();
+        for(int i=0;i<4000;i++) counts.merge(Redeem.roll("test-secret",java.util.UUID.nameUUIDFromBytes(("p"+i).getBytes()),"2026-10-05"),1,Integer::sum);
+        check(counts.getOrDefault("coins",0)>1700&&counts.getOrDefault("lootbox",0)>700&&counts.getOrDefault("legendary",0)<60&&counts.size()>=4,"Prize odds follow the weights (coins common, legendary very rare)");
+        check(Afk.effective(72000,600)==60000&&Afk.effective(100,600)==0,"AFK seconds come off the played time and never below zero");
+        check(!Quiet.allow("pjampjam left the game","multiplayer.player.left")&&!Quiet.allow("pjampjam has made the advancement [X]","chat.type.advancement.task")&&!Quiet.allow("pjampjam is now AFK.","")
+            &&Quiet.allow("pjampjam fell from a high place","death.fell.accident.generic")&&Quiet.allow("Elza left the game","multiplayer.player.left")&&Quiet.allow("pjampjams cat left","")==true,"Quiet names hide joins, leaves, AFK and advancements but not deaths or other players");
+        System.out.println("Passed 45 onboarding, AFK ledger, secret code and quiet name, greeting, name day, bot wall, leaderboard, discovery, death, daily reward, chair, holiday, donate, land, rtp, support and combat checks");
     }
     private static void check(boolean value,String message) {if(!value)throw new AssertionError(message);}
 }

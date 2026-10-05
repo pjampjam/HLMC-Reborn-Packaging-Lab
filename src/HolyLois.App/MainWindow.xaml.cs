@@ -170,6 +170,12 @@ public partial class MainWindow : ThemedWindow
                 catch (System.Net.Http.HttpRequestException) { UpdateStatus.Text = T("OfflineCheck"); }
                 catch (OperationCanceledException) when (!cancellation.IsCancellationRequested) { UpdateStatus.Text = T("OfflineCheck"); }
             }
+            if (!context.IsIsolated && ClientContext.IsGameOrLauncherRunning())
+            {
+                if (!AppDialog.Show(this, T("CloseForUpdate"), T("CloseForUpdateInfo"), T("Agree"))) throw new OperationCanceledException();
+                StatusText.Text = T("Closing");
+                await Task.Run(ClientContext.CloseGameAndLauncher, cancellation.Token);
+            }
             var feedback = new TransferFeedback(); var finished = false;
             var installProgress = new Progress<InstallProgress>(p => {
                 if (finished || cancellation is null) return;
@@ -202,7 +208,7 @@ public partial class MainWindow : ThemedWindow
                 note += T("GuardRepaired") + " ";
             }
             context.OpenLauncher();
-            StatusText.Text = note + T(context.Settings.Launcher == "sk" ? "SkLinked" : "OfficialHint");
+            StatusText.Text = note + T(context.Settings.PlayMode == QuickPlay.Quick ? (context.Settings.Launcher == "sk" ? "QuickHintSk" : "QuickHint") : context.Settings.Launcher == "sk" ? "SkLinked" : "OfficialHint");
         }
         catch (Exception ex) { StatusText.Text = Localize.Error(ex); }
     }
