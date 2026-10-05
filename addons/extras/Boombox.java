@@ -114,6 +114,7 @@ public final class Boombox implements ModInitializer {
         PvpDeath.register();
         PackCheck.register();
         ModCheck.register();
+        Legends.register();
         PayloadTypeRegistry.serverboundPlay().register(BoomboxVolume.TYPE, BoomboxVolume.CODEC);
         ServerPlayNetworking.registerGlobalReceiver(BoomboxVolume.TYPE, (payload, context) -> changeVolume(context.player(), payload));
         loadConfig();

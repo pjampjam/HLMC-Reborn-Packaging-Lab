@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
   "id": "holylois-extras",
-  "version": "1.5.1",
+  "version": "1.6.0",
   "name": "Holy Lois",
   "provides": [
     "holylois"
   ],
-  "description": "Holy Lois boombox (internet radio through Simple Voice Chat, held or placed), zone titles (biome and land claim) and small client fixes",
+  "description": "Holy Lois boombox (internet radio through Simple Voice Chat, held or placed), legends and fishing treasure, fish weights, zone titles (biome and land claim) and small client fixes",
   "authors": [
     "pjampjam"
   ],

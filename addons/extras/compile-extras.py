@@ -1,5 +1,5 @@
 """Build holylois-boombox on the server against the live classpath (read-only). Run from ~/holylois-boombox."""
-import hashlib, io, json, pathlib, subprocess, urllib.request, zipfile
+import hashlib, io, json, pathlib, re, subprocess, urllib.request, zipfile
 r = pathlib.Path('/opt/minecraft'); w = pathlib.Path(__file__).resolve().parent
 lib = w / 'lib'; lib.mkdir(exist_ok=True)
 JLAYER = 'https://repo1.maven.org/maven2/javazoom/jlayer/1.0.1/jlayer-1.0.1.jar'
@@ -26,6 +26,9 @@ sources = sorted(w.glob('*.java'))
 if subprocess.run([java, '-m', 'jdk.compiler/com.sun.tools.javac.Main', '-proc:none', '-Xlint:-options', '-source', '25', '-target', '25',
                    '-cp', cp, '-d', str(classes), *map(str, sources)]).returncode: raise SystemExit('javac failed')
 if subprocess.run([java, '-cp', str(classes) + ':' + cp, 'holylois.boombox.BoomboxTest', '16']).returncode: raise SystemExit('BoomboxTest failed')
+# Legends and fish weights: the rules, plus the config files that will go live (copied next to this script by the kit).
+configs = [str(w / name) for name in ['holylois-legends.json', 'holylois-fish.json'] if (w / name).exists()]
+if subprocess.run([java, '-cp', str(classes) + ':' + cp, 'holylois.boombox.LegendsTest', *configs]).returncode: raise SystemExit('LegendsTest failed')
 # Fabric only loads nested jars that carry their own fabric.mod.json, so JLayer gets a small wrapper.
 wrapped = io.BytesIO()
 with zipfile.ZipFile(jl) as src, zipfile.ZipFile(wrapped, 'w', zipfile.ZIP_DEFLATED) as dst:
@@ -42,8 +45,8 @@ with zipfile.ZipFile(out, 'w', zipfile.ZIP_DEFLATED) as z:
         for p in sorted((w / folder).rglob('*')):
             if p.is_file(): z.write(p, p.relative_to(w).as_posix())
     for p in sorted(classes.rglob('*.class')):
-        if not p.name.startswith('BoomboxTest'): z.write(p, p.relative_to(classes).as_posix())
+        if not re.match(r'(Boombox|Legends)Test\b', p.name): z.write(p, p.relative_to(classes).as_posix())
     for p in sources:
-        if p.name != 'BoomboxTest.java': z.write(p, 'src/' + p.name)
+        if p.name not in ('BoomboxTest.java', 'LegendsTest.java'): z.write(p, 'src/' + p.name)
     z.write(w / 'README.md', 'README.md')
 print(json.dumps({'jar': str(out), 'sha256': hashlib.sha256(out.read_bytes()).hexdigest(), 'size': out.stat().st_size}))

@@ -1,0 +1,8 @@
+{
+	"match": {
+		"predicates": {
+			"minecraft:custom_data": "{holylois_light:1b}"
+		}
+	},
+	"luminance": 10
+}

@@ -41,6 +41,30 @@ Built on the server with `compile-extras.py` against the installed Minecraft 26.
   mobs keep their light; with shaders off everything is on, including the first-person light. A mode of OFF is switched to FANCY.
 - Bed camera (`BedCameraMixin`): in bed the first-person camera is lifted 0.3 and moved 0.3 forward so it is not inside the head.
 
+## Legends, fishing treasure and fish weights (1.6.0, server side)
+
+Nothing here needs client code: names, inscriptions, enchantments and the glint are item components, so they show in any client.
+
+- Structure chests (any loot table matching `chestTables`, by default `*:chests/*`: vanilla, Dungeons and Taverns, Towns and Towers)
+  hold one legend item at `chestChance` (1.2% per chest). Each item belongs to a legend (a set), has a name in the legend's colour,
+  grey italic inscriptions and optional enchantments, and carries `custom_data` `{holylois_legend: "<item id>", holylois_legend_set: "<legend id>"}`
+  so the Holy Lois advancements can find it.
+- When vanilla fishing rolls treasure, `treasureChance` (30%) of those catches become a Holy Lois treasure instead: a message in a
+  bottle (paper with a short text), a real buried treasure map (`data/holylois/loot_table/gameplay/treasure_map.json`) or a
+  fishing-only legend item. Fished-up loot crates (`crateTables`, by default anything with "crate" in its id) hold a fishing-only
+  legend item at `crateChance` (5%).
+- Items with `"light": true` also carry `{holylois_light: 1b}`; LambDynamicLights lights them when held or dropped through
+  `assets/holylois/dynamiclights/item/legend_light.json` (its `match` is a vanilla item predicate).
+- Every fish caught (`tables`, by default `minecraft:gameplay/fishing`, so vanilla and Fish of Thieves fish pass once) gets a size
+  between the lightest and heaviest weight of its species. Common (about 76%) stays a plain fish and stacks as before. Uncommon (13%)
+  gets a green name. Rare (7%), Epic (3%) and Legendary (1%) keep their weight in kg, the angler and the day, and do not stack:
+  they are trophies. Luck (Luck of the Sea) makes big fish more likely. A Legendary catch is announced in chat. The data is in
+  `custom_data` `{holylois_fish: {rarity, kg, species, by, day}}`; Fish of Thieves keeps its own variant data next to it.
+- Files: `config/holylois-legends.json` (legends, items, chances, bottle texts) and `config/holylois-fish.json` (species ranges in kg,
+  fish tags and namespaces). Without a file that part is off. Operators: `/legends reload`, `/legends list` and
+  `/legends give <item id | bottle | map | fish>` to look at an item without waiting for luck.
+- `LegendsTest` checks the rules and the config files that go live (the build runs it).
+
 ## Mod check
 
 Holy Lois runs on its pack and nothing else. While a player joins (configuration phase, next to the pack check) the client reports its
@@ -54,7 +78,9 @@ mod ids and the server compares them with `config/holylois-mods.json`:
   and points to Repair / check files in the launcher. In mode `warn` it is only logged.
 - A missing allowed mod is only logged until `missing` is `kick`.
 - A client too old to answer is let in while `legacy` is `allow`. Names in `exempt` skip the check (the owner's workshop profile).
-- No file, an empty `allowed` list or mode `off` means no check. Shaders, resource packs and settings are never part of it.
+- No file, an empty `allowed` list or mode `off` means no check.
+- Fabric Loader's own built-in mods (java, minecraft, fabricloader, mixinextras) are always allowed (1.6.0), so a list made from the
+  pack's jars cannot turn players away for them again. Shaders, resource packs and settings are never part of it.
 - This stops accidents and casual extras, not a determined cheat client, which can fake its list. The launcher moves extra jars out of the
   game folder and repairs changed pack files when Play is pressed.
 - The `allowed` list is the mod ids of the pack, including libraries nested inside jars: `work/make-mod-allowlist.py`.

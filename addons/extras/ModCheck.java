@@ -1,6 +1,7 @@
 package holylois.boombox;
 
 import net.fabricmc.fabric.api.networking.v1.FabricServerConfigurationPacketListenerImpl;
+import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerConfigurationConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerConfigurationNetworking;
@@ -28,6 +29,8 @@ import java.util.function.Consumer;
  * them with config/holylois-mods.json. Mods that are not in the pack are turned away with a clear message; missing mods are only
  * logged until the owner switches "missing" to "kick". Players named in "exempt" skip the check (the owner's workshop profile).
  * A client that is too old to answer is let in while "legacy" is "allow". No file, or mode "off", means no check.
+ * Fabric Loader's own built-in mods (java, minecraft, fabricloader, mixinextras) are always allowed, so a list made from the pack's
+ * jars can never turn players away for them again (pack 1.7.8 to 1.7.11 did, for mixinextras).
  *
  * {"mode": "enforce" | "warn" | "off", "missing": "warn" | "kick", "legacy": "allow" | "block", "exempt": ["name"], "allowed": ["modid"]}
  *
@@ -109,6 +112,19 @@ public final class ModCheck {
         return new Verdict(unknown, missing);
     }
 
+    /** The allowed list plus the server's own Fabric Loader built-ins (mods of type "builtin"). */
+    static Config withBuiltins(Config config, Collection<String> builtins) {
+        var allowed = new TreeSet<String>(config.allowed()); allowed.addAll(builtins);
+        return new Config(config.mode(), config.missing(), config.legacy(), config.exempt(), allowed);
+    }
+
+    private static Set<String> builtins() {
+        var ids = new TreeSet<String>();
+        for (var mod : FabricLoader.getInstance().getAllMods())
+            if ("builtin".equals(mod.getMetadata().getType())) ids.add(mod.getMetadata().getId());
+        return ids;
+    }
+
     static Config parse(String json) {
         JsonObject root = JsonParser.parseString(json).getAsJsonObject();
         var allowed = new TreeSet<String>(); var exempt = new TreeSet<String>();
@@ -123,7 +139,7 @@ public final class ModCheck {
         try {
             if (!Files.exists(CONFIG)) return null;
             var config = parse(Files.readString(CONFIG));
-            return config.allowed().isEmpty() ? null : config; // an empty list would turn away everybody
+            return config.allowed().isEmpty() ? null : withBuiltins(config, builtins()); // an empty list would turn away everybody
         } catch (Exception error) { Boombox.LOG.warn("Ignoring a broken {}", CONFIG, error); return null; }
     }
 
