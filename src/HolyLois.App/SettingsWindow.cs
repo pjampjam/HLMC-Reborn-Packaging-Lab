@@ -25,9 +25,8 @@ public sealed class SettingsWindow : ThemedWindow
         });
         Text(Localize.Text("PlayMode"),14,true);
         Text(Localize.Text("PlayModeIntro"),12);
-        Choice("PlayQuick","PlayQuickInfo","Recommended",QuickPlay.Quick,context.Settings.PlayMode == QuickPlay.Quick,true);
-        Choice("PlayStandard","PlayStandardInfo",null,QuickPlay.Standard,context.Settings.PlayMode == QuickPlay.Standard,true);
-        Choice("PlayIntegrated","PlayIntegratedInfo","ComingLater","integrated",false,false);
+        Choice("PlayStandard","PlayStandardInfo",null,PlayMode.Standard,true,true);
+        Choice("PlayIntegrated","PlayIntegratedInfo","ComingLater",PlayMode.Integrated,false,false);
         Text(Localize.Text("AppFiles"),14,true);
         Action(Localize.Text("OpenAppFolder"), () => Process.Start(new ProcessStartInfo("explorer.exe") { UseShellExecute = true, ArgumentList = { LauncherStartup.InstallRoot } }));
         Action(Localize.Text("CreateDesktop"), () => LauncherStartup.CreateShortcut(LauncherStartup.InstallRoot,true), !context.IsIsolated);

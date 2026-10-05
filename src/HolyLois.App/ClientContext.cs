@@ -9,7 +9,7 @@ using System.Text.Json;
 
 namespace HolyLois.App;
 
-public sealed record UserSettings(string Launcher = "official", string? LauncherExe = null, string? SkInstance = null, string Language = "en", string PlayMode = QuickPlay.Quick);
+public sealed record UserSettings(string Launcher = "official", string? LauncherExe = null, string? SkInstance = null, string Language = "en", string PlayMode = HolyLois.Core.PlayMode.Standard);
 public sealed class ClientContext
 {
     private readonly HttpClient http;
@@ -45,7 +45,7 @@ public sealed class ClientContext
         Directory.CreateDirectory(Root);
         Settings = File.Exists(SettingsPath) ? JsonSerializer.Deserialize<UserSettings>(File.ReadAllBytes(SettingsPath), JsonSettings.Options) ?? new() : new();
         if (Settings.Launcher is not ("official" or "sk")) throw new InvalidDataException("Saved launcher selection is invalid.");
-        Settings = Settings with { PlayMode = QuickPlay.Normalize(Settings.PlayMode) };
+        Settings = Settings with { PlayMode = HolyLois.Core.PlayMode.Normalize(Settings.PlayMode) };
         if (Settings.SkInstance is not null)
         {
             try { ValidateSkInstance(Settings.SkInstance); }
@@ -84,7 +84,7 @@ public sealed class ClientContext
     public void SetLanguage(string language)
     { Settings = Settings with { Language = language is "ru" or "lv" ? language : "en" }; AtomicFiles.WriteJson(SettingsPath, Settings); }
     public void SetPlayMode(string mode)
-    { Settings = Settings with { PlayMode = QuickPlay.Normalize(mode) }; AtomicFiles.WriteJson(SettingsPath, Settings); }
+    { Settings = Settings with { PlayMode = HolyLois.Core.PlayMode.Normalize(mode) }; AtomicFiles.WriteJson(SettingsPath, Settings); }
     public void SelectLauncher(string launcher)
     { if (Settings.Launcher == launcher) return; Settings = Settings with { Launcher = launcher, LauncherExe = null }; AtomicFiles.WriteJson(SettingsPath, Settings); DiscoverSkInstance(); }
     private void DiscoverSkInstance()
@@ -232,8 +232,7 @@ public sealed class ClientContext
         if (!CanPlay) throw new IOException("Finish Verify & update before opening your launcher.");
         if (IsIsolated) throw new IOException("Test setup is ready. Opening Minecraft is disabled in this development build.");
         var exe = DetectLauncher() ?? throw new IOException("Choose your installed launcher using 'Locate launcher'. Microsoft Store launcher users can open it from Start after setup.");
-        // Quick Play: the game joins Holy Lois by itself once it starts (see QuickPlay). Standard mode removes any old note.
-        if (Settings.PlayMode == QuickPlay.Quick) QuickPlay.Arm(Instance, ServerAddress.Public, DateTimeOffset.UtcNow); else QuickPlay.Disarm(Instance);
+        HolyLois.Core.PlayMode.RemoveOldQuickPlayNote(Instance);
         var launch = new ProcessStartInfo(exe.StartsWith("shell:", StringComparison.Ordinal) ? "explorer.exe" : exe) { UseShellExecute = true };
         if (exe.StartsWith("shell:", StringComparison.Ordinal)) launch.ArgumentList.Add(exe);
         if (Settings.Launcher == "official" && exe.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)) { launch.ArgumentList.Add("--workDir"); launch.ArgumentList.Add(MinecraftRoot); }

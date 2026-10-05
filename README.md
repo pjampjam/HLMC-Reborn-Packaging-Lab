@@ -10,15 +10,21 @@ This is the full release. Existing preview installations move to the standard Ho
 
 1. Open the downloaded EXE. Choose your Minecraft launcher and optional shortcuts.
 2. Close Minecraft, then click Install Holy Lois.
-3. Click Play beneath the logo. In Minecraft Launcher, select Holy Lois: Reborn. In SKlauncher, open Library and select Holy Lois: Reborn. Click Install there once to prepare Minecraft and Java, then Play. With Quick Play (the default) the game joins Holy Lois by itself from the title screen.
+3. Click Play beneath the logo. In Minecraft Launcher, select Holy Lois: Reborn. In SKlauncher, open Library and select Holy Lois: Reborn. Click Install there once to prepare Minecraft and Java, then Play. In the game, open Multiplayer and join Holy Lois.
 
-Already using Holy Lois? Close and reopen your installed app or its shortcut. Its signed app-stable channel updates it to 1.2.6 before showing the main window. You do not need another installer. An old downloaded copy hands off to the newer installed version after its verified update.
+Already using Holy Lois? Close and reopen your installed app or its shortcut. Its signed app-stable channel updates it to 1.2.7 before showing the main window. You do not need another installer. An old downloaded copy hands off to the newer installed version after its verified update.
 
 The app is unsigned by a Windows publisher certificate. SmartScreen may show Unknown publisher. Local scans and previous user download tests do not guarantee every antivirus result. If Defender detects a threat, stop and report the detection rather than adding an exclusion.
 
+## Version 1.2.7
+
+- Quick Play is removed. In testing it did not join the server by itself, so Play did the same as Standard. Play opens your Minecraft launcher; you join Holy Lois from Multiplayer in the game, and singleplayer works as before.
+- Settings keep **Standard** (opens your launcher) and show **Integrated** as coming later: the app will start the game itself, with its own Microsoft sign-in.
+- A leftover `holylois-quickplay.json` from 1.2.6 is deleted the next time you press Play. Pack 1.7.11 embedded (Holy Lois Extras 1.5.1 without Quick Play).
+
 ## Version 1.2.6
 
-- Play modes in Settings: **Quick Play** (default: the launcher writes `holylois-quickplay.json` into the game folder and the Holy Lois Extras mod joins play.holylois.com or mc.holylois.com from the title screen, premium and offline accounts alike; the note is valid for 3 minutes and only for those two hosts), **Standard** (only opens your launcher) and **Integrated** (coming later, needs its own Microsoft sign-in).
+- Play modes in Settings: Quick Play (removed in 1.2.7, it never joined by itself), **Standard** (only opens your launcher) and **Integrated** (coming later, needs its own Microsoft sign-in).
 - When an update needs Minecraft or its launcher closed, the app asks first (**Agree**) and closes them for you.
 - New launcher and Minecraft window icons. Pack 1.7.10 embedded.
 

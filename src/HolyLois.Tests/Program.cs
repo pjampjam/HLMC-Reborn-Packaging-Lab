@@ -464,13 +464,11 @@ tests.Add(("Mod guard moves foreign jars aside, flags damaged mods and re-enable
     return Task.CompletedTask;
 }));
 
-tests.Add(("Quick Play note is written for the mod and removed in standard mode", () => {
-    var game = Dir("quickplay-game"); var now = new DateTimeOffset(2026, 10, 5, 12, 0, 0, TimeSpan.Zero);
-    QuickPlay.Arm(game, ServerAddress.Public, now);
-    var note = System.Text.Json.JsonDocument.Parse(File.ReadAllText(Path.Combine(game, QuickPlay.FileName))).RootElement;
-    Check(note.GetProperty("address").GetString() == "play.holylois.com" && note.GetProperty("created").GetInt64() == now.ToUnixTimeSeconds(), "Quick Play note has the wrong content.");
-    QuickPlay.Disarm(game); Check(!File.Exists(Path.Combine(game, QuickPlay.FileName)), "Standard mode left a note behind.");
-    QuickPlay.Disarm(game); Check(QuickPlay.Normalize(null) == QuickPlay.Quick && QuickPlay.Normalize("junk") == QuickPlay.Quick && QuickPlay.Normalize("standard") == QuickPlay.Standard, "Play mode did not normalize.");
+tests.Add(("Old Quick Play settings fall back to Standard and a leftover note is removed", () => {
+    var game = Dir("quickplay-game"); var note = Path.Combine(game, PlayMode.OldQuickPlayNote);
+    File.WriteAllText(note, "{\"address\":\"play.holylois.com\",\"created\":0}");
+    PlayMode.RemoveOldQuickPlayNote(game); Check(!File.Exists(note), "The old Quick Play note was left behind.");
+    PlayMode.RemoveOldQuickPlayNote(game); Check(PlayMode.Normalize(null) == PlayMode.Standard && PlayMode.Normalize("quick") == PlayMode.Standard && PlayMode.Normalize("standard") == PlayMode.Standard, "Play mode did not fall back to Standard.");
     return Task.CompletedTask;
 }));
 

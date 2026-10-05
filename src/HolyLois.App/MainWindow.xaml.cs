@@ -208,7 +208,7 @@ public partial class MainWindow : ThemedWindow
                 note += T("GuardRepaired") + " ";
             }
             context.OpenLauncher();
-            StatusText.Text = note + T(context.Settings.PlayMode == QuickPlay.Quick ? (context.Settings.Launcher == "sk" ? "QuickHintSk" : "QuickHint") : context.Settings.Launcher == "sk" ? "SkLinked" : "OfficialHint");
+            StatusText.Text = note + T(context.Settings.Launcher == "sk" ? "SkLinked" : "OfficialHint");
         }
         catch (Exception ex) { StatusText.Text = Localize.Error(ex); }
     }

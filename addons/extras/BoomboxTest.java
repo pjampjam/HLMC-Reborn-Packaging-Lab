@@ -12,10 +12,6 @@ public final class BoomboxTest {
         if (!verdict.unknown().equals(new java.util.TreeSet<>(java.util.List.of("meteor-client", "xray"))) || !verdict.missing().equals(new java.util.TreeSet<>(java.util.List.of("holylois-extras")))
             || !mods.legacy().equals("allow") || !mods.missing().equals("warn") || !mods.exempt().contains("Owner")) throw new AssertionError("mod check verdict");
         if (!ModCheck.check(mods, java.util.List.of("fabricloader", "sodium", "holylois-extras")).unknown().isEmpty()) throw new AssertionError("mod check clean client");
-        long now = 1_760_000_000L;
-        if (QuickPlayClient.parse("{\"address\":\"play.holylois.com\",\"created\":" + (now - 30) + "}", now) == null || QuickPlayClient.parse("{\"address\":\"MC.holylois.com:25565\",\"created\":" + now + "}", now) == null) throw new AssertionError("quick play accepts a fresh note for our address");
-        if (QuickPlayClient.parse("{\"address\":\"play.holylois.com\",\"created\":" + (now - 400) + "}", now) != null || QuickPlayClient.parse("{\"address\":\"evil.example.com\",\"created\":" + now + "}", now) != null
-            || QuickPlayClient.parse("{\"address\":\"play.holylois.com.evil.com\",\"created\":" + now + "}", now) != null || QuickPlayClient.parse("not json", now) != null) throw new AssertionError("quick play ignores stale notes, other hosts and junk");
         int ok = 0;
         for (var station : new Boombox.Config().stations.subList(0, Math.min(args.length > 0 ? Integer.parseInt(args[0]) : 3, new Boombox.Config().stations.size()))) {
             var stream = new RadioStream(station.url, 0.55f);
