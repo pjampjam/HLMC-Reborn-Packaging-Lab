@@ -13,7 +13,7 @@ public static class LauncherSetup
 
     public static void Complete(string baseFolder, SetupChoices choices, Action<bool> createShortcut)
     {
-        if (choices.Launcher is not ("official" or "sk")) throw new InvalidDataException("Choose Minecraft Launcher or SKlauncher.");
+        if (choices.Launcher is not ("official" or "sk" or "name")) throw new InvalidDataException("Choose a Minecraft account or a player name.");
         var receipt = SafePaths.Resolve(baseFolder, "setup-completed.json");
         if (File.Exists(receipt)) return;
         if (choices.DesktopShortcut) createShortcut(true);

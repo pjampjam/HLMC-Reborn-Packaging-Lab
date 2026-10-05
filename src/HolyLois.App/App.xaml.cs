@@ -21,7 +21,8 @@ public partial class App : Application
             if (args.Contains("--remove-app")) { await AppMaintenance.RemoveAsync(args); Shutdown(0); return; }
             if (args.Contains("--apply-app-update") || args.Contains("--recover-app-update")) { Shutdown(await AppUpdates.ApplyAsync(args)); return; }
             if (!development && !args.Contains("--app-update-ready") && AppPromotion.Request(args)) { Shutdown(0); return; }
-            if (!development && !AppUpdates.AcquireLock()) { Shutdown(0); return; }
+            // A second start while the app runs (also while it waits hidden behind the game) brings the open window forward.
+            if (!development && !AppUpdates.AcquireLock()) { ShowRequest.Send(); Shutdown(0); return; }
             Exit += (_,_) => AppUpdates.ReleaseLock();
             if (args.Contains("--owner-root") || args.Contains("--publish-prepared"))
                 throw new InvalidDataException("Owner publishing stays in the production admin app. The player app does not publish packs.");
@@ -80,8 +81,10 @@ public partial class App : Application
                     }
                 }
                 var pictures = Pictures(content).ToArray();
-                if (pictures.Length != 2 || pictures.Any(p => p.Height != 155 || p.CornerRadius != new CornerRadius(6) || ((ImageBrush)p.Background).Stretch != Stretch.UniformToFill)
-                    || Math.Abs(pictures[0].ActualWidth-pictures[1].ActualWidth) > 0.1) throw new IOException("Launcher picture frames no longer match or preserve crop proportions.");
+                var nameFrame = (System.Windows.Controls.Border)setup.FindName("NamePicture");
+                if (pictures.Length != 1 || pictures.Any(p => p.Height != 155 || p.CornerRadius != new CornerRadius(6) || ((ImageBrush)p.Background).Stretch != Stretch.UniformToFill)
+                    || nameFrame.Height != 155 || nameFrame.CornerRadius != new CornerRadius(6)
+                    || Math.Abs(pictures[0].ActualWidth-nameFrame.ActualWidth) > 0.1) throw new IOException("Setup picture frames no longer match or preserve crop proportions.");
                 var marker = new System.Windows.Controls.Border { Width=40,Height=40,Background=Brushes.White };
                 var motionWindow = new ThemedWindow { Content=marker,Width=120,Height=120 }; motionWindow.Show();
                 UiMotion.FadeIn(marker,0,true);
@@ -131,6 +134,52 @@ public partial class App : Application
                 if (System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceNames().Any(n => n.EndsWith("HolyLoisSetup.exe",StringComparison.Ordinal)))
                     throw new InvalidDataException("The old checker remains embedded.");
                 AtomicFiles.Write(SafePaths.Resolve(root,"first-run-result.txt"),"Self-install verified; no embedded checker; optional shortcuts remain off after repeated setup."u8.ToArray()); Shutdown(0); return;
+            }
+            if (args.Contains("--verify-fast-start")) {
+                if (data is null || !context.IsIsolated) throw new ArgumentException("Fast start verification requires an isolated folder.");
+                var playerIndex = Array.IndexOf(args,"--player");
+                var player = playerIndex >= 0 && playerIndex + 1 < args.Length ? args[playerIndex+1] : "pjamtest";
+                context.SelectLauncher("name"); context.UsePlayerName(player);
+                if (!args.Contains("--no-join")) context.SetJoinServer(true);
+                if (args.Contains("--reuse-real")) {
+                    var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                    var reuse = new List<string> { Path.Combine(appData,".minecraft") };
+                    try { reuse.Add(SkLauncherProfiles.DataRoot(Path.Combine(appData,".sklauncher"))); } catch (IOException) { }
+                    context.ExtraReuseRoots = reuse;
+                }
+                var clock = System.Diagnostics.Stopwatch.StartNew(); var log = new System.Text.StringBuilder();
+                if (!context.CanPlay) { await context.InstallAsync(null, CancellationToken.None); log.AppendLine($"Pack {context.Manifest.Version} installed in {clock.Elapsed:m\\:ss}"); }
+                clock.Restart();
+                var plan = await context.PrepareFastStartAsync(null, CancellationToken.None);
+                log.AppendLine($"Java, Minecraft and Fabric ready in {clock.Elapsed:m\\:ss} (downloaded {context.LastDownloads?.Downloaded}, reused from other launchers {context.LastDownloads?.Reused})");
+                clock.Restart();
+                var again = await context.PrepareFastStartAsync(null, CancellationToken.None);
+                log.AppendLine($"Second check (every later Play) took {clock.Elapsed.TotalSeconds:0.0} s, downloaded {context.LastDownloads?.Downloaded}");
+                log.AppendLine("Java: " + plan.Java);
+                if (!args.Contains("--no-game")) {
+                    context.AllowTestStart = true; clock.Restart();
+                    var session = context.StartGame(again); int? mods = null;
+                    while (!session.HasWindow() && !session.Exited.IsCompleted && clock.Elapsed < TimeSpan.FromMinutes(10)) { mods ??= session.ModCount; await Task.Delay(250); }
+                    if (session.Exited.IsCompleted) throw new IOException("Minecraft closed while starting with exit code " + await session.Exited + ". See " + context.OutputLog);
+                    if (!session.HasWindow()) throw new IOException("No Minecraft window after 10 minutes. See " + context.OutputLog);
+                    log.AppendLine($"Minecraft window open {clock.Elapsed:m\\:ss} after start ({session.ModCount ?? mods} mods). The game stays open: join Holy Lois as {player} and close it when done.");
+                }
+                File.WriteAllText(Path.Combine(data,"fast-start-result.txt"), log.ToString()); Shutdown(0); return;
+            }
+            if (args.Contains("--render-start-preview")) {
+                if (data is null) throw new ArgumentException("Rendering requires an isolated folder.");
+                context.SelectLauncher("name"); context.UsePlayerName("pjamtest");
+                var start = new LaunchWindow("pjamtest", true); start.SetStep("assets"); start.SetBytes(212_000_000, 483_000_000); Render(start,data,"start-progress.png",520,470);
+                start = new LaunchWindow("pjamtest", true); start.SetStep("mods", string.Format(Localize.Text("ModsCount"), 214)); Render(start,data,"start-mods.png",520,470);
+                start = new LaunchWindow("pjamtest", false); start.SetStep("java");
+                start.Fail(Localize.Text("StartFailed"), string.Format(Localize.Text("StartClosed"), 1) + "\n\n" + Localize.Text("StartFailedHelp"), [(Localize.Text("ReportCopy"), () => null, true), ("Discord", () => null, false)]);
+                Render(start,data,"start-failed.png",520,560);
+                Render(new NameWindow(context),data,"name-window.png",540,560);
+                await LauncherDiscovery.WarmAsync();
+                Render(new MainWindow(context),data,"main-fast-start.png",1060,748);
+                context.SelectLauncher("official"); Render(new MainWindow(context),data,"main-account.png",1060,748);
+                context.SelectLauncher("name"); Render(new SettingsWindow(context),data,"settings-fast-start.png",610,1100);
+                Shutdown(0); return;
             }
             if (args.Contains("--render-settings-preview")) { Render(new SettingsWindow(context),data!,"settings-preview.png",610,900); Shutdown(0); return; }
             if (args.Contains("--render-update-preview")) {
@@ -248,6 +297,7 @@ public partial class App : Application
             }
             else MainWindow = new MainWindow(context);
             MainWindow.Show(); ShutdownMode = ShutdownMode.OnLastWindowClose;
+            if (!development) ShowRequest.Listen(() => Dispatcher.BeginInvoke(() => { if (MainWindow is { } window) { window.Show(); if (window.WindowState == WindowState.Minimized) window.WindowState = WindowState.Normal; window.Activate(); } }));
         }
         catch (Exception ex)
         {

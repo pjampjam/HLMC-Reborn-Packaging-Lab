@@ -1,6 +1,6 @@
 # Holy Lois: Reborn
 
-A Windows launcher and updater for the Holy Lois modpack. Choose Minecraft Launcher or SKlauncher, install the pack, then open your chosen launcher to play.
+A Windows launcher and updater for the Holy Lois modpack. Play with a player name (fast start: the app starts Minecraft itself) or with a bought Minecraft account (the app opens Minecraft Launcher), install the pack, then press Play.
 
 ## Download
 
@@ -8,13 +8,25 @@ A Windows launcher and updater for the Holy Lois modpack. Choose Minecraft Launc
 
 This is the full release. Existing preview installations move to the standard HolyLoisReborn folder, and owned launcher profiles and shortcuts lose their Preview names. The original small installers in HLMC-Reborn remain withdrawn. Do not download those older installers.
 
-1. Open the downloaded EXE. Choose your Minecraft launcher and optional shortcuts.
+1. Open the downloaded EXE. Choose **Player name** (type the name you want in the game) or **Minecraft account**, and optional shortcuts.
 2. Close Minecraft, then click Install Holy Lois.
-3. Click Play beneath the logo. In Minecraft Launcher, select Holy Lois: Reborn. In SKlauncher, open Library and select Holy Lois: Reborn. Click Install there once to prepare Minecraft and Java, then Play. In the game, open Multiplayer and join Holy Lois.
+3. Click Play beneath the logo. With a player name, Minecraft opens straight from the app and joins Holy Lois. With a Minecraft account, Minecraft Launcher opens: select Holy Lois: Reborn and press Play there, and the game joins Holy Lois by itself.
 
-Already using Holy Lois? Close and reopen your installed app or its shortcut. Its signed app-stable channel updates it to 1.2.7 before showing the main window. You do not need another installer. An old downloaded copy hands off to the newer installed version after its verified update.
+Already using Holy Lois? Close and reopen your installed app or its shortcut. Its signed app-stable channel updates it to 1.3.0 before showing the main window. You do not need another installer. An old downloaded copy hands off to the newer installed version after its verified update.
 
 The app is unsigned by a Windows publisher certificate. SmartScreen may show Unknown publisher. Local scans and previous user download tests do not guarantee every antivirus result. If Defender detects a threat, stop and report the detection rather than adding an exclusion.
+
+## Version 1.3.0
+
+- **Fast start.** For player-name accounts the app starts Minecraft itself: no SKlauncher, no clicking through another launcher. A start window shows each step (pack check, Java 25, Minecraft and Fabric, sounds and textures, starting, loading mods) with a progress bar, then steps aside once the game window is open. If the game crashes, the app comes back with a crash window.
+- Java 25 (Mojang's own build), Minecraft 26.3 and Fabric are fetched from Mojang and Fabric and checked by hash. Fabric files are checked against the signed pack. Identical files that another launcher already has on the PC (Minecraft Launcher, its Microsoft Store version, SKlauncher) are linked or copied instead of downloaded. Later starts only compare file sizes and times, and work offline once everything is in place.
+- Memory follows the computer (3 to 8 GB) with Mojang's recommended garbage collector settings. The long Java command goes through an argument file, so Windows' command line limit never cuts it.
+- **Player names.** The first start asks for a name (3 to 16 letters, digits or _). SKlauncher players keep the name they already play as, read from their game log, and their game folder, worlds and settings. Settings can change the name with a clear warning (a new name is a new player on the server); every earlier name stays one click away. Three new names a day at most. A name that belongs to a bought Minecraft account is refused, because the server would ask for that account. Names live in the app's data folder; uninstalling keeps them unless "Also forget my player names" is ticked.
+- **Join Holy Lois on start** (on by default, in Settings). Fast start passes Minecraft's own join option; for a bought account the Minecraft Launcher profile carries the same option, so the game joins by itself there too. Turn it off for singleplayer.
+- SKlauncher players can switch back to **Open SKlauncher** in Settings. A bought account keeps opening Minecraft Launcher: starting the game from this app would need a Microsoft sign-in that Mojang only allows for approved launchers.
+- **Help and reports** in Settings: copy a report or save it as a zip on the Desktop, and open Discord. The report has the last start, the game output, the game log and the newest crash report, with the Windows user name, login details and IP addresses removed.
+- Opening the app while the game runs brings the hidden window back instead of doing nothing.
+- A softer, game-like Play button: green face on a darker lip that presses down. First setup asks "Account or player name" instead of "which launcher".
 
 ## Version 1.2.7
 
@@ -64,6 +76,8 @@ The app is unsigned by a Windows publisher certificate. SmartScreen may show Unk
 ## Files and updates
 
 The app installs into `%LOCALAPPDATA%\HolyLoisReborn`. Game files and preferences live under its data folder. If an older installation already occupies that folder, migration preserves it as a sibling HolyLoisReborn-backup folder before moving the working preview installation. The backup is retained for recovery. Close Minecraft and its launcher during this one-time move.
+
+Fast start keeps Java and Minecraft in `data\game` (files identical to another launcher's are hard-linked, so they take no extra space), the last start record and game output in `data\logs`, and player names in `data\players.json`. The pack's game folder is the same one as before: `data\instances\Holy Lois Reborn`, or the SKlauncher folder for SKlauncher players.
 
 App updates use this repository's signed app-stable channel. Modpack updates use the existing separate signed HLMC-Reborn pack channel. Direct release-file checks do not use the GitHub REST API quota; hosting and download failures can still occur. The working installed app remains available when the network check fails.
 

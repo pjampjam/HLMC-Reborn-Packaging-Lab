@@ -9,7 +9,9 @@ using System.Text.Json;
 
 namespace HolyLois.App;
 
-public sealed record UserSettings(string Launcher = "official", string? LauncherExe = null, string? SkInstance = null, string Language = "en", string PlayMode = HolyLois.Core.PlayMode.Standard);
+/// <summary>Launcher is "official" (bought account, opens Minecraft Launcher), "sk" (SKlauncher game folder) or "name" (player name, fast start only).</summary>
+public sealed record UserSettings(string Launcher = "official", string? LauncherExe = null, string? SkInstance = null, string Language = "en", string PlayMode = HolyLois.Core.PlayMode.Standard,
+    bool JoinServer = true, bool? FastStart = null);
 public sealed class ClientContext
 {
     private readonly HttpClient http;
@@ -44,7 +46,7 @@ public sealed class ClientContext
             : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), ".sklauncher");
         Directory.CreateDirectory(Root);
         Settings = File.Exists(SettingsPath) ? JsonSerializer.Deserialize<UserSettings>(File.ReadAllBytes(SettingsPath), JsonSettings.Options) ?? new() : new();
-        if (Settings.Launcher is not ("official" or "sk")) throw new InvalidDataException("Saved launcher selection is invalid.");
+        if (Settings.Launcher is not ("official" or "sk" or "name")) throw new InvalidDataException("Saved launcher selection is invalid.");
         Settings = Settings with { PlayMode = HolyLois.Core.PlayMode.Normalize(Settings.PlayMode) };
         if (Settings.SkInstance is not null)
         {
@@ -83,8 +85,6 @@ public sealed class ClientContext
     }
     public void SetLanguage(string language)
     { Settings = Settings with { Language = language is "ru" or "lv" ? language : "en" }; AtomicFiles.WriteJson(SettingsPath, Settings); }
-    public void SetPlayMode(string mode)
-    { Settings = Settings with { PlayMode = HolyLois.Core.PlayMode.Normalize(mode) }; AtomicFiles.WriteJson(SettingsPath, Settings); }
     public void SelectLauncher(string launcher)
     { if (Settings.Launcher == launcher) return; Settings = Settings with { Launcher = launcher, LauncherExe = null }; AtomicFiles.WriteJson(SettingsPath, Settings); DiscoverSkInstance(); }
     private void DiscoverSkInstance()
@@ -127,8 +127,11 @@ public sealed class ClientContext
         get { try { return Installer.ReadReceipt(); } catch (Exception ex) when (ex is IOException or JsonException) { return null; } }
     }
     public bool CanPlay => (Settings.Launcher != "sk" || SkLauncherProfiles.IsRegistered(SkLauncherRoot, Instance))
+        && (Settings.Launcher != "official" || LauncherProfileReady())
         && Directory.Exists(Instance) && File.Exists(SafePaths.Resolve(Instance, "holylois-instance.json")) && Receipt?.Version == Manifest.Version && File.Exists(SafePaths.Resolve(StatePath, "ready.txt"))
         && File.ReadAllText(SafePaths.Resolve(StatePath, "ready.txt")) == Manifest.Version;
+    // Switching from a player name to a bought account needs the Minecraft Launcher profile, which a name install never wrote.
+    private bool LauncherProfileReady() => File.Exists(Path.Combine(MinecraftRoot, "versions", LauncherProfiles.VersionId, LauncherProfiles.VersionId + ".json"));
     public async Task InstallAsync(IProgress<InstallProgress>? progress, CancellationToken token)
     {
         if (!IsIsolated && IsGameOrLauncherRunning()) throw new IOException("Close Minecraft and your Minecraft launcher before updating, then try again.");
@@ -154,14 +157,14 @@ public sealed class ClientContext
         {
             progress?.Report(new("Preparing SKlauncher library...", 1, 1, Manifest.Files.Length, Manifest.Files.Length));
             await LauncherProfiles.PrepareVersionAsync(SkLauncherProfiles.DataRoot(SkLauncherRoot), Manifest,
-                Asset("fabric-profile.json"), downloader, token, Asset("vanilla-profile.json"));
+                LauncherFabricProfile(), downloader, token, Asset("vanilla-profile.json"));
             if (!IsIsolated && IsGameOrLauncherRunning()) throw new IOException("Close SKlauncher, then click Repair / check files to finish adding Holy Lois.");
             SkLauncherProfiles.Register(SkLauncherRoot, Instance, Manifest, Asset("profile-icon.png"));
         }
-        else
+        else if (Settings.Launcher == "official")
         {
             progress?.Report(new("Preparing Fabric launcher profile...", 1, 1, Manifest.Files.Length, Manifest.Files.Length));
-            await LauncherProfiles.PrepareAsync(MinecraftRoot, Instance, Manifest, Asset("fabric-profile.json"), Asset("profile-icon.png"), downloader, token, Asset("vanilla-profile.json"), LauncherProfiles.ReleaseProfileId, "Holy Lois: Reborn");
+            await LauncherProfiles.PrepareAsync(MinecraftRoot, Instance, Manifest, LauncherFabricProfile(), Asset("profile-icon.png"), downloader, token, Asset("vanilla-profile.json"), LauncherProfiles.ReleaseProfileId, "Holy Lois: Reborn");
         }
         AtomicFiles.WriteJson(SafePaths.Resolve(Instance, "holylois-pack-receipt.json"), Installer.ReadReceipt());
         AtomicFiles.Write(SafePaths.Resolve(StatePath, "ready.txt"), Encoding.ASCII.GetBytes(Manifest.Version));
@@ -170,6 +173,86 @@ public sealed class ClientContext
         _ = CleanInstalledDownloads();
         progress?.Report(new("Holy Lois is ready. Select its profile in your launcher.", 1, 1, Manifest.Files.Length, Manifest.Files.Length));
     }
+    // The profile a player's own launcher starts: the pack's Fabric profile, plus "join Holy Lois" when that setting is on.
+    private byte[] LauncherFabricProfile() => GameVersion.WithJoin(Asset("fabric-profile.json"), Settings.JoinServer ? ServerAddress.Public : null);
+    /// <summary>Rewrites the launcher's copy of the Holy Lois profile after the join setting changed. Missing profiles wait for the next install.</summary>
+    public void ApplyJoinToLauncherProfile()
+    {
+        try
+        {
+            string? root = Settings.Launcher switch { "official" => MinecraftRoot, "sk" => SkLauncherProfiles.DataRoot(SkLauncherRoot), _ => null };
+            if (root is null) return;
+            var path = SafePaths.Resolve(root, "versions/" + LauncherProfiles.VersionId + "/" + LauncherProfiles.VersionId + ".json");
+            if (!File.Exists(path)) return;
+            var next = LauncherFabricProfile();
+            if (!File.ReadAllBytes(path).AsSpan().SequenceEqual(next)) AtomicFiles.Write(path, next);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException) { /* the next install writes it */ }
+    }
+    public void SetJoinServer(bool join) { Settings = Settings with { JoinServer = join }; AtomicFiles.WriteJson(SettingsPath, Settings); ApplyJoinToLauncherProfile(); }
+    public void SetFastStart(bool fast) { Settings = Settings with { FastStart = fast }; AtomicFiles.WriteJson(SettingsPath, Settings); }
+    public bool UsesFastStart => HolyLois.Core.PlayMode.UsesFastStart(Settings.Launcher, Settings.FastStart);
+
+    // Player names live in the data folder, which uninstalling keeps unless the player asks to forget them.
+    public string PlayersPath => SafePaths.Resolve(Root, "players.json");
+    public PlayerBook Players => PlayerNames.Load(PlayersPath);
+    public string? PlayerName => Players.Current;
+    public void UsePlayerName(string name) => PlayerNames.Save(PlayersPath, PlayerNames.Use(Players, name, DateTimeOffset.UtcNow));
+    public void ForgetPlayers() { if (File.Exists(PlayersPath)) File.Delete(PlayersPath); }
+    /// <summary>First fast start for a SKlauncher player: take the name they already play with from the game log.</summary>
+    public string? SuggestedPlayerName()
+    {
+        if (PlayerName is not null) return PlayerName;
+        foreach (var folder in new[] { Instance, PreparedInstance }.Distinct())
+            if (PlayerNames.FromGameLog(folder) is { } name) return name;
+        return null;
+    }
+    public Task<bool?> IsPremiumNameAsync(string name, CancellationToken token) => PlayerNames.IsPremiumAsync(http, name, token);
+
+    // Fast start keeps Java and Minecraft in the app's own folder and reuses identical files from other launchers.
+    public string GameRoot => SafePaths.Resolve(Root, "game");
+    public string LogsRoot => SafePaths.Resolve(Root, "logs");
+    public string OutputLog => SafePaths.Resolve(LogsRoot, "game-output.log");
+    private string StartRecordPath => SafePaths.Resolve(LogsRoot, "last-start.json");
+    /// <summary>Verification only: extra folders whose identical files may be reused, and permission to start the game from a test folder.</summary>
+    public IReadOnlyList<string> ExtraReuseRoots { get; set; } = [];
+    public bool AllowTestStart { get; set; }
+    public GameDownloads? LastDownloads { get; private set; }
+    private IEnumerable<string> ReuseRoots()
+    {
+        foreach (var extra in ExtraReuseRoots) yield return extra;
+        yield return MinecraftRoot;
+        string? sk = null;
+        try { sk = SkLauncherProfiles.DataRoot(SkLauncherRoot); } catch (IOException) { }
+        if (sk is not null) yield return sk;
+        if (!IsIsolated) yield return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Packages", "Microsoft.4297127D64EC6_8wekyb3d8bbwe", "LocalCache", "Local");
+    }
+    public async Task<LaunchPlan> PrepareFastStartAsync(IProgress<GameProgress>? progress, CancellationToken token)
+    {
+        if (!UsesFastStart) throw new IOException("Fast start is off. Play opens your launcher.");
+        var name = PlayerName ?? throw new IOException("Choose your player name first.");
+        if (!CanPlay) throw new IOException("Finish Verify & update before playing.");
+        var downloads = new GameDownloads(http, GameRoot, ReuseRoots());
+        LastDownloads = downloads;
+        var version = new GameVersion(Asset("vanilla-profile.json"), Asset("fabric-profile.json"));
+        var memory = FastStart.MemoryMb(GC.GetGCMemoryInfo().TotalAvailableMemoryBytes);
+        var options = new FastStartOptions(name, Settings.JoinServer ? ServerAddress.Public : null, AppUpdates.RunningVersion.ToString(3), memory);
+        HolyLois.Core.PlayMode.RemoveOldQuickPlayNote(Instance);
+        return await FastStart.PrepareAsync(downloads, version, Manifest.LoaderFiles, Instance, options, GamePlatform.Current, progress, token);
+    }
+    public GameSession StartGame(LaunchPlan plan)
+    {
+        if (IsIsolated && !AllowTestStart) throw new IOException("Test setup is ready. Starting Minecraft is disabled in this development build.");
+        var session = GameSession.Start(plan, OutputLog);
+        SaveStart(new StartRecord("fast start", Manifest.Version, AppUpdates.RunningVersion.ToString(3), DateTimeOffset.UtcNow));
+        return session;
+    }
+    public StartRecord? LastStart
+    {
+        get { try { return File.Exists(StartRecordPath) ? JsonSerializer.Deserialize<StartRecord>(File.ReadAllBytes(StartRecordPath), JsonSettings.Options) : null; } catch (Exception ex) when (ex is IOException or JsonException) { return null; } }
+    }
+    public void SaveStart(StartRecord record) { try { AtomicFiles.WriteJson(StartRecordPath, record); } catch (IOException) { } }
+    public string BuildReport() => GameReports.Build(LastStart, Instance, File.Exists(OutputLog) ? OutputLog : null, Environment.OSVersion.VersionString, Environment.UserName);
     public StorageCleanupResult CleanInstalledDownloads()
     {
         try
@@ -214,6 +297,7 @@ public sealed class ClientContext
     }
     public string? DetectLauncher()
     {
+        if (Settings.Launcher == "name") return null;
         if (Settings.LauncherExe is not null && File.Exists(Settings.LauncherExe)) return Settings.LauncherExe;
         var paths = Settings.Launcher == "official" ? new[] {
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Minecraft Launcher", "MinecraftLauncher.exe"),
@@ -233,6 +317,8 @@ public sealed class ClientContext
         if (IsIsolated) throw new IOException("Test setup is ready. Opening Minecraft is disabled in this development build.");
         var exe = DetectLauncher() ?? throw new IOException("Choose your installed launcher using 'Locate launcher'. Microsoft Store launcher users can open it from Start after setup.");
         HolyLois.Core.PlayMode.RemoveOldQuickPlayNote(Instance);
+        ApplyJoinToLauncherProfile();
+        SaveStart(new StartRecord(Settings.Launcher == "sk" ? "SKlauncher" : "Minecraft Launcher", Manifest.Version, AppUpdates.RunningVersion.ToString(3), DateTimeOffset.UtcNow));
         var launch = new ProcessStartInfo(exe.StartsWith("shell:", StringComparison.Ordinal) ? "explorer.exe" : exe) { UseShellExecute = true };
         if (exe.StartsWith("shell:", StringComparison.Ordinal)) launch.ArgumentList.Add(exe);
         if (Settings.Launcher == "official" && exe.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)) { launch.ArgumentList.Add("--workDir"); launch.ArgumentList.Add(MinecraftRoot); }

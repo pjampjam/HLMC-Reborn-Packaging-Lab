@@ -20,13 +20,23 @@ public partial class MainWindow : ThemedWindow
     private readonly DispatcherTimer statusTimer = new() { Interval = TimeSpan.FromSeconds(30) };
     private DateTime lastOnline = DateTime.MinValue;
     private bool pinging;
+    private bool starting;
+    private string? nameNote;
     public MainWindow(ClientContext context)
     {
         this.context = context; InitializeComponent();
         progressClock.Tick += (_,_) => ProgressDetails.Text = progressDetail + "  -  " + T("WorkingTime") + " " + operationTime.Elapsed.ToString(@"m\:ss"); Localize.Apply(this, context.Settings.Language);
         LanguageChoice.SelectedIndex = context.Settings.Language == "en" ? 1 : context.Settings.Language == "lv" ? 2 : 0;
         Closing += OnClosing; 
-        UpdateStatus.Text = T("AutoCheck"); StatusText.Text = AppUpdates.Notice ?? T("StartHint"); Refresh();
+        UpdateStatus.Text = T("AutoCheck"); StatusText.Text = AppUpdates.Notice ?? T("StartHint");
+        // SKlauncher players move to fast start with the name they already play as; one note says how to go back.
+        try
+        {
+            if (context.Settings.Launcher == "sk" && context.UsesFastStart && context.PlayerName is null && context.SuggestedPlayerName() is { } known)
+            { context.UsePlayerName(known); StatusText.Text = string.Format(T("FastStartIntro"), known); }
+        }
+        catch (Exception ex) when (ex is IOException or InvalidDataException or UnauthorizedAccessException) { }
+        Refresh();
         Loaded += async (_, _) => { await LauncherDiscovery.WarmAsync(); if (IsClosed || Dispatcher.HasShutdownStarted) return; Refresh(); if (!context.IsIsolated) { await Task.Run(context.CleanInstalledDownloads); if (IsClosed || Dispatcher.HasShutdownStarted) return; await CheckUpdates(); if (!IsClosed) updateTimer.Start(); await PingServer(); if (!IsClosed) statusTimer.Start(); } };
         updateTimer.Tick += async (_, _) => await CheckUpdates(); statusTimer.Tick += async (_, _) => await PingServer();
         Closed += (_, _) => { updateTimer.Stop(); progressClock.Stop(); statusTimer.Stop(); };
@@ -60,31 +70,42 @@ public partial class MainWindow : ThemedWindow
         WebsiteButton.Visibility = WebsiteUrl.Length > 0 ? Visibility.Visible : Visibility.Collapsed; LinkGrid.Columns = WebsiteUrl.Length > 0 ? 2 : 1; DiscordButton.Margin = new Thickness(0, 0, WebsiteUrl.Length > 0 ? 4 : 0, 0);
         ReleaseLabel.Text = "Minecraft 26.3 / Fabric 0.19.5 / " + T("Version") + " " + context.Manifest.Version;
         SizeLabel.Text = $"{context.Manifest.Files.Count(f => f.Path.StartsWith("mods/"))} {T("Mods")}  -  {context.Manifest.Files.Sum(f => f.Size) / 1048576:N0} MB";
-        OfficialSelected.Visibility = sk ? Visibility.Hidden : Visibility.Visible; SkSelected.Visibility = sk ? Visibility.Visible : Visibility.Hidden;
+        // Two ways to play: a bought account (its own launcher) or a player name (fast start; SKlauncher folders count as names).
+        var named = context.Settings.Launcher != "official"; var fast = context.UsesFastStart;
+        OfficialSelected.Visibility = named ? Visibility.Hidden : Visibility.Visible; SkSelected.Visibility = named ? Visibility.Visible : Visibility.Hidden;
         var neutral = (Brush)FindResource("Line"); var accent = (Brush)FindResource("Gold");
-        OfficialCard.BorderBrush = sk ? neutral : accent; SkCard.BorderBrush = sk ? accent : neutral;
-        // The chosen launcher gets a warm tint as well as the gold outline and "Selected" label.
+        OfficialCard.BorderBrush = named ? neutral : accent; SkCard.BorderBrush = named ? accent : neutral;
+        // The chosen way gets a warm tint as well as the gold outline and "Selected" label.
         var tint = (Brush)FindResource("GoldSoft"); var plain = (Brush)FindResource("Control");
-        OfficialCard.Background = sk ? plain : tint; SkCard.Background = sk ? tint : plain;
+        OfficialCard.Background = named ? plain : tint; SkCard.Background = named ? tint : plain;
         LinkSkButton.Visibility = Visibility.Collapsed; RebuildSkButton.Visibility = Visibility.Collapsed;
-        LauncherHint.Text = T(sk ? context.CanPlay ? "SkLinked" : context.RecoveredDeletedInstance ? "SkMissing" : "SkFirst" : "OfficialHint");
-        var detected = context.DetectLauncher();
-        LauncherActions.Visibility = detected is null ? Visibility.Visible : Visibility.Collapsed;
+        var player = context.PlayerName;
+        NamePanel.Visibility = named ? Visibility.Visible : Visibility.Collapsed;
+        NameShown.Visibility = player is null ? Visibility.Collapsed : Visibility.Visible; NameEntry.Visibility = player is null ? Visibility.Visible : Visibility.Collapsed;
+        NameText.Text = player ?? "";
+        if (player is null && NameBox.Text.Length == 0) NameBox.Text = context.SuggestedPlayerName() ?? "";
+        if (nameNote is null) { NameNote.Text = sk ? T("SkFolderNote") : ""; NameNote.Visibility = sk ? Visibility.Visible : Visibility.Collapsed; NameNote.Foreground = (Brush)FindResource("Muted"); }
+        LauncherHint.Text = fast ? T(context.Settings.JoinServer ? "FastHintJoin" : "FastHintTitle")
+            : T(sk ? context.CanPlay ? "SkLinked" : context.RecoveredDeletedInstance ? "SkMissing" : "SkFirst" : "OfficialHint");
+        var detected = fast ? null : context.DetectLauncher();
+        DetectionPanel.Visibility = fast ? Visibility.Collapsed : Visibility.Visible;
+        LauncherActions.Visibility = !fast && detected is null ? Visibility.Visible : Visibility.Collapsed;
         DetectionPanel.BorderBrush = detected is null ? (Brush)FindResource("Line") : (Brush)FindResource("Success");
         DetectionHint.Text = !LauncherDiscovery.Ready ? T("Detecting") : detected is null ? T("NotDetected") : !sk && detected.StartsWith("shell:") ? T("DetectedStore") : T("Detected") + ": " + (sk ? "SKlauncher" : "Minecraft Launcher");
         var receipt = Directory.Exists(context.Instance) ? context.Receipt : null;
         var available = receipt is not null && receipt.Version != context.Manifest.Version;
         PackStatus.Text = context.CanPlay ? T("Ready") : receipt is null ? T("NoPack") : T(available ? "NewPack" : "NeedsRepair");
         InstallLabel.Text = receipt is null ? T("Install") : available ? T("Update") : T("Verify");
-        PlayButton.IsEnabled = context.CanPlay && detected is not null && cancellation is null;
         var packReady = context.CanPlay;
-        var ready = packReady && detected is not null;
+        var ready = PlayReady();
+        PlayButton.IsEnabled = ready && cancellation is null && !starting;
         // Gold marks the next required step; green appears only when Play will work.
         InstallButton.Style = (Style)FindResource(packReady ? typeof(Button) : "PrimaryButton");
         InstallLabel.Foreground = (Brush)FindResource(packReady ? "Text" : "OnGold");
         PlayButton.Style = ready ? (Style)FindResource("PlayButtonStyle") : (Style)FindResource(typeof(Button));
         PlayLabel.Foreground = (Brush)FindResource(ready ? "OnGreen" : "Text");
-        PlayLabel.Text = T("Play"); PlayLauncherLabel.Text = sk ? "SKlauncher" : "Minecraft Launcher"; PlayHint.Text = T(ready ? "PlayReadyHint" : context.CanPlay ? "PlayMissingLauncher" : "PlayInstallHint");
+        PlayLabel.Text = T("Play"); PlayLauncherLabel.Text = fast ? T("FastStart") : sk ? "SKlauncher" : "Minecraft Launcher";
+        PlayHint.Text = T(ready ? fast ? "PlayFastHint" : "PlayReadyHint" : !context.CanPlay ? "PlayInstallHint" : fast ? "PlayNameHint" : "PlayMissingLauncher");
         PlayButton.Foreground = PlayLabel.Foreground; PlayLauncherLabel.Foreground = PlayLabel.Foreground; PlayButton.FontWeight = FontWeights.SemiBold;
         RefreshNews(available);
         // One card per release: gold version, summary, then one bullet per change so long notes stay readable.
@@ -108,6 +129,7 @@ public partial class MainWindow : ThemedWindow
         }
         if (HistoryPanel.Children.Count == 0) HistoryPanel.Children.Add(new TextBlock { Text = T("NoHistory") });
     }
+    private bool PlayReady() => context.CanPlay && (context.UsesFastStart ? context.PlayerName is not null : context.DetectLauncher() is not null);
     // The newest release at the top of the page; it turns gold with its own Update button while an update waits.
     private void RefreshNews(bool available)
     {
@@ -140,7 +162,8 @@ public partial class MainWindow : ThemedWindow
         if (HistoryPanel is not null) { Refresh(); UpdateStatus.Text = T("AutoCheck"); StatusText.Text = context.CanPlay ? T("Installed") : T("NoPack"); }
     }
     private void Official_Click(object sender, RoutedEventArgs e) { context.SelectLauncher("official"); Refresh(); }
-    private void Sk_Click(object sender, RoutedEventArgs e) { context.SelectLauncher("sk"); Refresh(); }
+    // An existing SKlauncher folder stays in use; everyone else gets the app's own game folder.
+    private void Sk_Click(object sender, RoutedEventArgs e) { if (context.Settings.Launcher != "sk") context.SelectLauncher("name"); Refresh(); }
     private async void CheckUpdates_Click(object sender, RoutedEventArgs e) { await LauncherDiscovery.WarmAsync(); await CheckUpdates(); }
     private async Task CheckUpdates()
     {
@@ -192,10 +215,11 @@ public partial class MainWindow : ThemedWindow
         catch (Exception ex) { StatusText.Text = Localize.Error(ex); Progress.Foreground = (Brush)FindResource("Danger"); ProgressDetails.Text = T("Error"); }
         finally { cancellation.Dispose(); cancellation = null; SetBusy(false); Refresh(); }
     }
-    private void SetBusy(bool busy) { Progress.IsIndeterminate = busy; if (busy) { operationTime.Restart(); progressClock.Start(); progressDetail = T("Checking"); Progress.Value = 0; Progress.Foreground = (Brush)FindResource("ActionGreen"); ProgressDetails.Visibility = Visibility.Visible; ProgressDetails.Text = T("Checking"); } if (!busy) { progressClock.Stop(); operationTime.Stop(); } SettingsButton.IsEnabled = !busy; LauncherActions.IsEnabled = !busy; LinkSkButton.IsEnabled = RebuildSkButton.IsEnabled = InstallButton.IsEnabled = NewsUpdateButton.IsEnabled = OfficialCard.IsEnabled = SkCard.IsEnabled = LanguageChoice.IsEnabled = !busy; CheckUpdatesButton.IsEnabled = !busy && !checking; PlayButton.IsEnabled = !busy && context.CanPlay && context.DetectLauncher() is not null; CancelButton.Visibility = busy ? Visibility.Visible : Visibility.Collapsed; }
+    private void SetBusy(bool busy) { Progress.IsIndeterminate = busy; if (busy) { operationTime.Restart(); progressClock.Start(); progressDetail = T("Checking"); Progress.Value = 0; Progress.Foreground = (Brush)FindResource("ActionGreen"); ProgressDetails.Visibility = Visibility.Visible; ProgressDetails.Text = T("Checking"); } if (!busy) { progressClock.Stop(); operationTime.Stop(); } SettingsButton.IsEnabled = !busy; LauncherActions.IsEnabled = !busy; LinkSkButton.IsEnabled = RebuildSkButton.IsEnabled = InstallButton.IsEnabled = NewsUpdateButton.IsEnabled = OfficialCard.IsEnabled = SkCard.IsEnabled = LanguageChoice.IsEnabled = !busy; CheckUpdatesButton.IsEnabled = !busy && !checking; PlayButton.IsEnabled = !busy && !starting && PlayReady(); NameSaveButton.IsEnabled = !busy; CancelButton.Visibility = busy ? Visibility.Visible : Visibility.Collapsed; }
     private void Cancel_Click(object sender, RoutedEventArgs e) => cancellation?.Cancel();
     private async void Play_Click(object sender, RoutedEventArgs e)
     {
+        if (context.UsesFastStart) { await FastStartAsync(); return; }
         try
         {
             var report = context.Guard(); var note = "";
@@ -208,7 +232,7 @@ public partial class MainWindow : ThemedWindow
                 note += T("GuardRepaired") + " ";
             }
             context.OpenLauncher();
-            StatusText.Text = note + T(context.Settings.Launcher == "sk" ? "SkLinked" : "OfficialHint");
+            StatusText.Text = note + T(context.Settings.Launcher == "sk" ? "SkLinked" : context.Settings.JoinServer ? "OfficialHintJoin" : "OfficialHint");
         }
         catch (Exception ex) { StatusText.Text = Localize.Error(ex); }
     }
@@ -237,5 +261,112 @@ public partial class MainWindow : ThemedWindow
     private void Website_Click(object sender, RoutedEventArgs e) { if (WebsiteUrl.Length > 0) Process.Start(new ProcessStartInfo(WebsiteUrl) { UseShellExecute = true }); }
     private void CopyAddress_Click(object sender, RoutedEventArgs e) { Clipboard.SetText(ServerAddress.Public); StatusText.Text = T("Copied"); }
     private void DisableShaders_Click(object sender, RoutedEventArgs e) { if (cancellation is not null) return; try { context.DisableShaders(); StatusText.Text = T("Disabled"); } catch (Exception ex) { StatusText.Text = Localize.Error(ex); } }
+    private GameSession? game;
+    /// <summary>Fast start: check the pack, get Java and Minecraft ready, start the game, then step aside once its window is open.</summary>
+    private async Task FastStartAsync()
+    {
+        if (starting || cancellation is not null) return;
+        if (game is not null) { StatusText.Text = T("GameRunning"); return; }
+        starting = true; Refresh();
+        var window = new LaunchWindow(context.PlayerName ?? "", context.Settings.JoinServer) { Owner = this };
+        window.Show();
+        GameSession? session = null;
+        var token = window.Cancellation.Token;
+        try
+        {
+            window.SetStep("check");
+            var report = context.Guard();
+            if (report.Damaged.Length > 0)
+            {
+                await RunInstallAsync(false);
+                if (context.Guard().Damaged.Length > 0) throw new IOException(T("GuardFailed"));
+            }
+            token.ThrowIfCancellationRequested();
+            var progress = new Progress<GameProgress>(p => { if (!window.IsClosed) { window.SetStep(p.Step); window.SetBytes(p.DoneBytes, p.TotalBytes); } });
+            var plan = await Task.Run(() => context.PrepareFastStartAsync(progress, token), token);
+            window.SetStep("start"); window.Waiting();
+            session = context.StartGame(plan);
+            while (!session.HasWindow())
+            {
+                if (session.Exited.IsCompleted)
+                {
+                    var code = await session.Exited;
+                    context.SaveStart((context.LastStart ?? new StartRecord("fast start", context.Manifest.Version, AppUpdates.RunningVersion.ToString(3), DateTimeOffset.UtcNow)) with { ExitCode = code, Ended = DateTimeOffset.UtcNow });
+                    throw new GameStartException(string.Format(T("StartClosed"), code));
+                }
+                if (token.IsCancellationRequested) { try { session.Process.Kill(true); } catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception) { } throw new OperationCanceledException(token); }
+                if (session.ModCount is int mods) window.SetStep("mods", string.Format(T("ModsCount"), mods));
+                await Task.Delay(250);
+            }
+            game = session; session = null;
+            window.Finish();
+            StatusText.Text = T("GameRunning");
+            Hide();
+            _ = WatchGameAsync(game);
+        }
+        catch (OperationCanceledException) { if (!window.IsClosed) window.Finish(); StatusText.Text = T("Cancelled"); }
+        catch (Exception ex)
+        {
+            var reason = ex is GameStartException ? ex.Message : Localize.Error(ex);
+            var record = context.LastStart;
+            if (ex is not GameStartException) context.SaveStart(new StartRecord("fast start", context.Manifest.Version, AppUpdates.RunningVersion.ToString(3), record?.Started ?? DateTimeOffset.UtcNow, Error: ex.Message));
+            StatusText.Text = reason;
+            var actions = new List<(string, Func<string?>, bool)>();
+            if (context.Settings.Launcher == "sk" && context.DetectLauncher() is not null)
+                actions.Add((T("OpenLauncherInstead"), () => { context.OpenLauncher(); window.Close(); return null; }, true));
+            actions.Add((T("ReportCopy"), () => ReportActions.Copy(context), actions.Count == 0));
+            actions.Add(("Discord", () => { ReportActions.OpenDiscord(); return null; }, false));
+            if (!window.IsClosed) window.Fail(T("StartFailed"), reason + "\n\n" + T("StartFailedHelp"), actions);
+        }
+        finally { session?.Dispose(); starting = false; Refresh(); }
+    }
+    private sealed class GameStartException(string message) : Exception(message);
+    /// <summary>After the game closes: quietly exit, or come back with the crash window when it ended with an error.</summary>
+    private async Task WatchGameAsync(GameSession session)
+    {
+        var code = await session.Exited;
+        var record = context.LastStart;
+        if (record is not null) context.SaveStart(record with { ExitCode = code, Ended = DateTimeOffset.UtcNow });
+        var crashed = code != 0 || record is not null && GameReports.NewestCrash(context.Instance, record.Started) is not null;
+        session.Dispose(); game = null;
+        if (IsClosed || Dispatcher.HasShutdownStarted) return;
+        if (!crashed && !IsVisible) { Application.Current.Shutdown(); return; }
+        Show(); WindowState = WindowState.Normal; Activate(); Refresh();
+        StatusText.Text = crashed ? string.Format(T("CrashInfoShort"), code) : T("GameClosed");
+        if (crashed) ReportActions.ShowCrash(this, context, code);
+    }
+    private async void SaveName_Click(object sender, RoutedEventArgs e) => await SaveNameAsync();
+    private async void NameBox_KeyDown(object sender, System.Windows.Input.KeyEventArgs e) { if (e.Key == System.Windows.Input.Key.Enter) { e.Handled = true; await SaveNameAsync(); } }
+    private async Task SaveNameAsync()
+    {
+        var name = NameBox.Text.Trim();
+        if (!PlayerNames.IsValid(name)) { ShowNameNote(T("NameInvalid"), true); return; }
+        NameSaveButton.IsEnabled = false;
+        try
+        {
+            // A name this folder already played with is the player's own; only new names are checked against bought accounts.
+            var played = string.Equals(context.SuggestedPlayerName(), name, StringComparison.OrdinalIgnoreCase);
+            if (!played && !PlayerNames.Known(context.Players, name))
+            {
+                using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(6));
+                if (await context.IsPremiumNameAsync(name, timeout.Token) == true) { ShowNameNote(T("NamePremium"), true); return; }
+            }
+            context.UsePlayerName(name); nameNote = null;
+            StatusText.Text = string.Format(T("NameSaved"), context.PlayerName);
+        }
+        catch (Exception ex) when (ex is IOException or InvalidDataException or UnauthorizedAccessException) { ShowNameNote(ex.Message, true); }
+        finally { NameSaveButton.IsEnabled = cancellation is null; Refresh(); }
+    }
+    private void ShowNameNote(string text, bool error)
+    {
+        nameNote = text; NameNote.Text = text; NameNote.Visibility = Visibility.Visible;
+        NameNote.Foreground = (Brush)FindResource(error ? "Danger" : "Muted");
+    }
+    private void ChangeName_Click(object sender, RoutedEventArgs e)
+    {
+        if (cancellation is not null || starting) return;
+        if (new NameWindow(context).ShowModalResult(this)) StatusText.Text = string.Format(T("NameSaved"), context.PlayerName);
+        nameNote = null; Refresh();
+    }
     private void OnClosing(object? sender, CancelEventArgs e) { if (cancellation is not null) { e.Cancel = true; cancellation.Cancel(); StatusText.Text = T("Cancelled"); } }
 }

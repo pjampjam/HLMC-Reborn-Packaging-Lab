@@ -473,6 +473,7 @@ tests.Add(("Old Quick Play settings fall back to Standard and a leftover note is
 }));
 
 tests.AddRange(SkPathTests.Create(root));
+tests.AddRange(FastStartTests.Create(root));
 foreach (var test in tests)
 {
     try { await test.Run(); Console.WriteLine("PASS " + test.Name); passed++; }

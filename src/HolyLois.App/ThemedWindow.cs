@@ -58,6 +58,15 @@ public class ThemedWindow : Window
         ShowDialog();
         InputModality.SetKeyboardFocusVisible(owner,InputModality.GetKeyboardFocusVisible(this));
     }
+    public bool ShowModalResult(Window owner)
+    {
+        Owner = owner;
+        InputModality.SetKeyboardFocusVisible(this,InputModality.GetKeyboardFocusVisible(owner));
+        using var shade = (owner as ThemedWindow)?.DimForModal();
+        var result = ShowDialog() == true;
+        InputModality.SetKeyboardFocusVisible(owner,InputModality.GetKeyboardFocusVisible(this));
+        return result;
+    }
     public IDisposable DimForModal()
     {
         EnsureChrome();

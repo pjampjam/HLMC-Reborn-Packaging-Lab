@@ -1,6 +1,6 @@
 <Application xmlns:local="clr-namespace:HolyLois.App" x:Class="HolyLois.App.App" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 <Application.Resources>
-<!-- Holy Lois color system 1.2. Surfaces step up in lightness: Canvas < Surface < SurfaceRaised < Control < ControlHover.
+<!-- Holy Lois color system 1.3. Surfaces step up in lightness: Canvas < Surface < SurfaceRaised < Control < ControlHover.
      Gold is the brand and continue accent, green means play or active progress, red means destructive or failed.
      Text pairs (On*) keep at least 4.5:1 contrast on their fills. Labels always name the action, so color is never the only cue. -->
 <Color x:Key="CanvasColor">#111215</Color>
@@ -15,8 +15,11 @@
 <Color x:Key="GoldColor">#FFE24D</Color>
 <Color x:Key="GoldSoftColor">#3A3220</Color>
 <Color x:Key="OnGoldColor">#1A1500</Color>
-<Color x:Key="ActionGreenColor">#22E070</Color>
-<Color x:Key="PlayGreenColor">#1FE06A</Color>
+<Color x:Key="ActionGreenColor">#2BC46E</Color>
+<Color x:Key="PlayGreenColor">#27BE68</Color>
+<Color x:Key="PlayTopColor">#45DB87</Color>
+<Color x:Key="PlayBottomColor">#1FA95A</Color>
+<Color x:Key="PlayLipColor">#11703A</Color>
 <Color x:Key="OnGreenColor">#04210F</Color>
 <Color x:Key="DangerFillColor">#C2362F</Color>
 <Color x:Key="DangerColor">#FF928A</Color>
@@ -35,6 +38,8 @@
 <SolidColorBrush x:Key="OnGold" Color="{StaticResource OnGoldColor}"/>
 <SolidColorBrush x:Key="ActionGreen" Color="{StaticResource ActionGreenColor}"/>
 <SolidColorBrush x:Key="PlayGreen" Color="{StaticResource PlayGreenColor}"/>
+<LinearGradientBrush x:Key="PlayFill" StartPoint="0,0" EndPoint="0,1"><GradientStop Color="{StaticResource PlayTopColor}" Offset="0"/><GradientStop Color="{StaticResource PlayBottomColor}" Offset="1"/></LinearGradientBrush>
+<SolidColorBrush x:Key="PlayLip" Color="{StaticResource PlayLipColor}"/>
 <SolidColorBrush x:Key="OnGreen" Color="{StaticResource OnGreenColor}"/>
 <SolidColorBrush x:Key="DangerFill" Color="{StaticResource DangerFillColor}"/>
 <SolidColorBrush x:Key="Danger" Color="{StaticResource DangerColor}"/>
@@ -49,7 +54,22 @@
 
 <Style x:Key="PrimaryButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}"><Setter Property="Background" Value="{StaticResource Gold}"/><Setter Property="Foreground" Value="{StaticResource OnGold}"/><Setter Property="BorderBrush" Value="{StaticResource Gold}"/><Setter Property="FontWeight" Value="SemiBold"/></Style>
 <Style x:Key="SuccessButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}"><Setter Property="Background" Value="{StaticResource ActionGreen}"/><Setter Property="Foreground" Value="{StaticResource OnGreen}"/><Setter Property="BorderBrush" Value="{StaticResource ActionGreen}"/><Setter Property="FontWeight" Value="SemiBold"/></Style>
-<Style x:Key="PlayButtonStyle" TargetType="Button" BasedOn="{StaticResource SuccessButton}"><Setter Property="Background" Value="{StaticResource PlayGreen}"/><Setter Property="BorderBrush" Value="{StaticResource PlayGreen}"/></Style>
+<!-- Play is the one game-like button: a soft green face on a darker lip that presses down, like a block being pushed. Dark text keeps over 5.9:1 contrast on the whole gradient. -->
+<Style x:Key="PlayButtonStyle" TargetType="Button" BasedOn="{StaticResource SuccessButton}"><Setter Property="Background" Value="{StaticResource PlayFill}"/><Setter Property="BorderBrush" Value="{StaticResource PlayLip}"/>
+<Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button"><Grid>
+<Border x:Name="Lip" Background="{StaticResource PlayLip}" CornerRadius="10" Margin="0,4,0,0"/>
+<Grid x:Name="Face" Margin="0,0,0,4">
+<Border Background="{TemplateBinding Background}" CornerRadius="10"/>
+<Border CornerRadius="10" BorderThickness="0,1,0,0" BorderBrush="#5CFFFFFF" IsHitTestVisible="False"/>
+<Border x:Name="Wash" Background="#FFFFFF" Opacity="0" CornerRadius="10" IsHitTestVisible="False"/>
+<Border Padding="{TemplateBinding Padding}"><ContentPresenter TextElement.Foreground="{TemplateBinding Foreground}" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center"/></Border>
+<Border x:Name="FocusRing" BorderBrush="{StaticResource Gold}" BorderThickness="2" Margin="2" CornerRadius="8" Visibility="Collapsed" IsHitTestVisible="False"/>
+</Grid></Grid>
+<ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Wash" Property="Opacity" Value="0.10"/></Trigger>
+<MultiTrigger><MultiTrigger.Conditions><Condition Property="IsKeyboardFocused" Value="True"/><Condition Property="local:InputModality.KeyboardFocusVisible" Value="True"/></MultiTrigger.Conditions><Setter TargetName="FocusRing" Property="Visibility" Value="Visible"/></MultiTrigger>
+<Trigger Property="IsPressed" Value="True"><Setter TargetName="Face" Property="Margin" Value="0,3,0,1"/><Setter TargetName="Wash" Property="Background" Value="#000000"/><Setter TargetName="Wash" Property="Opacity" Value="0.08"/></Trigger>
+<Trigger Property="IsEnabled" Value="False"><Setter TargetName="Face" Property="Opacity" Value="0.42"/><Setter TargetName="Lip" Property="Opacity" Value="0.42"/></Trigger>
+</ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter></Style>
 <Style x:Key="DangerButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}"><Setter Property="Background" Value="{StaticResource DangerFill}"/><Setter Property="Foreground" Value="#FFFFFF"/><Setter Property="BorderBrush" Value="{StaticResource DangerFill}"/><Setter Property="FontWeight" Value="SemiBold"/></Style>
 <Style x:Key="CancelButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}"><Setter Property="Background" Value="Transparent"/><Setter Property="Foreground" Value="{StaticResource Danger}"/><Setter Property="BorderBrush" Value="#6B403C"/></Style>
 <Style TargetType="ComboBox"><Setter Property="Background" Value="{StaticResource Control}"/><Setter Property="Foreground" Value="{StaticResource Text}"/><Setter Property="BorderBrush" Value="{StaticResource Line}"/><Setter Property="Padding" Value="12,6"/><Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ComboBox"><Grid><Border x:Name="Field" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" CornerRadius="{StaticResource Radius}"/><ToggleButton Focusable="False" IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"><ToggleButton.Template><ControlTemplate TargetType="ToggleButton"><Grid Background="Transparent"><TextBlock Text="⌄" Foreground="{StaticResource Muted}" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,12,0"/></Grid></ControlTemplate></ToggleButton.Template></ToggleButton><ContentPresenter Content="{TemplateBinding SelectionBoxItem}" ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="12,0,30,0" IsHitTestVisible="False"/><Border x:Name="FocusRing" BorderBrush="{StaticResource Gold}" BorderThickness="2" Margin="2" CornerRadius="{StaticResource InnerRadius}" Visibility="Collapsed" IsHitTestVisible="False"/><Popup x:Name="PART_Popup" Placement="Bottom" IsOpen="{TemplateBinding IsDropDownOpen}" AllowsTransparency="True" Focusable="False"><Border Background="{StaticResource SurfaceRaised}" BorderBrush="{StaticResource LineStrong}" BorderThickness="1" CornerRadius="{StaticResource Radius}" Padding="4" MinWidth="140"><ScrollViewer><ItemsPresenter KeyboardNavigation.DirectionalNavigation="Contained"/></ScrollViewer></Border></Popup></Grid><ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Field" Property="BorderBrush" Value="{StaticResource LineStrong}"/></Trigger><MultiTrigger><MultiTrigger.Conditions><Condition Property="IsKeyboardFocused" Value="True"/><Condition Property="local:InputModality.KeyboardFocusVisible" Value="True"/></MultiTrigger.Conditions><Setter TargetName="FocusRing" Property="Visibility" Value="Visible"/></MultiTrigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter></Style>
