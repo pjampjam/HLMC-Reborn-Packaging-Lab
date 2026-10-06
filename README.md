@@ -12,9 +12,13 @@ This is the full release. Existing preview installations move to the standard Ho
 2. Close Minecraft, then click Install Holy Lois.
 3. Click Play beneath the logo. With a player name, Minecraft opens straight from the app and joins Holy Lois. With a Minecraft account, Minecraft Launcher opens: select Holy Lois: Reborn and press Play there, and the game joins Holy Lois by itself.
 
-Already using Holy Lois? Close and reopen your installed app or its shortcut. Its signed app-stable channel updates it to 1.3.0 before showing the main window. You do not need another installer. An old downloaded copy hands off to the newer installed version after its verified update.
+Already using Holy Lois? Close and reopen your installed app or its shortcut. Its signed app-stable channel updates it to 1.3.1 before showing the main window. You do not need another installer. An old downloaded copy hands off to the newer installed version after its verified update.
 
 The app is unsigned by a Windows publisher certificate. SmartScreen may show Unknown publisher. Local scans and previous user download tests do not guarantee every antivirus result. If Defender detects a threat, stop and report the detection rather than adding an exclusion.
+
+## Version 1.3.1
+
+- The server-list icon uses the owner's handmade 64px artwork. Website and live-map icons now match the original branding. Gameplay and pack 1.8.0 stay unchanged.
 
 ## Version 1.3.0
 
