@@ -1,0 +1,17 @@
+{
+  "gui.xaero_claims_protection_interact_block": "Этот участок защищён. Здесь нельзя использовать этот блок.",
+  "gui.xaero_claims_protection_interact_block_any": "Этот участок защищён. Здесь нельзя использовать этот блок.",
+  "gui.xaero_claims_protection_interact_entity": "Этот участок защищён. Здесь нельзя взаимодействовать с этой сущностью.",
+  "gui.xaero_claims_protection_interact_entity_any": "Этот участок защищён. Здесь нельзя взаимодействовать с этой сущностью.",
+  "gui.xaero_claims_protection_use_item": "Нельзя использовать этот предмет так близко к защищённому участку.",
+  "gui.xaero_claims_protection_use_item_any": "Нельзя использовать этот предмет так близко к защищённому участку.",
+  "gui.xaero_claims_protection_interact_item_apply": "Здесь нельзя использовать этот предмет. Этот участок защищён.",
+  "gui.xaero_claims_protection_interact_item_apply_any": "Здесь нельзя использовать этот предмет. Этот участок защищён.",
+  "gui.xaero_claims_protection_interact_block_try_empty": "Попробуй ещё раз с пустой рукой.",
+  "gui.xaero_claims_protection_interact_entity_try_empty": "Попробуй ещё раз с пустой рукой.",
+  "gui.xaero_claims_protection_interact_item_apply_too_close": "Нельзя использовать этот предмет так близко к защищённому участку.",
+  "gui.xaero_claims_protection_block_disabled": "Это взаимодействие с блоком отключено на сервере.",
+  "gui.xaero_claims_protection_entity_disabled": "Это взаимодействие с сущностью отключено на сервере.",
+  "gui.xaero_claims_protection_item_disabled": "Этот предмет отключён на сервере.",
+  "gui.xaero_claims_protection_item_disabled_any": "Этот предмет отключён на сервере."
+}

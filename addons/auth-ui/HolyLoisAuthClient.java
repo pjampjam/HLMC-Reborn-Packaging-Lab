@@ -15,6 +15,9 @@ import net.minecraft.world.item.component.TooltipDisplay;
 
 public final class HolyLoisAuthClient implements ClientModInitializer {
     static AuthStatus status;
+    public static boolean muteWorldAudio() {
+        return status != null && AuthPolicy.quietWorldAudio(status.mode());
+    }
     public static boolean isHolyLois(Minecraft client) {
         var server = client.getCurrentServer();
         return status != null || server != null &&
@@ -32,8 +35,13 @@ public final class HolyLoisAuthClient implements ClientModInitializer {
         });
         PayloadTypeRegistry.clientboundPlay().register(AuthStatus.TYPE, AuthStatus.CODEC);
         ClientPlayNetworking.registerGlobalReceiver(AuthStatus.TYPE, (payload, context) -> {
+            boolean wasMuted = muteWorldAudio();
             status = payload;
             var client = context.client();
+            if (!wasMuted && muteWorldAudio()) {
+                for (var category : net.minecraft.sounds.SoundSource.values())
+                    if (category != net.minecraft.sounds.SoundSource.MASTER) client.getSoundManager().stop(null, category);
+            }
             if (payload.mode() == 0) {
                 if (client.gui.screen() instanceof HolyLoisAuthScreen) client.gui.setScreen(null);
             } else if (payload.mode() >= 1 && payload.mode() <= 3) {

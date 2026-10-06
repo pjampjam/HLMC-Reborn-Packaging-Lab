@@ -1,5 +1,6 @@
 package holylois;
 public final class OnboardingTest {
+    private static int checked;
     public static void main(String[] args) {
         check(!HolyLois.ready(true,false,100,0),"Unauthenticated players must never move");
         check(!HolyLois.ready(false,true,100,0),"Returning players must never move");
@@ -30,7 +31,11 @@ public final class OnboardingTest {
         stats.put("u3",com.google.gson.JsonParser.parseString("{\"minecraft:mined\":{\"minecraft:diamond_ore\":99}}").getAsJsonObject());
         var boards=Leaderboards.compute(java.util.Map.of("u1","Elza","u2","pjampjam"),stats);
         var diamonds=boards.get(Leaderboards.CATEGORIES.get(1));
-        check(diamonds.size()==2&&diamonds.get(0).name().equals("pjampjam")&&diamonds.get(1).value()==7,"Diamond board sums ores and skips unknown players");
+        check(diamonds.size()==1&&diamonds.get(0).name().equals("Elza")&&diamonds.get(0).value()==7,"Diamond board sums ores and skips the owner and unknown players");
+        String textureValue=java.util.Base64.getEncoder().encodeToString(("{\"textures\":{\"SKIN\":{\"url\":\"http://textures.minecraft.net/texture/"+"a".repeat(64)+"\"}}}").getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        check(SkinStats.texture(textureValue).equals("https://textures.minecraft.net/texture/"+"a".repeat(64)), "Skin texture export normalizes Mojang URL and drops other profile fields");
+        check(SkinStats.texture("bad base64")==null, "Malformed skin texture stays private");
+        check(!StatsVisibility.visible("PJAMPJAM")&&!StatsVisibility.visible("PJAMTEST")&&StatsVisibility.visible("Elza"),"Stats exclusion ignores capitals");
         check(boards.get(Leaderboards.CATEGORIES.get(0)).get(0).value()==2,"Playtime is shown in hours");
         var viewer=java.util.UUID.randomUUID(); var first=Leaderboards.view(viewer,100);
         check(Leaderboards.view(viewer,120)==first&&Leaderboards.view(viewer,400)!=first,"Board changes only when the page comes back");
@@ -56,6 +61,10 @@ public final class OnboardingTest {
         check(inRing,"Random teleport stays between 250 and 1800 blocks from spawn");
         check(SupportCommand.category("grief someone broke my farm").equals("grief")&&SupportCommand.category("BUG chest eats items").equals("bug")&&SupportCommand.category("hello?").equals("other"),"Support request categories come from the first word");
         check(CombatTag.BLOCKED.contains("rtp")&&CombatTag.BLOCKED.contains("home")&&!CombatTag.BLOCKED.contains("support"),"Combat blocks teleports but never /support");
+        for (String command : java.util.List.of("home tp base", "/Home", "essentialcommands:tpaccept Elza", "randomteleport", " /rtp ", "tpa\tElza", "spawn", "back", "warp tp town"))
+            check(CombatTag.blocksCommand(command), "Combat recognizes " + command);
+        for (String command : java.util.List.of("support help", "tpdeny Elza", "rules", "homework", "tp Elza 0 80 0"))
+            check(!CombatTag.blocksCommand(command), "Combat preserves " + command);
         check(Redeem.code("test-secret","2026-10-05").equals("HL-QZB2-QA3Q")&&Redeem.code("test-secret","2026-10-06").equals("HL-7AB3-Z0G0"),"Daily code matches the website's HMAC function");
         check(Redeem.normalize("hl-qzb2 qa3q").equals(Redeem.normalize("HL-QZB2-QA3Q"))&&Redeem.normalize("HL-0O1I").equals(Redeem.normalize("HL-001L")),"Typed codes ignore case, spaces, dashes and look-alikes");
         var noon=java.time.LocalDateTime.of(2026,10,6,12,0); var early=java.time.LocalDateTime.of(2026,10,6,0,30);
@@ -68,7 +77,7 @@ public final class OnboardingTest {
         check(Afk.effective(72000,600)==60000&&Afk.effective(100,600)==0,"AFK seconds come off the played time and never below zero");
         check(!Quiet.allow("pjampjam left the game","multiplayer.player.left")&&!Quiet.allow("pjampjam has made the advancement [X]","chat.type.advancement.task")&&!Quiet.allow("pjampjam is now AFK.","")
             &&Quiet.allow("pjampjam fell from a high place","death.fell.accident.generic")&&Quiet.allow("Elza left the game","multiplayer.player.left")&&Quiet.allow("pjampjams cat left","")==true,"Quiet names hide joins, leaves, AFK and advancements but not deaths or other players");
-        System.out.println("Passed 45 onboarding, AFK ledger, secret code and quiet name, greeting, name day, bot wall, leaderboard, discovery, death, daily reward, chair, holiday, donate, land, rtp, support and combat checks");
+        System.out.println("Passed " + checked + " onboarding, AFK ledger, secret code and quiet name, greeting, name day, bot wall, leaderboard, discovery, death, daily reward, chair, holiday, donate, land, rtp, support and combat checks");
     }
-    private static void check(boolean value,String message) {if(!value)throw new AssertionError(message);}
+    private static void check(boolean value,String message) {checked++;if(!value)throw new AssertionError(message);}
 }

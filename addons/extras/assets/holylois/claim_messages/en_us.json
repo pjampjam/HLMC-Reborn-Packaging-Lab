@@ -1,0 +1,17 @@
+{
+  "gui.xaero_claims_protection_interact_block": "This land is protected. You can't use this block here.",
+  "gui.xaero_claims_protection_interact_block_any": "This land is protected. You can't use this block here.",
+  "gui.xaero_claims_protection_interact_entity": "This land is protected. You can't interact with this entity here.",
+  "gui.xaero_claims_protection_interact_entity_any": "This land is protected. You can't interact with this entity here.",
+  "gui.xaero_claims_protection_use_item": "You can't use this item this close to protected land.",
+  "gui.xaero_claims_protection_use_item_any": "You can't use this item this close to protected land.",
+  "gui.xaero_claims_protection_interact_item_apply": "You can't use this item here. This land is protected.",
+  "gui.xaero_claims_protection_interact_item_apply_any": "You can't use this item here. This land is protected.",
+  "gui.xaero_claims_protection_interact_block_try_empty": "Try again with an empty hand.",
+  "gui.xaero_claims_protection_interact_entity_try_empty": "Try again with an empty hand.",
+  "gui.xaero_claims_protection_interact_item_apply_too_close": "You can't use this item this close to protected land.",
+  "gui.xaero_claims_protection_block_disabled": "This block interaction is disabled on the server.",
+  "gui.xaero_claims_protection_entity_disabled": "This entity interaction is disabled on the server.",
+  "gui.xaero_claims_protection_item_disabled": "This item is disabled on the server.",
+  "gui.xaero_claims_protection_item_disabled_any": "This item is disabled on the server."
+}

@@ -15,7 +15,7 @@ import java.util.*;
 public final class CombatTag {
     private CombatTag() {}
     static final long PVP_MILLIS = 20_000, MOB_MILLIS = 5_000;
-    static final Set<String> BLOCKED = Set.of("rtp", "home", "homes", "tpa", "tpahere", "tpask", "spawn", "back", "warp", "wild");
+    static final Set<String> BLOCKED = Set.of("rtp", "randomteleport", "home", "homes", "tpa", "tpahere", "tpask", "tpaccept", "spawn", "back", "warp", "wild");
     private static final Map<UUID, Long> pvpUntil = new HashMap<>(), mobUntil = new HashMap<>();
     private static final Set<UUID> pvpDeath = new HashSet<>(), lastDeathPvp = new HashSet<>();
 
@@ -44,10 +44,19 @@ public final class CombatTag {
 
     /** For the command mixin: true when the command must be refused. */
     public static boolean refuse(ServerPlayer player, String command) {
-        String root = command.startsWith("/") ? command.substring(1) : command;
-        root = root.split(" ", 2)[0].toLowerCase(Locale.ROOT);
+        if (!blocksCommand(command)) return false;
+        return refuseTeleport(player);
+    }
+
+    static boolean blocksCommand(String command) {
+        String root = command.strip();
+        if (root.startsWith("/")) root = root.substring(1);
+        root = root.split("\\s+", 2)[0].toLowerCase(Locale.ROOT);
         if (root.contains(":")) root = root.substring(root.indexOf(':') + 1);
-        if (!BLOCKED.contains(root)) return false;
+        return BLOCKED.contains(root);
+    }
+
+    public static boolean refuseTeleport(ServerPlayer player) {
         long wait = teleportWait(player.getUUID());
         if (wait == 0) return false;
         player.sendSystemMessage(Component.literal("⚔ You are in combat. Teleporting works again in " + wait + " s.").withStyle(ChatFormatting.RED));

@@ -1,1 +1,1 @@
-{"required": true, "minVersion": "0.8", "package": "holylois.auth.mixins", "compatibilityLevel": "JAVA_25", "client": ["AuthToastMixin"], "injectors": {"defaultRequire": 1}}
+{"required": true, "minVersion": "0.8", "package": "holylois.auth.mixins", "compatibilityLevel": "JAVA_25", "client": ["AuthToastMixin", "AuthSoundMixin"], "injectors": {"defaultRequire": 1}}

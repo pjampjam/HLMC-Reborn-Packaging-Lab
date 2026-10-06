@@ -23,6 +23,9 @@ public final class AuthPolicyTest {
         check(!AuthPolicy.routineAuthNotice("Incorrect password!"));
         check(!AuthPolicy.routineAuthNotice("Welcome to Holy Lois: Reborn!"));
         check(!AuthPolicy.routineAuthNotice("Ask an admin how to use /register on another server."));
+        check(!AuthPolicy.quietWorldAudio(0));
+        check(AuthPolicy.quietWorldAudio(1) && AuthPolicy.quietWorldAudio(2) && AuthPolicy.quietWorldAudio(3));
+        check(!AuthPolicy.quietWorldAudio(-1) && !AuthPolicy.quietWorldAudio(4));
         System.out.println(checked + " auth mode, validation, escaping and respawn checks passed.");
     }
 }

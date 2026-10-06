@@ -16,6 +16,10 @@ Already using Holy Lois? Close and reopen your installed app or its shortcut. It
 
 The app is unsigned by a Windows publisher certificate. SmartScreen may show Unknown publisher. Local scans and previous user download tests do not guarantee every antivirus result. If Defender detects a threat, stop and report the detection rather than adding an exclusion.
 
+## Pack 1.8.1
+
+The signed pack updates independently of launcher 1.3.1. Extras 1.6.1 preserves placed relic data, fixes crate rewards and visible-body rendering, and extends claim protection to radio controls and player-attributed mob damage/pushing. Onboarding 1.8.1 closes combat teleport bypasses and exports selected skin textures for stats. Auth UI 1.0.4 quiets world audio during login/register. Original water/DH behaviour is retained. Source-only help changes await a future EXE.
+
 ## Version 1.3.1
 
 - The server-list icon uses the owner's handmade 64px artwork. Website and live-map icons now match the original branding. Gameplay and pack 1.8.0 stay unchanged.

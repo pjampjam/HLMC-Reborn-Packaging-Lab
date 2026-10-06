@@ -20,6 +20,7 @@ public final class AuthPolicy {
     public static boolean randomRespawn(boolean alive, boolean usableSpawnPoint) {
         return !alive && !usableSpawnPoint;
     }
+    public static boolean quietWorldAudio(int mode) { return mode >= 1 && mode <= 3; }
     public static boolean routineAuthNotice(String message) {
         String text = message.replaceAll("(?i)\u00a7[0-9a-fk-or]", "").trim();
         return text.startsWith("Use /register ") && text.endsWith("to claim this account.")

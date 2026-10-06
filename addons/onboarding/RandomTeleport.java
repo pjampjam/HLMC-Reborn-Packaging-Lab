@@ -50,6 +50,7 @@ final class RandomTeleport {
     }
 
     private int request(ServerPlayer player) {
+        if (CombatTag.refuseTeleport(player)) return 0;
         var server = player.level().getServer();
         if (player.level().dimension() != Level.OVERWORLD) { player.sendSystemMessage(Component.literal("/rtp works in the Overworld only.").withStyle(ChatFormatting.RED)); return 0; }
         long now = System.currentTimeMillis() / 1000, last = lastUse.getOrDefault(player.getUUID(), 0L);
@@ -72,6 +73,12 @@ final class RandomTeleport {
             ServerPlayer player = server.getPlayerList().getPlayer(entry.getKey());
             Pending wait = entry.getValue();
             if (player == null) { iterator.remove(); continue; }
+            if (CombatTag.refuseTeleport(player)) { iterator.remove(); continue; }
+            if (player.level().dimension() != Level.OVERWORLD || !player.isAlive()) {
+                iterator.remove();
+                player.sendSystemMessage(Component.literal("Random teleport cancelled: your destination context changed.").withStyle(ChatFormatting.RED));
+                continue;
+            }
             if (player.distanceToSqr(wait.x(), wait.y(), wait.z()) > 1.0) {
                 iterator.remove();
                 player.sendSystemMessage(Component.literal("Random teleport cancelled: you moved.").withStyle(ChatFormatting.RED));

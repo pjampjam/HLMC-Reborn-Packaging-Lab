@@ -78,9 +78,9 @@ public final class Leaderboards {
             var entries = new ArrayList<Entry>();
             for (var stat : stats.entrySet()) {
                 String name = names.get(stat.getKey());
-                if (name == null) continue;
+                if (name == null || !StatsVisibility.visible(name)) continue;
                 long value = category.value().applyAsLong(stat.getValue());
-                if (value > 0) entries.add(new Entry(name, value));
+                if (value > 0) entries.add(new Entry(StatsVisibility.display(name), value));
             }
             entries.sort(Comparator.comparingLong(Entry::value).reversed().thenComparing(Entry::name));
             result.put(category, List.copyOf(entries.subList(0, Math.min(3, entries.size()))));

@@ -1,0 +1,17 @@
+{
+  "gui.xaero_claims_protection_interact_block": "Šī zeme ir aizsargāta. Šeit nevar izmantot šo bloku.",
+  "gui.xaero_claims_protection_interact_block_any": "Šī zeme ir aizsargāta. Šeit nevar izmantot šo bloku.",
+  "gui.xaero_claims_protection_interact_entity": "Šī zeme ir aizsargāta. Šeit nevar mijiedarboties ar šo radību.",
+  "gui.xaero_claims_protection_interact_entity_any": "Šī zeme ir aizsargāta. Šeit nevar mijiedarboties ar šo radību.",
+  "gui.xaero_claims_protection_use_item": "Šo priekšmetu nevar izmantot tik tuvu aizsargātai zemei.",
+  "gui.xaero_claims_protection_use_item_any": "Šo priekšmetu nevar izmantot tik tuvu aizsargātai zemei.",
+  "gui.xaero_claims_protection_interact_item_apply": "Šeit nevar izmantot šo priekšmetu. Šī zeme ir aizsargāta.",
+  "gui.xaero_claims_protection_interact_item_apply_any": "Šeit nevar izmantot šo priekšmetu. Šī zeme ir aizsargāta.",
+  "gui.xaero_claims_protection_interact_block_try_empty": "Mēģini vēlreiz ar tukšu roku.",
+  "gui.xaero_claims_protection_interact_entity_try_empty": "Mēģini vēlreiz ar tukšu roku.",
+  "gui.xaero_claims_protection_interact_item_apply_too_close": "Šo priekšmetu nevar izmantot tik tuvu aizsargātai zemei.",
+  "gui.xaero_claims_protection_block_disabled": "Šī darbība ar bloku serverī ir atspējota.",
+  "gui.xaero_claims_protection_entity_disabled": "Šī darbība ar radību serverī ir atspējota.",
+  "gui.xaero_claims_protection_item_disabled": "Šis priekšmets serverī ir atspējots.",
+  "gui.xaero_claims_protection_item_disabled_any": "Šis priekšmets serverī ir atspējots."
+}

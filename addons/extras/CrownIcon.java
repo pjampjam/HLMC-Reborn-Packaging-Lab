@@ -11,7 +11,7 @@ public final class CrownIcon {
 
     public static List<IoSupplier<InputStream>> sizes() {
         var icons = new ArrayList<IoSupplier<InputStream>>();
-        for (int size : new int[] {16, 32, 48, 128, 256}) {
+        for (int size : new int[] {256, 128, 48, 32, 16}) {
             String path = "/assets/holylois/icons/icon_" + size + "x" + size + ".png";
             if (CrownIcon.class.getResource(path) == null) return null;
             icons.add(() -> CrownIcon.class.getResourceAsStream(path));

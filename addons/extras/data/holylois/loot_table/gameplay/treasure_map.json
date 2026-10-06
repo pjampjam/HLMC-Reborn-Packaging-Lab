@@ -21,7 +21,7 @@
               "target": "item_name"
             }
           ],
-          "name": "minecraft:map"
+          "name": "minecraft:filled_map"
         }
       ],
       "rolls": 1

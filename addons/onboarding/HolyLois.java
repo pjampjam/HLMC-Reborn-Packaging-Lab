@@ -56,6 +56,7 @@ public final class HolyLois implements ModInitializer {
         public Set<UUID> pending = new HashSet<>();
     }
     @Override public void onInitialize() {
+        SkinStats.register();
         PayloadTypeRegistry.clientboundPlay().register(AuthStatus.TYPE, AuthStatus.CODEC);
         if (net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("placeholder-api")) TabPlaceholders.register();
         net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback.EVENT.register((dispatcher, registries, environment) -> {

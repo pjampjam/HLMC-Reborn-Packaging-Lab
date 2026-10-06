@@ -80,7 +80,7 @@ public final class Boombox implements ModInitializer {
             new Station("laut.fm Hardstyle", "https://stream.laut.fm/hardstyle"),
             new Station("laut.fm Techno", "https://stream.laut.fm/techno")));
         public float distance = 24f, volume = 0.55f;
-        public int maxPlaying = 6;
+        public int maxPlaying = 6, maxPlayingPerChunk = 2;
     }
 
     record Session(RadioStream stream, AudioPlayer player, AudioChannel channel, int station, long[] lastHeld, float[] range) {}
@@ -208,6 +208,7 @@ public final class Boombox implements ModInitializer {
             if (player.position().distanceToSqr(Vec3.atCenterOf(pos)) > 64 || !level.isLoaded(pos)) return;
             var state = level.getBlockState(pos);
             if (!state.is(BLOCK)) return;
+            if (!ClaimAccess.canUse(player, level, pos)) { actionBar(player, "You do not have permission to use this boombox here."); return; }
             volume = Math.clamp(state.getValue(BoomboxBlock.VOLUME) + request.step(), 1, 10);
             if (volume == state.getValue(BoomboxBlock.VOLUME)) { actionBar(player, volumeText(volume)); return; }
             level.setBlock(pos, state.setValue(BoomboxBlock.VOLUME, volume), 3);
@@ -248,6 +249,7 @@ public final class Boombox implements ModInitializer {
 
     /** Right-click on a placed boombox. */
     static void useSpeaker(ServerPlayer player, Level level, BlockPos pos, BlockState state) {
+        if (!ClaimAccess.canUse(player, (ServerLevel)level, pos)) { actionBar(player, "You do not have permission to use this boombox here."); return; }
         var spot = Spot.of(level, pos);
         boolean on = state.getValue(BoomboxBlock.PLAYING);
         if (player.isShiftKeyDown()) {
@@ -261,6 +263,9 @@ public final class Boombox implements ModInitializer {
         }
         if (voice == null) { actionBar(player, "Voice chat is not ready on the server yet"); return; }
         if (!speakers.containsKey(spot) && playing() >= config.maxPlaying) { actionBar(player, "Too many boomboxes are playing right now"); return; }
+        if (!on && placed.stream().filter(other -> sameChunk(other, spot)).count() >= Math.clamp(config.maxPlayingPerChunk, 1, 6)) {
+            actionBar(player, "This chunk already has its maximum number of active boomboxes."); return;
+        }
         int next = Math.floorMod(on ? state.getValue(BoomboxBlock.STATION) + 1 : state.getValue(BoomboxBlock.STATION), stationCount());
         level.setBlock(pos, state.setValue(BoomboxBlock.PLAYING, true).setValue(BoomboxBlock.STATION, next), 3);
         stopSpeaker(spot);
@@ -269,7 +274,13 @@ public final class Boombox implements ModInitializer {
         tuned(player, next);
     }
 
+    static boolean sameChunk(Spot a, Spot b) {
+        return a.dimension().equals(b.dimension()) && Math.floorDiv(a.x(), 16) == Math.floorDiv(b.x(), 16)
+            && Math.floorDiv(a.z(), 16) == Math.floorDiv(b.z(), 16);
+    }
+
     private static boolean startSpeaker(ServerLevel level, Spot spot, int station, int volume) {
+        if (speakers.keySet().stream().filter(other -> sameChunk(other, spot)).count() >= Math.clamp(config.maxPlayingPerChunk, 1, 6)) return false;
         var center = spot.center();
         var session = open(voice.createLocationalAudioChannel(UUID.randomUUID(), voice.fromServerLevel(level),
             voice.createPosition(center.x, center.y, center.z)), station, volume);

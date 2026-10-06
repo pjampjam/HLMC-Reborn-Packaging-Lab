@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "holylois-auth-ui",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "name": "Holy Lois Login",
   "description": "A masked password form backed by server EasyAuth and simple durability tooltips. No saved credentials.",
   "authors": [

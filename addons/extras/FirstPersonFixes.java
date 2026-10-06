@@ -21,6 +21,14 @@ final class FirstPersonFixes {
         FirstPersonAPI.registerPlayerHandler((PlayerOffsetHandler) (player, delta, base, offset) -> {
             double length = Math.sqrt(offset.x * offset.x + offset.z * offset.z);
             if (length < 0.01 || player.isSleeping()) return offset;
+            if (player.isUsingItem() && !player.isPassenger() && !player.isVisuallySwimming()) {
+                var item = player.getUseItem();
+                if (item.is(net.minecraft.world.item.Items.BOW) || item.is(net.minecraft.world.item.Items.CROSSBOW)
+                    || item.is(net.minecraft.world.item.Items.TRIDENT)) {
+                    double yaw = Math.toRadians(player.getViewYRot(delta));
+                    offset = new Vec3(Math.sin(yaw) * length, offset.y, -Math.cos(yaw) * length);
+                }
+            }
             Vec3 from = player.getPosition(delta), direction = new Vec3(offset.x / length, 0, offset.z / length);
             double room = length;
             for (double height : new double[] {0.3, 0.9, 1.5}) {
@@ -36,4 +44,5 @@ final class FirstPersonFixes {
             else if (!asleep && hiddenByUs) { FirstPersonAPI.setEnabled(true); hiddenByUs = false; }
         });
     }
+
 }

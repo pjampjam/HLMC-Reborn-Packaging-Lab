@@ -1,0 +1,20 @@
+package holylois.boombox.mixins;
+
+import holylois.boombox.PlacedRelics;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.block.state.BlockState;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+@Mixin(BlockItem.class)
+public abstract class RelicPlacementMixin {
+    @Inject(method = "placeBlock", at = @At("RETURN"), require = 1)
+    private void holyLoisRememberRelic(BlockPlaceContext context, BlockState state, CallbackInfoReturnable<Boolean> callback) {
+        if (callback.getReturnValue() && context.getLevel() instanceof ServerLevel level)
+            PlacedRelics.remember(level, context.getClickedPos(), context.getItemInHand());
+    }
+}

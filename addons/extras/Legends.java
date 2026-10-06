@@ -62,6 +62,7 @@ public final class Legends {
 
     static void register() {
         Boombox.LOG.info(load());
+        CrateLootCompatibility.register();
         LootTableEvents.MODIFY_DROPS.register(Legends::drops);
         CommandRegistrationCallback.EVENT.register((dispatcher, registries, environment) -> dispatcher.register(Commands.literal("legends")
             .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
@@ -123,6 +124,12 @@ public final class Legends {
     }
 
     private static void drops(Holder<LootTable> holder, LootContext context, List<ItemStack> drops) {
+        var blockState = context.getOptional(LootContextParams.BLOCK_STATE);
+        var blockOrigin = context.getOptional(LootContextParams.ORIGIN);
+        if (blockState != null && blockOrigin != null) {
+            var restored = PlacedRelics.restore(context.getLevel(), net.minecraft.core.BlockPos.containing(blockOrigin), blockState, drops);
+            if (restored != drops) { drops.clear(); drops.addAll(restored); }
+        }
         var key = holder.unwrapKey();
         if (key.isEmpty()) return;
         String id = key.get().identifier().toString();
@@ -187,7 +194,7 @@ public final class Legends {
     static ItemStack map(ServerLevel level, Vec3 origin, RandomSource random) {
         var params = new LootParams.Builder(level).withParameter(LootContextParams.ORIGIN, origin).create(LootContextParamSets.CHEST);
         var items = level.getServer().reloadableRegistries().getLootTable(MAP).getRandomItems(params, random.nextLong());
-        return items.isEmpty() ? ItemStack.EMPTY : items.get(0);
+        return items.isEmpty() || !items.get(0).has(DataComponents.MAP_ID) ? ItemStack.EMPTY : items.get(0);
     }
 
     static ItemStack make(ServerLevel level, Vec3 origin, RandomSource random, LootRules.Found found) {
