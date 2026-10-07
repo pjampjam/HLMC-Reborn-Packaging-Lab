@@ -20,7 +20,7 @@ The app is unsigned by a Windows publisher certificate. SmartScreen may show Unk
 
 One Holy Lois wordmark with a REBORN subtitle, compact crowned HL icons for launcher update/fast-start windows, a centred language chevron and updated EN/RU/LV help. The pack fixes saved skins after rejoining and offers `/party` and `/group` aliases; website guides and skin heads are clearer.
 
-Candidate only. Published app-stable remains 1.3.1 and pack-stable remains 1.8.2. Real skin/marker visuals and the launcher custom Defender scan are still release checks.
+Candidate only. Published app-stable remains 1.3.1 and pack-stable remains 1.8.2. Real skin/marker appearance remains a play check. The owner completed a manual Defender scan with zero threats for the final candidate, whose hash also matched their reported VirusTotal 0/69 result. This does not guarantee every antivirus or SmartScreen result.
 
 ## Pack 1.8.2
 
