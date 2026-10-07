@@ -16,6 +16,10 @@ Already using Holy Lois? Close and reopen your installed app or its shortcut. It
 
 The app is unsigned by a Windows publisher certificate. SmartScreen may show Unknown publisher. Local scans and previous user download tests do not guarantee every antivirus result. If Defender detects a threat, stop and report the detection rather than adding an exclusion.
 
+## Prepared pack 1.8.2
+
+Extras1.6.2 adds OPAC party-friendly damage/effect guards, a compact optional health/food HUD and private90sec rally marks. Onboarding1.8.2 uses the native daily-coin ledger and sends reward receipts after login. Auth UI1.0.5 handles separate/early auth messages and bounded native voice-handshake retry. The launcher EXE stays1.3.1; its layout/Settings rewrite remains a separate app patch. Candidate only, no published signed assets changed.
+
 ## Pack 1.8.1
 
 The signed pack updates independently of launcher 1.3.1. Extras 1.6.1 preserves placed relic data, fixes crate rewards and visible-body rendering, and extends claim protection to radio controls and player-attributed mob damage/pushing. Onboarding 1.8.1 closes combat teleport bypasses and exports selected skin textures for stats. Auth UI 1.0.4 quiets world audio during login/register. Original water/DH behaviour is retained. Source-only help changes await a future EXE.

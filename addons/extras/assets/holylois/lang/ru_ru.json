@@ -10,5 +10,15 @@
   "holylois.zone.abandoned": "Заброшенные земли",
   "holylois.zone.dimension.minecraft.overworld": "Обычный мир",
   "holylois.zone.dimension.minecraft.the_nether": "Незер",
-  "holylois.zone.dimension.minecraft.the_end": "Энд"
+  "holylois.zone.dimension.minecraft.the_end": "Энд",
+  "holylois.party.title": "Группа",
+  "holylois.party.food": "Еда %s",
+  "holylois.party.offline": "Не в игре",
+  "holylois.party.other_dimension": "В другом измерении",
+  "holylois.party.rally": "Сбор: %s",
+  "holylois.party.join_first": "Сначала вступите в группу: /oparties create или /oparties join NAME.",
+  "holylois.party.cooldown": "Подождите перед следующей точкой сбора.",
+  "holylois.party.rally_sent": "Точка сбора видна группе 90 секунд. /rally clear убирает её.",
+  "holylois.party.help": "/partyhud on|off, /partyhud pings on|off. * означает другое измерение. /rally делится вашей позицией с группой на 90с.",
+  "holylois.party.save_failed": "Не удалось сохранить настройку группы."
 }

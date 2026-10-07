@@ -1,0 +1,12 @@
+{
+  "holylois.reward.title": "Dienas dāvana piegādāta",
+  "holylois.reward.coins": "+%s dienas monētas",
+  "holylois.reward.streak": "Diena %s/7",
+  "holylois.reward.waiting": "%s monētas gaida: /daily",
+  "holylois.reward.next": "%s dienas līdz Holy Lootbox",
+  "holylois.voice.connecting": "Balss čats savienojas...",
+  "holylois.voice.unavailable": "Nav balss savienojuma: /voicefix vai V",
+  "holylois.voice.retry": "Pieprasām jaunu balss savienojumu.",
+  "holylois.voice.connected": "Balss savienojums jau darbojas.",
+  "holylois.voice.wait": "Pabeidz pieteikšanos un mēģini /voicefix."
+}

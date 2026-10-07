@@ -94,18 +94,27 @@ public final class DailyRewards {
         if (file == null) return -1;
         var entry = state.players.computeIfAbsent(player.getUUID().toString(), id -> new Entry());
         int streak = nextStreak(entry.last, entry.streak, today());
+        long received = Economy.claimDaily(server, player);
         long coins = Economy.unclaimedDaily(server, player.getUUID());
         if (streak < 0) {
+            if (received > 0) {
+                player.sendSystemMessage(Component.literal("✦ Daily coins received: " + received).withStyle(ChatFormatting.GOLD));
+                notify(player, "", 0, entry.streak, received, coins);
+            }
             if (coins > 0) player.sendSystemMessage(Component.literal("✦ Your " + coins + " daily coins are waiting  ").withStyle(ChatFormatting.GOLD)
                 .append(claimButton("[ Claim ]")));
             return -1;
         }
         entry.last = today().toString(); entry.streak = streak; entry.best = Math.max(entry.best, streak);
         int day = dayOfWeek(streak), tier = tier(streak);
+        String noticeItem = "";
+        int noticeCount = 1;
         var message = Component.literal("✦ Daily gift  ").withStyle(ChatFormatting.GOLD).append(bar(day))
             .append(Component.literal("  day " + day + "/7" + (streak > 7 ? ", " + streak + " days in a row" : "")).withStyle(ChatFormatting.GRAY));
         if (day == 7) {
-            give(player, lootbox(tier, player.getGameProfile().name()));
+            var box = lootbox(tier, player.getGameProfile().name());
+            noticeItem = BuiltInRegistries.ITEM.getKey(box.getItem()).toString();
+            give(player, box);
             entry.lootboxes++;
             message.append(Component.literal("\n  A ").withStyle(ChatFormatting.GOLD))
                 .append(Component.literal("Holy Lootbox").withStyle(ChatFormatting.YELLOW, ChatFormatting.BOLD))
@@ -117,15 +126,25 @@ public final class DailyRewards {
             var options = DAYS.get(day - 1).stream().filter(g -> BuiltInRegistries.ITEM.containsKey(Identifier.parse(g.item()))).toList();
             var gift = options.get(random.nextInt(options.size()));
             int count = Math.max(1, (int)Math.round(gift.count() * (1 + 0.5 * (tier - 1))));
+            noticeItem = gift.item(); noticeCount = count;
             give(player, new ItemStack(BuiltInRegistries.ITEM.getValue(Identifier.parse(gift.item())), count));
             message.append(Component.literal("\n  " + count + " " + gift.label()).withStyle(ChatFormatting.YELLOW))
                 .append(Component.literal(". " + (7 - day) + (7 - day == 1 ? " day" : " days") + " until your Holy Lootbox.").withStyle(ChatFormatting.GRAY));
             player.level().playSound(null, player.blockPosition(), SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 0.5f, 1.2f);
         }
         if (coins > 0) message.append(Component.literal("\n  ")).append(claimButton("[ Claim " + coins + " daily coins ]"));
-        player.sendSystemMessage(message);
+        if (received > 0) message.append(Component.literal("\n  " + received + " daily coins received.").withStyle(ChatFormatting.GREEN));
+        if (net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.canSend(player, holylois.auth.RewardNotice.TYPE)) {
+            player.sendSystemMessage(Component.literal("✦ Daily supplies delivered. Day " + day + "/7" + (received > 0 ? " + " + received + " coins." : ".")).withStyle(ChatFormatting.GOLD));
+            if (coins > 0) player.sendSystemMessage(claimButton("[ Claim " + coins + " daily coins ]"));
+            notify(player, noticeItem, noticeCount, streak, received, coins);
+        } else player.sendSystemMessage(message);
         save();
         return streak;
+    }
+    private static void notify(ServerPlayer player, String item, int count, int streak, long coins, long waiting) {
+        if (net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.canSend(player, holylois.auth.RewardNotice.TYPE))
+            net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(player, new holylois.auth.RewardNotice(item, count, streak, coins, Math.max(0, waiting)));
     }
 
     /** Seven boxes for the week: claimed days gold, the rest dark gray, the lootbox day a star. */

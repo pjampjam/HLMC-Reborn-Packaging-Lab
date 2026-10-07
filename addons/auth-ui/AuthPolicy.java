@@ -21,10 +21,18 @@ public final class AuthPolicy {
         return !alive && !usableSpawnPoint;
     }
     public static boolean quietWorldAudio(int mode) { return mode >= 1 && mode <= 3; }
+    public static boolean holyLoisAddress(String address) {
+        String host = address.strip().toLowerCase(java.util.Locale.ROOT).split(":", 2)[0];
+        return java.util.Set.of("play.holylois.com", "mc.holylois.com", "holylois.com", "79.76.40.155").contains(host);
+    }
     public static boolean routineAuthNotice(String message) {
         String text = message.replaceAll("(?i)\u00a7[0-9a-fk-or]", "").trim();
+        return !text.isEmpty() && text.lines().allMatch(AuthPolicy::routineLine);
+    }
+    private static boolean routineLine(String text) {
         return text.startsWith("Use /register ") && text.endsWith("to claim this account.")
-            || text.startsWith("You are not authenticated!") && text.contains("/login")
+            || text.equals("You are not authenticated!")
+            || text.equals("Use /login or /l to authenticate.")
             || text.equals("You are now authenticated.")
             || text.equals("You have a valid session. No need to log in.")
             || text.equals("You are using an online account. No need to log in.");

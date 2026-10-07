@@ -6,6 +6,13 @@ import java.util.UUID;
 
 /** EconomyCraft bridge: daily coin state, plus balance changes for Holy Lois features (land claims). */
 final class Economy {
+    /** Use EconomyCraft's own daily operation and ledger; never duplicate a raw payment. */
+    static long claimDaily(MinecraftServer server, net.minecraft.server.level.ServerPlayer player) {
+        long amount = unclaimedDaily(server, player.getUUID());
+        if (amount <= 0) return 0;
+        try { return Bridge.manager(server).claimDaily(player.getUUID()) ? amount : 0; }
+        catch (RuntimeException error) { org.slf4j.LoggerFactory.getLogger("HolyLois").warn("Daily coin claim failed; manual /daily remains available", error); return 0; }
+    }
     private Economy() {}
 
     private static boolean present() { return FabricLoader.getInstance().isModLoaded("economycraft"); }

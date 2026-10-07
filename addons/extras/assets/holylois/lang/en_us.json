@@ -10,5 +10,15 @@
   "holylois.zone.abandoned": "Abandoned land",
   "holylois.zone.dimension.minecraft.overworld": "The Overworld",
   "holylois.zone.dimension.minecraft.the_nether": "The Nether",
-  "holylois.zone.dimension.minecraft.the_end": "The End"
+  "holylois.zone.dimension.minecraft.the_end": "The End",
+  "holylois.party.title": "Party",
+  "holylois.party.food": "Food %s",
+  "holylois.party.offline": "Offline",
+  "holylois.party.other_dimension": "In another dimension",
+  "holylois.party.rally": "Rally: %s",
+  "holylois.party.join_first": "Join a party first: /oparties create or /oparties join NAME.",
+  "holylois.party.cooldown": "Wait a moment before placing another rally point.",
+  "holylois.party.rally_sent": "Rally point shared with your party for 90 seconds. /rally clear removes it.",
+  "holylois.party.help": "/partyhud on|off, /partyhud pings on|off. * means another dimension. /rally shares your position with your party for 90s.",
+  "holylois.party.save_failed": "Could not save the party display setting."
 }

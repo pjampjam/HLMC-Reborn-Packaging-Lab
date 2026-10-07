@@ -115,6 +115,7 @@ public final class Boombox implements ModInitializer {
         PackCheck.register();
         ModCheck.register();
         Legends.register();
+        PartySupport.register();
         PayloadTypeRegistry.serverboundPlay().register(BoomboxVolume.TYPE, BoomboxVolume.CODEC);
         ServerPlayNetworking.registerGlobalReceiver(BoomboxVolume.TYPE, (payload, context) -> changeVolume(context.player(), payload));
         loadConfig();

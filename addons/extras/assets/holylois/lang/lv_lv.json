@@ -10,5 +10,15 @@
   "holylois.zone.abandoned": "Pamestas zemes",
   "holylois.zone.dimension.minecraft.overworld": "Virszeme",
   "holylois.zone.dimension.minecraft.the_nether": "Nether",
-  "holylois.zone.dimension.minecraft.the_end": "Beigas"
+  "holylois.zone.dimension.minecraft.the_end": "Beigas",
+  "holylois.party.title": "Komanda",
+  "holylois.party.food": "Ēdiens %s",
+  "holylois.party.offline": "Nav spēlē",
+  "holylois.party.other_dimension": "Citā dimensijā",
+  "holylois.party.rally": "Pulcēšanās: %s",
+  "holylois.party.join_first": "Vispirms pievienojies komandai: /oparties create vai /oparties join NAME.",
+  "holylois.party.cooldown": "Uzgaidi pirms nākamā pulcēšanās punkta.",
+  "holylois.party.rally_sent": "Komanda redz punktu 90 sekundes. /rally clear to noņem.",
+  "holylois.party.help": "/partyhud on|off, /partyhud pings on|off. * nozīmē citu dimensiju. /rally kopīgo tavu atrašanās vietu komandai uz 90s.",
+  "holylois.party.save_failed": "Neizdevās saglabāt komandas skata iestatījumu."
 }

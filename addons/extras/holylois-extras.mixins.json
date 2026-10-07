@@ -9,6 +9,7 @@
     "RelicBlockChangeMixin",
     "ClaimMobPushMixin",
     "ClaimMobDamageMixin",
+    "PartyEffectsMixin",
     "ClaimFeedbackMixin"
   ],
   "client": [

@@ -15,15 +15,19 @@ import net.minecraft.world.item.component.TooltipDisplay;
 
 public final class HolyLoisAuthClient implements ClientModInitializer {
     static AuthStatus status;
+    private static final java.util.List<Component> pendingNotices = new java.util.ArrayList<>();
+    private static long noticeSince;
     public static boolean muteWorldAudio() {
         return status != null && AuthPolicy.quietWorldAudio(status.mode());
     }
     public static boolean isHolyLois(Minecraft client) {
         var server = client.getCurrentServer();
         return status != null || server != null &&
-            (server.ip.equalsIgnoreCase("79.76.40.155:25565") || server.ip.equals("79.76.40.155"));
+            AuthPolicy.holyLoisAddress(server.ip);
     }
     @Override public void onInitializeClient() {
+        VoiceRecovery.register();
+        RewardHud.register();
         ItemTooltipCallback.EVENT.register((stack, tooltipContext, tooltipFlag, lines) -> {
             if (!stack.isDamageableItem() || lines.isEmpty()) return;
             if (!stack.getOrDefault(DataComponents.TOOLTIP_DISPLAY, TooltipDisplay.DEFAULT).shows(DataComponents.DAMAGE)) return;
@@ -37,6 +41,8 @@ public final class HolyLoisAuthClient implements ClientModInitializer {
         ClientPlayNetworking.registerGlobalReceiver(AuthStatus.TYPE, (payload, context) -> {
             boolean wasMuted = muteWorldAudio();
             status = payload;
+            VoiceRecovery.ready(payload.mode() == 0);
+            pendingNotices.clear();
             var client = context.client();
             if (!wasMuted && muteWorldAudio()) {
                 for (var category : net.minecraft.sounds.SoundSource.values())
@@ -49,10 +55,16 @@ public final class HolyLoisAuthClient implements ClientModInitializer {
                 else client.gui.setScreen(new HolyLoisAuthScreen(payload));
             }
         });
-        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> status = null);
+        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> { status = null; pendingNotices.clear(); });
         ClientReceiveMessageEvents.ALLOW_GAME.register((message, overlay) -> {
             var client = Minecraft.getInstance();
-            if (isHolyLois(client) && AuthPolicy.routineAuthNotice(message.getString())) return false;
+            if (isHolyLois(client) && AuthPolicy.routineAuthNotice(message.getString())) {
+                if (status == null) {
+                    if (pendingNotices.isEmpty()) noticeSince = System.currentTimeMillis();
+                    if (pendingNotices.size() < 4) pendingNotices.add(message);
+                }
+                return false;
+            }
             if (client.gui.screen() instanceof HolyLoisAuthScreen screen && status != null && (status.mode() == 1 || status.mode() == 2)) {
                 screen.feedback(message.getString());
                 return false;
@@ -60,6 +72,11 @@ public final class HolyLoisAuthClient implements ClientModInitializer {
             return true;
         });
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            // Keep manual sign-in usable if the custom form handshake is unavailable.
+            if (status == null && client.player != null && !pendingNotices.isEmpty() && System.currentTimeMillis() - noticeSince > 5_000) {
+                for (var message : pendingNotices) client.player.sendSystemMessage(message);
+                pendingNotices.clear();
+            }
             if (isHolyLois(client))
                 net.minecraft.client.gui.components.toasts.SystemToast.forceHide(client.gui.toastManager(),
                     net.minecraft.client.gui.components.toasts.SystemToast.SystemToastId.UNSECURE_SERVER_WARNING);

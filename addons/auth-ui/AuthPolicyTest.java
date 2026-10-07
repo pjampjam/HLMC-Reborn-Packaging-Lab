@@ -19,6 +19,13 @@ public final class AuthPolicyTest {
         check(!AuthPolicy.randomRespawn(true,false));
         check(AuthPolicy.routineAuthNotice("\u00a76Use /register <password> <password> to claim this account."));
         check(AuthPolicy.routineAuthNotice("You are not authenticated!\nUse /login or /l to authenticate."));
+        check(AuthPolicy.routineAuthNotice("You are not authenticated!"));
+        check(AuthPolicy.routineAuthNotice("Use /login or /l to authenticate."));
+        check(AuthPolicy.holyLoisAddress("PLAY.HOLYLOIS.COM:25565"));
+        check(AuthPolicy.holyLoisAddress("mc.holylois.com"));
+        check(!AuthPolicy.holyLoisAddress("play.holylois.com.attacker.example"));
+        check(!AuthPolicy.routineAuthNotice("Use /login or /l to authenticate. Wrong password!"));
+        check(!AuthPolicy.routineAuthNotice("You are not authenticated!\nUse /login or /l to authenticate.\nWrong password!"));
         check(AuthPolicy.routineAuthNotice("You have a valid session. No need to log in."));
         check(!AuthPolicy.routineAuthNotice("Incorrect password!"));
         check(!AuthPolicy.routineAuthNotice("Welcome to Holy Lois: Reborn!"));

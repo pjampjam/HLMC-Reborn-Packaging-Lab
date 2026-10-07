@@ -58,6 +58,7 @@ public final class HolyLois implements ModInitializer {
     @Override public void onInitialize() {
         SkinStats.register();
         PayloadTypeRegistry.clientboundPlay().register(AuthStatus.TYPE, AuthStatus.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(holylois.auth.RewardNotice.TYPE, holylois.auth.RewardNotice.CODEC);
         if (net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("placeholder-api")) TabPlaceholders.register();
         net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback.EVENT.register((dispatcher, registries, environment) -> {
             BotWallCommand.register(dispatcher);
@@ -292,13 +293,9 @@ public final class HolyLois implements ModInitializer {
         if (own.isPresent()) Achievements.award(player.level().getServer(), player, "fun/name_day", "done");
         if (own.isPresent()) message.append(Component.literal("\nDaudz laimes vārda dienā, " + own.get() + "! Happy name day!")
             .withStyle(style -> style.withColor(ChatFormatting.LIGHT_PURPLE).withBold(true).withItalic(false)));
-        else if (!nameDay.isEmpty()) message.append(Component.literal("\nToday is the Latvian name day of " + NameDays.join(nameDay) + ".")
-            .withStyle(style -> style.withColor(ChatFormatting.LIGHT_PURPLE).withBold(false).withItalic(false)));
         if (online > 1) message.append(Component.literal("\n" + (online - 1) + (online == 2 ? " friend is" : " friends are") + " online. Hold Tab to see who.")
             .withStyle(style -> style.withColor(ChatFormatting.GREEN).withBold(false)));
-        message.append(Component.literal("\n/home set base | /rtp | /tpa NAME | /claims land | /ah auction house | /daily coins | /support help")
-                .withStyle(style -> style.withColor(ChatFormatting.YELLOW).withBold(false)))
-            .append(Component.literal("\nV: voice | Caps Lock: talk | Tab: server stats")
+        message.append(Component.literal("\nHelp: holylois.com/guide | V: voice | Tab: players")
                 .withStyle(style -> style.withColor(ChatFormatting.AQUA).withBold(false)));
         player.sendSystemMessage(message);
         var server = player.level().getServer();

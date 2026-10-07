@@ -1,0 +1,12 @@
+{
+  "holylois.reward.title": "Ежедневный подарок доставлен",
+  "holylois.reward.coins": "+%s ежедневных монет",
+  "holylois.reward.streak": "День %s/7",
+  "holylois.reward.waiting": "%s монет ждут: /daily",
+  "holylois.reward.next": "%s дней до Holy Lootbox",
+  "holylois.voice.connecting": "Голосовой чат подключается...",
+  "holylois.voice.unavailable": "Нет голосовой связи: /voicefix или V",
+  "holylois.voice.retry": "Запрашиваем новое голосовое подключение.",
+  "holylois.voice.connected": "Голосовая связь уже установлена.",
+  "holylois.voice.wait": "Дождитесь входа и попробуйте /voicefix."
+}
