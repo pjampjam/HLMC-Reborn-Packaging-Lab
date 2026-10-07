@@ -16,6 +16,12 @@ Already using Holy Lois? Close and reopen your installed app or its shortcut. It
 
 The app is unsigned by a Windows publisher certificate. SmartScreen may show Unknown publisher. Local scans and previous user download tests do not guarantee every antivirus result. If Defender detects a threat, stop and report the detection rather than adding an exclusion.
 
+## Prepared launcher 1.3.2 / pack 1.8.3
+
+One Holy Lois wordmark with a REBORN subtitle, compact crowned HL icons for launcher update/fast-start windows, a centred language chevron and updated EN/RU/LV help. The pack fixes saved skins after rejoining and offers `/party` and `/group` aliases; website guides and skin heads are clearer.
+
+Candidate only. Published app-stable remains 1.3.1 and pack-stable remains 1.8.2. Real skin/marker visuals and the launcher custom Defender scan are still release checks.
+
 ## Pack 1.8.2
 
 Extras1.6.2 adds OPAC party-friendly damage/effect guards, a compact optional health/food HUD and private90sec rally marks. Onboarding1.8.2 uses the native daily-coin ledger and sends reward receipts after login. Auth UI1.0.5 handles separate/early auth messages and bounded native voice-handshake retry. The launcher EXE stays1.3.1; its layout/Settings rewrite remains a separate app patch. Published pack 1.8.2 updates independently of the unchanged launcher 1.3.1. Earlier signed releases remain untouched.

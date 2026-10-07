@@ -12,7 +12,8 @@
     "LiteminerShapeMixin",
     "HomeShortcutMixin",
     "HomeNameMixin",
-    "PortalReturnMixin"
+    "PortalReturnMixin",
+    "SavedSkinLoginMixin"
   ],
   "injectors": {
     "defaultRequire": 1

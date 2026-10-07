@@ -18,13 +18,13 @@ public sealed class AppUpdateWindow : ThemedWindow
     public CancellationTokenSource Cancellation { get; } = new();
     public AppUpdateWindow(string? title = null, bool cancellable = true)
     {
-        Title = "Holy Lois: Reborn"; Width = 520; Height = 280;
+        Title = "Holy Lois: Reborn"; Icon = new BitmapImage(new Uri("pack://application:,,,/Assets/compact.png")); Width = 520; Height = 280;
         ResizeMode = ResizeMode.NoResize; WindowStartupLocation = WindowStartupLocation.CenterScreen;
         Background = (Brush)Application.Current.Resources["Surface"]; FontFamily = new FontFamily("Segoe UI");
         var grid = new Grid { Margin = new Thickness(28,22,28,22) };
         grid.RowDefinitions.Add(new() { Height = GridLength.Auto }); grid.RowDefinitions.Add(new()); grid.RowDefinitions.Add(new() { Height = GridLength.Auto }); grid.RowDefinitions.Add(new() { Height = GridLength.Auto });
         var heading = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Center };
-        heading.Children.Add(new Image { Source = new BitmapImage(new Uri("pack://application:,,,/Assets/logo.png")), Width = 36, Height = 36, Stretch = Stretch.Uniform, Margin = new Thickness(0,0,12,0) });
+        heading.Children.Add(new Image { Source = new BitmapImage(new Uri("pack://application:,,,/Assets/compact.png")), Width = 32, Height = 32, Stretch = Stretch.Uniform, Margin = new Thickness(0,0,12,0) });
         heading.Children.Add(new TextBlock { Text = title ?? "Holy Lois: Reborn", FontSize = 22, FontWeight = FontWeights.SemiBold, VerticalAlignment = VerticalAlignment.Center }); grid.Children.Add(heading);
         status = new TextBlock { Text = "Checking for launcher updates...", TextAlignment = TextAlignment.Center, VerticalAlignment = VerticalAlignment.Center, FontSize = 14 };
         Grid.SetRow(status,1); grid.Children.Add(status);
