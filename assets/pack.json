@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "version": "1.8.1",
+  "version": "1.8.2",
   "minecraft": "26.3",
   "fabric": "0.19.5",
   "java": 25,
@@ -98,17 +98,17 @@
       "policy": "managed"
     },
     {
-      "path": "mods/DistantHorizons-3.3.4-26.3-fabric-neoforge.jar",
-      "url": "https://cdn.modrinth.com/data/uCdwusMi/versions/TGgEbP9A/DistantHorizons-3.3.4-26.3-fabric-neoforge.jar",
-      "size": 28476894,
-      "sha256": "ba3e5c85a765a109219831df99b99ef5cfcdee05b2dfa6796116993bd48d3947",
-      "policy": "managed"
-    },
-    {
       "path": "mods/dynamic-fps-3.11.10+minecraft-26.3.0-fabric.jar",
       "url": "https://cdn.modrinth.com/data/LQ3K71Q1/versions/Jwq069rR/dynamic-fps-3.11.10%2Bminecraft-26.3.0-fabric.jar",
       "size": 189474,
       "sha256": "a186d7cdfa3738935cb8425026d118013916fdcfbc060e4397d22368d0bb6594",
+      "policy": "managed"
+    },
+    {
+      "path": "mods/DistantHorizons-3.3.4-26.3-fabric-neoforge.jar",
+      "url": "https://cdn.modrinth.com/data/uCdwusMi/versions/TGgEbP9A/DistantHorizons-3.3.4-26.3-fabric-neoforge.jar",
+      "size": 28476894,
+      "sha256": "ba3e5c85a765a109219831df99b99ef5cfcdee05b2dfa6796116993bd48d3947",
       "policy": "managed"
     },
     {
@@ -224,17 +224,17 @@
       "policy": "managed"
     },
     {
-      "path": "mods/holylois-auth-ui-1.0.4+26.3.jar",
-      "url": "https://github.com/pjampjam/HLMC-Reborn/releases/download/pack-v1.8.1/holylois-auth-ui-1.0.4+26.3.jar",
-      "size": 19759,
-      "sha256": "78e227a7ccc5990d78f34d00b0f8d9e1dd1f8137ac5f74fbb0e8acc5a44c4b72",
+      "path": "mods/holylois-auth-ui-1.0.5+26.3.jar",
+      "url": "https://github.com/pjampjam/HLMC-Reborn/releases/download/pack-v1.8.2/holylois-auth-ui-1.0.5+26.3.jar",
+      "size": 29714,
+      "sha256": "495c3afcb85974a6323cd5a778f6982e4f51249e1a4efbbaf18610fc5698c6a2",
       "policy": "managed"
     },
     {
-      "path": "mods/holylois-extras-1.6.1+26.3.jar",
-      "url": "https://github.com/pjampjam/HLMC-Reborn/releases/download/pack-v1.8.1/holylois-extras-1.6.1+26.3.jar",
-      "size": 372661,
-      "sha256": "6050b5ba58341117fadd75c8b7566ca6f7240d527a68d59c5bddbe05f251e547",
+      "path": "mods/holylois-extras-1.6.2+26.3.jar",
+      "url": "https://github.com/pjampjam/HLMC-Reborn/releases/download/pack-v1.8.2/holylois-extras-1.6.2+26.3.jar",
+      "size": 399148,
+      "sha256": "9dcd132b0df0cc316ae79907d5e5791bb2e189868ea1cbba9a265ca65b2147ac",
       "policy": "managed"
     },
     {
@@ -252,6 +252,13 @@
       "policy": "managed"
     },
     {
+      "path": "mods/yet_another_config_lib_v3-3.9.7+26.3-fabric.jar",
+      "url": "https://cdn.modrinth.com/data/1eAoo2KR/versions/s9SjoFu1/yet_another_config_lib_v3-3.9.7%2B26.3-fabric.jar",
+      "size": 1125377,
+      "sha256": "c52d41d444522d9abba994cd4c4ee2e71a065d7c31010f92a9959b80ccb4b0f5",
+      "policy": "managed"
+    },
+    {
       "path": "mods/ImmediatelyFast-Fabric-1.17.1+26.3.jar",
       "url": "https://cdn.modrinth.com/data/5ZwdcRci/versions/3MP9UR23/ImmediatelyFast-Fabric-1.17.1%2B26.3.jar",
       "size": 99586,
@@ -263,6 +270,13 @@
       "url": "https://cdn.modrinth.com/data/O7RBXm3n/versions/y8vT21Sb/InventoryProfilesNext-fabric-26.3-2.3.8.jar",
       "size": 1485260,
       "sha256": "d7e4a0a21427db27d723a48c66af9693cb7f9eddbdcec9a8d32a6bd3dab946b3",
+      "policy": "managed"
+    },
+    {
+      "path": "mods/yosbr-0.1.2.jar",
+      "url": "https://cdn.modrinth.com/data/WwbubTsV/versions/KMOzdYko/yosbr-0.1.2.jar",
+      "size": 17373,
+      "sha256": "db4c744fd71f5617639cb0fdff72378b08d2852004f4045c62090de1bf53afcb",
       "policy": "managed"
     },
     {
@@ -490,20 +504,6 @@
       "policy": "managed"
     },
     {
-      "path": "mods/yet_another_config_lib_v3-3.9.7+26.3-fabric.jar",
-      "url": "https://cdn.modrinth.com/data/1eAoo2KR/versions/s9SjoFu1/yet_another_config_lib_v3-3.9.7%2B26.3-fabric.jar",
-      "size": 1125377,
-      "sha256": "c52d41d444522d9abba994cd4c4ee2e71a065d7c31010f92a9959b80ccb4b0f5",
-      "policy": "managed"
-    },
-    {
-      "path": "mods/yosbr-0.1.2.jar",
-      "url": "https://cdn.modrinth.com/data/WwbubTsV/versions/KMOzdYko/yosbr-0.1.2.jar",
-      "size": 17373,
-      "sha256": "db4c744fd71f5617639cb0fdff72378b08d2852004f4045c62090de1bf53afcb",
-      "policy": "managed"
-    },
-    {
       "path": "mods/zoomify-2.16.3+26.3.jar",
       "url": "https://cdn.modrinth.com/data/w7ThoJFB/versions/bvz5KJLQ/zoomify-2.16.3%2B26.3.jar",
       "size": 563038,
@@ -641,12 +641,26 @@
   ],
   "defaults": {
     "path": "defaults.zip",
-    "url": "https://github.com/pjampjam/HLMC-Reborn/releases/download/pack-v1.8.1/defaults.zip",
+    "url": "https://github.com/pjampjam/HLMC-Reborn/releases/download/pack-v1.8.2/defaults.zip",
     "size": 53046,
     "sha256": "fff4f18d365943e0f07707660965b81a97cc6b5d17b98e8dd97e92101509e847",
     "policy": "seed"
   },
   "history": [
+    {
+      "version": "1.8.2",
+      "date": "2026-10-07",
+      "summary": "Party up, find your friends, and get back to the adventure.",
+      "added": [],
+      "removed": [],
+      "updated": [
+        "Party members are protected from friendly fire, with an optional health and food panel.",
+        "Use /rally to share a meeting point with your party for 90 seconds.",
+        "Daily supplies appear in a clear reward card, with daily coins claimed through their existing reward system.",
+        "Voice chat can recover its connection after login; /voicefix requests another attempt.",
+        "Cleaner login messages and matching release news across the website and launcher."
+      ]
+    },
     {
       "version": "1.8.1",
       "date": "2026-10-07",
@@ -945,21 +959,6 @@
         "Dismiss the repeated insecure-chat popup on Holy Lois",
         "Keep welcome, command tips and real download failures",
         "Premium and offline joins tested by owner"
-      ]
-    },
-    {
-      "version": "1.5.1",
-      "date": "2026-10-01",
-      "summary": "Centered server login, restored player animations, shader skin compatibility and quieter inventory defaults.",
-      "added": [
-        "Holy Lois Login"
-      ],
-      "removed": [],
-      "updated": [
-        "Player animation and eye-expression pack order",
-        "3D Skin Layers Iris Compatibility Mode",
-        "Slot locking is opt-in",
-        "Low-durability and failed-replacement alerts disabled"
       ]
     }
   ],
