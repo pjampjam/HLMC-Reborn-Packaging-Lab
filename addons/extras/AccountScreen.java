@@ -31,10 +31,10 @@ public final class AccountScreen extends TravelScreen {
     @Override public void removed(){clearSecrets();}
     @Override public void extractRenderState(GuiGraphicsExtractor g,int x,int y,float tick){
         super.extractRenderState(g,x,y,tick);g.nextStratum();
-        g.centeredText(font,text(state.kind()==1?"account_keep_progress":"account_private"),width/2,top+34,0xFFAAAAAA);
-        g.text(font,text(state.kind()==1?"account_new_name":"account_new_password"),left+12,top+56,0xFFAAAAAA);
-        if(state.kind()==2){g.text(font,text("account_confirm_password"),left+12,top+104,0xFFAAAAAA);if(!state.authenticated())g.text(font,text("account_code"),left+12,top+152,0xFFAAAAAA);}
-        if(!state.message().isEmpty())g.centeredText(font,text("account_"+state.message()),width/2,top+panelHeight-55,0xFFFFAA88);
+        g.centeredText(font,text(state.kind()==1?"account_keep_progress":"account_private"),width/2,top+34,Ui.MUTED);
+        g.text(font,text(state.kind()==1?"account_new_name":"account_new_password"),left+12,top+56,Ui.MUTED);
+        if(state.kind()==2){g.text(font,text("account_confirm_password"),left+12,top+104,Ui.MUTED);if(!state.authenticated())g.text(font,text("account_code"),left+12,top+152,Ui.MUTED);}
+        if(!state.message().isEmpty())g.centeredText(font,text("account_"+state.message()),width/2,top+panelHeight-55,Ui.DANGER);
     }
     public static void register(){
         net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.registerGlobalReceiver(AccountNotice.TYPE,(payload,context)->{

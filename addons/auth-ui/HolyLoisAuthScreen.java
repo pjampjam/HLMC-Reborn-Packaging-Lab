@@ -11,7 +11,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.util.FormattedCharSequence;
 
-/** Full black backdrop. Passwords live only in input widgets until sent to EasyAuth. */
+/** Full canvas backdrop in the launcher look (AuthUi). Passwords live only in input widgets until sent to EasyAuth. */
 public final class HolyLoisAuthScreen extends Screen {
     private AuthStatus state;
     private EditBox password, confirm;
@@ -32,42 +32,46 @@ public final class HolyLoisAuthScreen extends Screen {
         else return;
         waiting = false; if (submit != null) submit.active = true;
     }
-    private int top() { return Math.max(8, (height - 218) / 2); }
+    private int top() { return Math.max(8, (height - 222) / 2); }
     @Override protected void init() {
         int x = width / 2 - 118, y = top();
         if (quitting) {
-            addRenderableWidget(new ActionButton(x, y + 100, 236, "Back", b -> minecraft.gui.setScreen(new HolyLoisAuthScreen(state))));
-            addRenderableWidget(new ActionButton(x, y + 130, 236, "Disconnect", b -> {
+            addRenderableWidget(new ActionButton(x, y + 100, 236, "Back", AuthUi.Kind.NORMAL, b -> minecraft.gui.setScreen(new HolyLoisAuthScreen(state))));
+            addRenderableWidget(new ActionButton(x, y + 130, 236, "Disconnect", AuthUi.Kind.DANGER, b -> {
                 clearPasswords(); HolyLoisAuthClient.status = null;
                 minecraft.disconnectFromWorld(Component.literal("Disconnected from Holy Lois: Reborn"));
             }));
         } else if (state.mode() != 3) {
-            password = addRenderableWidget(new PasswordBox(x, y + 83, "Password"));
-            if (state.mode() == 2) confirm = addRenderableWidget(new PasswordBox(x, y + 126, "Confirm password"));
-            submit = addRenderableWidget(new ActionButton(x, y + (state.mode() == 2 ? 158 : 123), 236,
-                state.mode() == 2 ? "Create account" : "Log in", b -> submit()));
+            password = addRenderableWidget(new PasswordBox(x, y + 86, "Password"));
+            if (state.mode() == 2) confirm = addRenderableWidget(new PasswordBox(x, y + 130, "Confirm password"));
+            submit = addRenderableWidget(new ActionButton(x, y + (state.mode() == 2 ? 162 : 124), 236,
+                state.mode() == 2 ? "Create account" : "Log in", AuthUi.Kind.PRIMARY, b -> submit()));
             setInitialFocus(password);
         }
     }
+    /** A field drawn like the launcher's text box: canvas fill, line border, gold when focused. */
     private final class PasswordBox extends EditBox {
         private final String label;
         PasswordBox(int x, int y, String label) {
-            super(font, x, y, 236, 22, Component.literal(label)); this.label = label;
-            setMaxLength(100); setTextColor(0xFFECECEC); setTextShadow(false);
+            super(font, x + 8, y + 8, 220, 10, Component.literal(label)); this.label = label;
+            setMaxLength(100); setTextColor(AuthUi.TEXT); setTextShadow(false); setBordered(false);
             addFormatter((text, offset) -> FormattedCharSequence.forward("*".repeat(text.length()), Style.EMPTY));
+        }
+        @Override public void extractWidgetRenderState(GuiGraphicsExtractor g, int mx, int my, float delta) {
+            AuthUi.box(g, getX() - 8, getY() - 8, 236, 24, AuthUi.CANVAS, isFocused() ? AuthUi.GOLD : isHovered() ? AuthUi.LINE_STRONG : AuthUi.LINE);
+            super.extractWidgetRenderState(g, mx, my, delta);
         }
         @Override public void updateWidgetNarration(NarrationElementOutput output) {
             output.add(NarratedElementType.TITLE, label + ", " + getValue().length() + " characters");
         }
     }
     private final class ActionButton extends Button {
-        ActionButton(int x, int y, int width, String text, OnPress action) {
-            super(x, y, width, 24, Component.literal(text), action, DEFAULT_NARRATION);
+        private final AuthUi.Kind kind;
+        ActionButton(int x, int y, int width, String text, AuthUi.Kind kind, OnPress action) {
+            super(x, y, width, 24, Component.literal(text), action, DEFAULT_NARRATION); this.kind = kind;
         }
         @Override protected void extractContents(GuiGraphicsExtractor graphics, int mx, int my, float delta) {
-            graphics.fill(getX(), getY(), getX() + getWidth(), getY() + getHeight(), isHoveredOrFocused() ? 0xFF272727 : 0xFF161616);
-            graphics.outline(getX(), getY(), getWidth(), getHeight(), active ? 0xFFC9B450 : 0xFF454545);
-            graphics.centeredText(font, getMessage(), getX() + getWidth()/2, getY() + 8, active ? 0xFFE3CF6A : 0xFF777777);
+            AuthUi.button(graphics, font, getX(), getY(), getWidth(), getHeight(), getMessage(), isHovered(), isFocused(), active, kind);
         }
     }
     private void submit() {
@@ -102,25 +106,26 @@ public final class HolyLoisAuthScreen extends Screen {
     @Override public boolean shouldCloseOnEsc() { return false; }
     @Override public boolean isPauseScreen() { return false; }
     @Override public boolean isInGameUi() { return false; }
-    @Override public void extractBackground(GuiGraphicsExtractor g, int x, int y, float delta) { g.fill(0, 0, width, height, 0xFF000000); }
+    @Override public void extractBackground(GuiGraphicsExtractor g, int x, int y, float delta) { g.fill(0, 0, width, height, AuthUi.CANVAS); }
     @Override public void extractRenderState(GuiGraphicsExtractor g, int x, int y, float delta) {
         if (state.mode() == 3 && !quitting) {
-            g.centeredText(font, "Arriving...", width/2, height/2 - 4, 0xFFECECEC);
+            g.centeredText(font, "HOLY LOIS: REBORN", width/2, height/2 - 16, AuthUi.GOLD);
+            g.centeredText(font, "Arriving...", width/2, height/2, AuthUi.MUTED);
             return;
         }
-        int left = width/2 - 150, top = top();
-        g.fill(left, top, left + 300, top + 218, 0xFF0E0E0E);
-        g.fill(left, top, left + 300, top + 2, 0xFFC9B450);
+        int left = width/2 - 140, top = top();
+        AuthUi.box(g, left, top, 280, 222, AuthUi.SURFACE, AuthUi.LINE);
         g.nextStratum();
-        g.centeredText(font, "HOLY LOIS: REBORN", width/2, top + 16, 0xFFE3CF6A);
-        g.centeredText(font, quitting ? "Leave the server?" : state.mode() == 2 ? "Create your server account" : state.mode() == 3 ? "Finding a safe place..." : "Welcome back", width/2, top + 38, 0xFFECECEC);
+        g.centeredText(font, "HOLY LOIS: REBORN", width/2, top + 14, AuthUi.GOLD);
+        g.centeredText(font, quitting ? "Leave the server?" : state.mode() == 2 ? "Create your server account" : "Welcome back", width/2, top + 32, AuthUi.TEXT);
+        g.fill(width/2 - 12, top + 44, width/2 + 12, top + 45, AuthUi.GOLD);
         if (!quitting && state.mode() != 3) {
-            g.text(font, "Password", width/2 - 118, top + 70, 0xFFAAAAAA);
-            if (state.mode() == 2) g.text(font, "Confirm password", width/2 - 118, top + 113, 0xFFAAAAAA);
-            g.centeredText(font, state.mode() == 2 ? "At least " + state.minimumLength() + " characters, no spaces." : "Use the password you registered here.", width/2, top + 56, 0xFF999999);
+            g.centeredText(font, state.mode() == 2 ? "At least " + state.minimumLength() + " characters, no spaces." : "Use the password you registered here.", width/2, top + 54, AuthUi.MUTED);
+            g.text(font, "Password", width/2 - 118, top + 73, AuthUi.MUTED, false);
+            if (state.mode() == 2) g.text(font, "Confirm password", width/2 - 118, top + 117, AuthUi.MUTED, false);
         }
-        if (!notice.isEmpty() && !quitting) g.centeredText(font, notice, width/2, top + 191, 0xFFDDC265);
-        g.centeredText(font, "Esc: leave server", width/2, Math.min(height - 10, top + 225), 0xFF777777);
+        if (!notice.isEmpty() && !quitting) g.centeredText(font, notice, width/2, top + 196, waiting ? AuthUi.MUTED : AuthUi.DANGER);
+        g.centeredText(font, "Esc: leave server", width/2, Math.min(height - 10, top + 230), AuthUi.alpha(AuthUi.MUTED, 0.6f));
         g.nextStratum();
         super.extractRenderState(g, x, y, delta);
     }

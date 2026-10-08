@@ -62,14 +62,20 @@ public final class LootRules {
         public Map<String, double[]> species = new LinkedHashMap<>();
         /** Higher means big fish are rarer. Luck (Luck of the Sea, luck potions) softens it. */
         public double curve = 2.5;
+        /** Share of Legendary catches that turn Mythic (about 1 fish in 5000): far past the species' heaviest weight. */
+        public double mythicChance = 1 / 60.0;
     }
 
     public record Rarity(String name, double from, String color, boolean trophy) {}
 
-    /** Share of each tier with curve 2.5 and no luck: about 76%, 13%, 7%, 3% and 1%. */
+    /** Share of each tier with curve 2.5 and no luck: about 76%, 13%, 7%, 3% and 1%. Mythic is never rolled by size, see mythic(). */
     public static final List<Rarity> RARITIES = List.of(
         new Rarity("Common", 0, "white", false), new Rarity("Uncommon", 0.5, "green", false), new Rarity("Rare", 0.75, "aqua", true),
         new Rarity("Epic", 0.9, "light_purple", true), new Rarity("Legendary", 0.97, "gold", true));
+    public static final Rarity MYTHIC = new Rarity("Mythic", 2, "red", true);
+
+    /** A Mythic fish weighs 1.5 to 2.5 times the species' heaviest normal weight; returns that factor. */
+    public static double mythic(double roll) { return 1.5 + Math.clamp(roll, 0.0, 1.0); }
 
     /** Turns a uniform roll into how big the fish is between its lightest (0) and heaviest (1). */
     public static double size(double roll, double curve, float luck) {

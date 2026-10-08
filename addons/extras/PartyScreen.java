@@ -38,15 +38,15 @@ public final class PartyScreen extends TravelScreen {
     @Override public void extractRenderState(GuiGraphicsExtractor g,int x,int y,float tick){
         super.extractRenderState(g,x,y,tick);g.nextStratum();
         var state=PartyHud.current();int w=panelWidth-24;
-        g.centeredText(font,text(confirmDestroy?"disband_warning":confirmLeave?"leave_warning":"party_warning"),width/2,top+32,0xFFC7B786);
+        g.centeredText(font,text(confirmDestroy?"disband_warning":confirmLeave?"leave_warning":"party_warning"),width/2,top+32,Ui.MUTED);
         if(confirmLeave || confirmDestroy)return;
-        if(state.members().isEmpty())g.centeredText(font,text("no_party"),width/2,top+58,0xFFAAAAAA);
+        if(state.members().isEmpty())g.centeredText(font,text("no_party"),width/2,top+58,Ui.MUTED);
         else for(int i=0;i<rows();i++){
             int index=page*rows()+i;if(index>=state.members().size())break;var m=state.members().get(index);
             String details=m.online()?String.format(Locale.ROOT,"%.0f/%.0f  %d/20",m.health(),m.maximum(),m.food()):text("offline").getString();
-            g.text(font,font.plainSubstrByWidth(m.name(),Math.max(40,w-100)),left+12,top+48+i*15,0xFFE6E6E6);
-            g.text(font,details,left+panelWidth-108,top+48+i*15,m.online()?0xFF8DDE9A:0xFF8C8C8C);
+            g.text(font,font.plainSubstrByWidth(m.name(),Math.max(40,w-100)),left+12,top+48+i*15,Ui.TEXT);
+            g.text(font,details,left+panelWidth-108,top+48+i*15,m.online()?Ui.SUCCESS:Ui.MUTED);
         }
-        g.text(font,text(wasMember?"invite_hint":"accept_hint"),left+12,top+panelHeight-135,0xFF999999);
+        g.text(font,text(wasMember?"invite_hint":"accept_hint"),left+12,top+panelHeight-135,Ui.MUTED);
     }
 }

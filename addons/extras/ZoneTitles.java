@@ -14,13 +14,15 @@ import net.minecraft.resources.Identifier;
 import java.util.*;
 
 /**
- * RPG-style zone titles at the top of the screen: the biome (or dimension) on the first line, and "Wilderness" or the
- * land claim (Open Parties and Claims) on the second. Claim borders show at once; a new biome shows after two seconds
- * inside it, and the same biome at most once every 90 seconds, so walking along a border does not flicker.
+ * RPG-style zone titles in the upper third of the screen (below Jade's hover box and any boss bars): the structure,
+ * biome or dimension on the first line, and "Wilderness" or the land claim (Open Parties and Claims) on the second.
+ * Claim borders show at once; a new biome shows after two seconds inside it, and the same biome at most once every
+ * 90 seconds, so walking along a border does not flicker. Structures come from the server (StructureZone), each at
+ * most once every 5 minutes.
  */
 public final class ZoneTitles implements ClientModInitializer {
     static final int FADE_IN = 10, STAY = 50, FADE_OUT = 20, BIOME_SETTLE = 40;
-    static final long BIOME_REPEAT_MILLIS = 90_000;
+    static final long BIOME_REPEAT_MILLIS = 90_000, STRUCTURE_REPEAT_MILLIS = 300_000;
 
     record Claim(String key, Component name, int color) {}
 
@@ -30,11 +32,18 @@ public final class ZoneTitles implements ClientModInitializer {
     private Component top, bottom;
     private int bottomColor;
     private final Map<String, Long> biomeShownAt = new HashMap<>();
+    private final Map<String, Long> structureShownAt = new HashMap<>();
+    private Claim currentClaim;
+    private int stay = STAY;
+    /** Title colour: the kind of zone (see colorFor). */
+    private int titleColor = Ui.GOLD;
 
     private boolean broken;
 
     @Override public void onInitializeClient() {
         ClientTickEvents.END_CLIENT_TICK.register(mc -> guarded(() -> tick(mc)));
+        net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.registerGlobalReceiver(StructureZone.TYPE,
+            (payload, context) -> guarded(() -> structure(payload)));
         HudElementRegistry.attachElementAfter(VanillaHudElements.BOSS_BAR, Identifier.fromNamespaceAndPath("holylois", "zone_title"),
             (graphics, delta) -> guarded(() -> render(graphics, delta)));
     }
@@ -64,6 +73,23 @@ public final class ZoneTitles implements ClientModInitializer {
         bottom = claim.name();
         bottomColor = claim.color();
         age = 0;
+        stay = STAY;
+        titleColor = BIOME;
+    }
+
+    /** Entered (or left, empty id) a structure; the same one shows again after 5 minutes at the earliest. */
+    private void structure(StructureZone zone) {
+        if (zone.structure().isEmpty()) return;
+        Identifier id = Identifier.tryParse(zone.structure());
+        if (id == null) return;
+        String key = zone.structure() + "@" + zone.start();
+        long now = System.currentTimeMillis();
+        if (now - structureShownAt.getOrDefault(key, 0L) < STRUCTURE_REPEAT_MILLIS) return;
+        structureShownAt.put(key, now);
+        var claim = currentClaim != null ? currentClaim : new Claim("wild", Component.translatable("holylois.zone.wilderness"), 0xBFBFBF);
+        show(name("holylois.structure", id), claim, now);
+        stay = STAY + 30;
+        titleColor = structureColor(id);
     }
 
     private void tick(Minecraft mc) {
@@ -74,10 +100,12 @@ public final class ZoneTitles implements ClientModInitializer {
         String biome = mc.level.getBiome(pos).unwrapKey().map(key -> name("biome", key.identifier())).orElse("");
         Claim claim = FabricLoader.getInstance().isModLoaded("openpartiesandclaims") ? Opac.claimAt(dimension, pos.getX() >> 4, pos.getZ() >> 4) : null;
         if (claim == null) claim = new Claim(lastClaim == null ? "wild" : lastClaim, Component.translatable("holylois.zone.wilderness"), 0xBFBFBF);
+        currentClaim = claim;
         long now = System.currentTimeMillis();
         if (!dimension.equals(lastDimension)) {
             lastDimension = dimension; lastBiome = biome; lastClaim = claim.key(); candidateBiome = null;
             show(name("holylois.zone.dimension", dimension), claim, now);
+            titleColor = dimensionColor(dimension);
             biomeShownAt.put(biome, now);
             return;
         }
@@ -97,29 +125,70 @@ public final class ZoneTitles implements ClientModInitializer {
     }
 
     /** 0..1 opacity for the current age. */
-    static float alpha(int age, float partial) {
+    static float alpha(int age, float partial) { return alpha(age, partial, STAY); }
+
+    static float alpha(int age, float partial, int stay) {
         float t = age + partial;
         if (t < FADE_IN) return t / FADE_IN;
-        if (t < FADE_IN + STAY) return 1;
-        return Math.max(0, 1 - (t - FADE_IN - STAY) / FADE_OUT);
+        if (t < FADE_IN + stay) return 1;
+        return Math.max(0, 1 - (t - FADE_IN - stay) / FADE_OUT);
     }
 
     private void render(GuiGraphicsExtractor graphics, DeltaTracker delta) {
-        if (top == null || age > FADE_IN + STAY + FADE_OUT) return;
+        if (top == null || age > FADE_IN + stay + FADE_OUT) return;
         var mc = Minecraft.getInstance();
         if (mc.player == null) return;
-        int a = Math.round(alpha(age, delta.getGameTimeDeltaPartialTick(false)) * 255);
-        if (a < 8) return;
-        // Sit below any boss bars (19 px each, starting at y 12).
-        int y = 18 + 19 * ((holylois.boombox.mixins.BossOverlayAccessor) mc.gui.hud.getBossOverlay()).holyLois$events().size();
+        float fade = alpha(age, delta.getGameTimeDeltaPartialTick(false), stay);
+        if (fade < 0.03f) return;
+        // Upper third, under the boss bars (19 px each from y 12) and clear of Jade's hover box at the top centre.
+        int bars = ((holylois.boombox.mixins.BossOverlayAccessor) mc.gui.hud.getBossOverlay()).holyLois$events().size();
+        int y = Math.max(18 + 19 * bars, Math.round(graphics.guiHeight() * 0.2f));
         int x = graphics.guiWidth() / 2;
+        String title = top.getString();
+        float scale = 1.6f;
+        int titleWidth = Math.round(mc.font.width(title) * scale);
         var pose = graphics.pose();
         pose.pushMatrix();
         pose.translate(x, y);
-        pose.scale(1.75f, 1.75f);
-        graphics.centeredText(mc.font, Component.literal("✦ " + top.getString() + " ✦"), 0, 0, (a << 24) | 0xFFD966);
+        pose.scale(scale, scale);
+        outlined(graphics, mc.font, title, -mc.font.width(title) / 2, 0, titleColor, fade);
         pose.popMatrix();
-        graphics.centeredText(mc.font, bottom, x, y + 18, (a << 24) | (bottomColor & 0xFFFFFF));
+        // A gold rule that fades out to both sides.
+        int half = Math.max(24, titleWidth / 2 + 10), ruleY = y + 17;
+        for (int step = 0; step < 4; step++) {
+            int from = half * step / 4, to = half * (step + 1) / 4;
+            int color = Ui.alpha(titleColor, fade * 0.7f * (1 - step / 4f));
+            graphics.fill(x - to, ruleY, x - from, ruleY + 1, color);
+            graphics.fill(x + from, ruleY, x + to, ruleY + 1, color);
+        }
+        int sub = bottomColor == 0xBFBFBF ? Ui.MUTED : bottomColor;
+        outlined(graphics, mc.font, bottom.getString(), x - mc.font.width(bottom) / 2, y + 22, sub, fade);
+    }
+
+    /** Biomes gold; dimensions green, red, lavender; structures by danger: red dungeons, green villages, aqua ruins and the rest. */
+    static final int BIOME = Ui.GOLD;
+    private static final java.util.Set<String> DANGER = java.util.Set.of("ancient_city", "trial_chambers", "stronghold", "fortress",
+        "bastion_remnant", "end_city", "monument", "mansion", "pillager_outpost", "mineshaft", "mineshaft_mesa");
+
+    static int dimensionColor(Identifier dimension) {
+        return switch (dimension.getPath()) { case "the_nether" -> 0xFFFF6B4A; case "the_end" -> 0xFFD49EFF; default -> 0xFF7ED3A0; };
+    }
+
+    static int structureColor(Identifier id) {
+        String path = id.getPath();
+        if (path.startsWith("village")) return 0xFF7ED3A0;
+        // YUNG's and other dungeon mods: anything that sounds like one.
+        if (DANGER.contains(path) || path.contains("dungeon") || path.contains("fortress") || path.contains("crypt") || path.contains("catacomb")
+            || path.contains("tower") || path.contains("keep") || path.contains("citadel")) return 0xFFFF7A5C;
+        return 0xFF8DD8FF;
+    }
+
+    /** Text with a 1 px dark outline all around, readable on snow, sand and sky. */
+    static void outlined(GuiGraphicsExtractor graphics, net.minecraft.client.gui.Font font, String text, int x, int y, int color, float fade) {
+        int stroke = Ui.alpha(Ui.CANVAS, 0.85f * fade);
+        for (int dx = -1; dx <= 1; dx++) for (int dy = -1; dy <= 1; dy++)
+            if (dx != 0 || dy != 0) graphics.text(font, text, x + dx, y + dy, stroke, false);
+        graphics.text(font, text, x, y, Ui.alpha(color, fade), false);
     }
 
     // Separate class so Open Parties and Claims types load only when the mod is present.

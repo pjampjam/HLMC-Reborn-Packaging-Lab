@@ -22,14 +22,14 @@ public final class RallyScreen extends TravelScreen {
     @Override public void tick(){var p=mark();request.active=p!=null && minecraft.player!=null && !p.author().equals(minecraft.player.getUUID()) && p.dimension().equals(minecraft.player.level().dimension().identifier().toString());}
     @Override public void extractRenderState(GuiGraphicsExtractor g,int x,int y,float tick){
         super.extractRenderState(g,x,y,tick);g.nextStratum();var p=mark();
-        g.centeredText(font,text("request_hint"),width/2,top+32,0xFFBBBBBB);
-        if(p==null)g.centeredText(font,text("rally_gone"),width/2,top+65,0xFFAAAAAA);
+        g.centeredText(font,text("request_hint"),width/2,top+32,Ui.MUTED);
+        if(p==null)g.centeredText(font,text("rally_gone"),width/2,top+65,Ui.MUTED);
         else{
-            g.centeredText(font,p.name(),width/2,top+58,0xFFEFE5A0);
+            g.centeredText(font,p.name(),width/2,top+58,Ui.GOLD);
             boolean same=p.dimension().equals(minecraft.player.level().dimension().identifier().toString());
             String line=same?String.format(Locale.ROOT,"%.0f m   %d s",minecraft.player.position().distanceTo(new net.minecraft.world.phys.Vec3(p.x()+.5,p.y(),p.z()+.5)),Math.max(0,p.seconds()-(int)((System.currentTimeMillis()-received)/1000))):p.dimension();
-            g.centeredText(font,line,width/2,top+77,0xFF9CDBAC);
-            g.centeredText(font,text("request_author"),width/2,top+94,0xFF929292);
+            g.centeredText(font,line,width/2,top+77,Ui.SUCCESS);
+            g.centeredText(font,text("request_author"),width/2,top+94,Ui.MUTED);
         }
     }
 }

@@ -18,6 +18,21 @@ A boombox for Holy Lois: Reborn that plays internet radio to everyone in earshot
 
 Built on the server with `compile-extras.py` against the installed Minecraft 26.3, Fabric API and Simple Voice Chat.
 
+## Trophy fish, boombox look and the Holy Lois UI (1.7.0)
+
+- Trophy fish (custom_data `holylois_fish`, now with `size`) are drawn bigger by weight in hands, on the ground, in frames and on
+  the Farmer's Delight cutting board (FishLook + Fish*Mixin); your own first-person view grows a sixth as much. Slots get a rarity
+  glow and the weight in the corner. Mythic: 1/60 of Legendary catches, 1.5-2.5x the species maximum, red, announced with a sound.
+  Filleting gives 2-8x the cutting results by size (FilletMixin); `data/holylois/recipe/cutting/thieves_fish.json` lets every Fish
+  of Thieves fish be sliced. Eating Rare and better fish gives short effects (Legends.buffs).
+- Boombox: new 3D model (make-texture.py writes textures and models); while playing, the speaker cones pulse with the voice chat
+  audio level the client already receives (BoomboxPulse, no extra packets).
+- Ui (and auth-ui AuthUi): the launcher palette and small rounded shapes for every screen and HUD card. Zone titles sit below Jade,
+  colour-coded with an outline; structures come from the server once a second (StructureZone).
+- ChestReplay: resets Fresh Animations' chest animation state when a shut chest comes back into view (no replayed close).
+- XaeroTpaOption: world map right-click on a player sends `/tpa NAME` for players without /tp rights.
+- Capture (operators): `/capture ultra` and `/capture panorama [seconds]` for the title panorama.
+
 ## Client fixes
 
 - Better Advancements 0.6.0.78 ignored tab clicks whenever Num Lock or Caps Lock was on (upstream issue #260); tabs now

@@ -70,9 +70,17 @@ loom {
         server { runDir = '../run/server'; vmArgs '-Xmx4G', '-Dholylois.commandAudit=true' }
     }
 }
-tasks.named('runClient') { dependsOn syncClientMods }
+// The live legends and fish files (HLMC-Reborn/server/legends) for every dev world: fish weights, test catches, treasure.
+['Client', 'GameTest', 'Server'].each { side ->
+    tasks.register("syncLegends${side}", Copy) {
+        from rootProject.file('../../HLMC-Reborn/server/legends')
+        include '*.json'
+        into rootProject.file("run/${side == 'GameTest' ? 'gametest' : side.toLowerCase()}/config")
+    }
+}
+tasks.named('runClient') { dependsOn syncClientMods, 'syncLegendsClient' }
 // A stuck test freezes the window (the game only ticks when the test says so): stop it after 10 minutes.
-tasks.named('runClientGameTest') { dependsOn syncGameTestMods; timeout = java.time.Duration.ofMinutes(10) }
+tasks.named('runClientGameTest') { dependsOn syncGameTestMods, 'syncLegendsGameTest'; timeout = java.time.Duration.ofMinutes(10) }
 
 def jbr = (file('C:/Program Files/JetBrains').listFiles() ?: []).collect { new File(it, 'jbr/bin/java.exe') }
     .findAll { it.exists() }.sort { it.parentFile.parentFile.parentFile.name }.reverse().find()
@@ -87,4 +95,4 @@ if (jbr != null) tasks.named('runClient') {
     }
 }
 // Console input (e.g. `stop`, `op NAME`) reaches the test server.
-tasks.named('runServer') { dependsOn syncServerMods; standardInput = System.in }
+tasks.named('runServer') { dependsOn syncServerMods, 'syncLegendsServer'; standardInput = System.in }

@@ -14,7 +14,8 @@
     "RuneforgedAcquisitionInvoker",
     "RuneforgedChestTransferMixin",
     "RuneforgedInventoryClickMixin",
-    "ReiTagBuildMixin"
+    "ReiTagBuildMixin",
+    "FilletMixin"
   ],
   "client": [
     "LiteminerScrollMixin",
@@ -51,7 +52,12 @@
     "BoomboxUseReleaseMixin",
     "XaeroTeleportMenuMixin",
     "XaeroOptionAccessor",
-    "XaeroPartyMarkerMixin"
+    "XaeroPartyMarkerMixin",
+    "FishResolverMixin",
+    "FishRenderStateMixin",
+    "FishLayerMixin",
+    "FishSlotMixin",
+    "ChestReplayMixin"
   ],
   "injectors": {
     "defaultRequire": 0

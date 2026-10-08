@@ -31,12 +31,18 @@ final class RareCatchHud {
             if(shown==0)shown=now;if(now-shown>5000){notice=null;return;}
             var id=Identifier.tryParse(notice.item());if(id==null){notice=null;return;}
             var item=BuiltInRegistries.ITEM.getValue(id);if(item==null){notice=null;return;}var stack=new ItemStack(item);
-            int w=Math.min(220,mc.getWindow().getGuiScaledWidth()-20),x=(mc.getWindow().getGuiScaledWidth()-w)/2,y=mc.getWindow().getGuiScaledHeight()-132;
-            int color=notice.rarity().equals("legendary")?0xFFFFD65E:notice.rarity().equals("epic")?0xFFD49EFF:0xFF8DD8FF;
-            g.fill(x,y,x+w,y+48,0xE5171A1F);g.outline(x,y,w,48,color);g.item(stack,x+9,y+15);
-            g.text(mc.font,Component.translatable("holylois.catch."+notice.rarity()),x+34,y+7,color);
-            g.text(mc.font,mc.font.plainSubstrByWidth(stack.getHoverName().getString(),w-42),x+34,y+19,0xFFE9E9E9);
-            g.text(mc.font,String.format(Locale.ROOT,"%.2f kg",notice.kilograms()),x+34,y+32,0xFFAAAAAA);
+            // Centred just above the action bar line and the health/food rows, so it never covers the hotbar or item names.
+            int w=Math.min(200,mc.getWindow().getGuiScaledWidth()-20),h=40,x=(mc.getWindow().getGuiScaledWidth()-w)/2,y=Math.max(mc.getWindow().getGuiScaledHeight()-126,Math.round(mc.getWindow().getGuiScaledHeight()*0.62f));
+            int color=FishLook.color(notice.rarity());if(color==0)color=Ui.GOLD;
+            float fade=Math.min(1,Math.min((now-shown)/150f,(5000-(now-shown))/400f));
+            boolean mythic=notice.rarity().equals("mythic");
+            int border=mythic?Ui.alpha(color,0.55f+0.45f*(float)Math.abs(Math.sin((now-shown)/180.0))):Ui.alpha(color,0.8f);
+            Ui.box(g,x,y,w,h,Ui.alpha(Ui.SURFACE,0.94f*fade),Ui.alpha(border,fade));
+            Ui.box(g,x+6,y+8,24,24,Ui.alpha(color,0.16f*fade),Ui.alpha(color,0.45f*fade));
+            g.item(stack,x+10,y+12);
+            g.text(mc.font,Component.translatable("holylois.catch."+notice.rarity()),x+38,y+7,Ui.alpha(color,fade),false);
+            g.text(mc.font,mc.font.plainSubstrByWidth(stack.getHoverName().getString(),w-46),x+38,y+18,Ui.alpha(Ui.TEXT,fade),false);
+            g.text(mc.font,String.format(Locale.ROOT,"%.2f kg",notice.kilograms()),x+38,y+29,Ui.alpha(Ui.MUTED,fade),false);
         });
     }
     private static int setting(boolean value){

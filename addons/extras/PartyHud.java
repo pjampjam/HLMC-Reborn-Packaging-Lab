@@ -66,51 +66,56 @@ public final class PartyHud {
     }
     private static int automatic(){options.hud=false;options.automatic=true;try{Files.createDirectories(FILE.getParent());Files.writeString(FILE,new Gson().toJson(options));}catch(Exception error){Minecraft.getInstance().player.sendSystemMessage(Component.translatable("holylois.party.save_failed"));}return 1;}
     private static float safe(float v) { return Float.isFinite(v) ? Math.max(0, v) : 0; }
+    /** Right edge, under the status effect icons: the minimap and voice icons own the top-left, Jade the top centre. */
     private static void render(GuiGraphicsExtractor g) {
         var mc = Minecraft.getInstance();
         partyHit=false;rallyHit=false;
         if (mc.player == null || mc.level == null || mc.gui.hud.isHidden() || (mc.gui.screen() != null && !(mc.gui.screen() instanceof net.minecraft.client.gui.screens.ChatScreen)) || System.currentTimeMillis() - receivedAt > 3_000) return;
-        int width = Math.min(202, g.guiWidth() - 12), x = g.guiWidth() - width - 6, y = 48;
+        int width = Math.min(150, g.guiWidth() - 12), x = g.guiWidth() - width - 6, y = 54;
         hitWidth=width;
         if ((options.hud || options.automatic && state.members().size()>1) && !state.members().isEmpty()) {
-            int visible = Math.min(Math.max(1, Math.min(6, (g.guiHeight() - 100) / 25)), state.members().size()), height = 16 + visible * 25 + (visible < state.members().size() ? 12 : 0);
-            g.fill(x, y, x + width, y + height, 0xBE101216);
+            int visible = Math.min(Math.max(1, Math.min(6, (g.guiHeight() - 110) / 24)), state.members().size()), height = 18 + visible * 24 + (visible < state.members().size() ? 11 : 0);
+            Ui.card(g, x, y, width, height, Ui.GOLD, 1);
             partyX=x;partyY=y;partyHit=true;
-            g.text(mc.font, Component.translatable("holylois.party.title"), x + 6, y + 5, 0xFFFFD966); y += 16;
+            g.text(mc.font, Component.translatable("holylois.party.title"), x + 8, y + 6, Ui.GOLD, false);
+            String count = String.valueOf(state.members().size());
+            g.text(mc.font, count, x + width - 8 - mc.font.width(count), y + 6, Ui.MUTED, false);
+            y += 18;
             for (var member : state.members().stream().limit(visible).toList()) {
-                g.text(mc.font, member.name(), x + 6, y, member.online() ? 0xFFF0F0F0 : 0xFF999999);
-                if (!member.online()) g.text(mc.font, Component.translatable("holylois.party.offline"), x + 6, y + 10, 0xFF999999);
+                g.text(mc.font, mc.font.plainSubstrByWidth(member.name(), width - 30), x + 8, y, member.online() ? Ui.TEXT : Ui.MUTED, false);
+                if (!member.sameDimension() && member.online()) g.text(mc.font, "*", x + width - 12, y, 0xFFBBAADD, false);
+                if (!member.online()) g.text(mc.font, Component.translatable("holylois.party.offline"), x + 8, y + 10, Ui.alpha(Ui.MUTED, 0.7f), false);
                 else {
                     float health = safe(member.health()), maximum = Math.max(1, safe(member.maximum()));
-                    int fill = Math.min(55, Math.round(55 * health / maximum));
-                    g.fill(x + 6, y + 12, x + 61, y + 17, 0xFF40242A); g.fill(x + 6, y + 12, x + 6 + fill, y + 17, 0xFFE85462);
-                    String hp = String.format(Locale.ROOT, "%.0f/%.0f", health, maximum);
-                    if (member.absorption() > 0) hp += "+" + Math.round(safe(member.absorption()));
-                    g.text(mc.font, hp, x + 66, y + 10, member.absorption() > 0 ? 0xFFFFD966 : 0xFFEAA9AF);
-                    g.text(mc.font, Component.translatable("holylois.party.food", Math.max(0, Math.min(20, member.food()))), x + width - 58, y + 10, 0xFFD6B78E);
-                    if (!member.sameDimension()) g.text(mc.font, "*", x + width - 10, y, 0xFFBBAADD);
+                    int barWidth = width - 62;
+                    Ui.bar(g, x + 8, y + 11, barWidth, 4, health / maximum, Ui.HEALTH, Ui.alpha(Ui.HEALTH, 0.22f));
+                    if (member.absorption() > 0) g.fill(x + 8, y + 11, x + 8 + Math.min(barWidth, Math.round(barWidth * safe(member.absorption()) / maximum)), y + 12, Ui.GOLD);
+                    String hp = String.format(Locale.ROOT, "%.0f", health) + (member.absorption() > 0 ? "+" + Math.round(safe(member.absorption())) : "");
+                    g.text(mc.font, hp, x + 12 + barWidth, y + 9, member.absorption() > 0 ? Ui.GOLD : Ui.TEXT, false);
+                    String food = String.valueOf(Math.max(0, Math.min(20, member.food())));
+                    g.text(mc.font, food, x + width - 8 - mc.font.width(food), y + 9, Ui.FOOD, false);
                 }
-                y += 25;
+                y += 24;
             }
-            if (visible < state.members().size()) { g.text(mc.font, "+" + (state.members().size() - visible), x + 6, y, 0xFFAAAAAA); y += 12; }
-            y += 7;
+            if (visible < state.members().size()) { g.text(mc.font, "+" + (state.members().size() - visible), x + 8, y - 2, Ui.MUTED, false); y += 11; }
+            y += 6;
         }
         var ping = state.rally();
         int seconds = ping == null ? 0 : ping.seconds() - (int)((System.currentTimeMillis() - receivedAt) / 1000);
         if (!options.pings || ping == null || seconds <= 0) return;
-        rallyX=x;rallyY=y;rallyHeight=collapsed?22:52;rallyHit=true;
-        g.fill(x, y, x + width, y + rallyHeight, 0xCE17241E);
+        rallyX=x;rallyY=y;rallyHeight=collapsed?20:54;rallyHit=true;
+        Ui.card(g, x, y, width, rallyHeight, Ui.GREEN, 1);
         var title=Component.translatable("holylois.party.rally", ping.name()).getString();
-        g.text(mc.font, mc.font.plainSubstrByWidth(title,width-32), x + 6, y + 5, 0xFF8EE3AA);
-        if(collapsed){g.text(mc.font,"+",x+width-15,y+5,0xFFE5EEE7);return;}
-        g.text(mc.font,"-",x+width-15,y+5,0xFFE5EEE7);
+        g.text(mc.font, mc.font.plainSubstrByWidth(title,width-30), x + 8, y + 6, Ui.SUCCESS, false);
+        g.text(mc.font,collapsed?"+":"-",x+width-13,y+6,Ui.MUTED,false);
+        if(collapsed)return;
         boolean same = mc.level.dimension().identifier().toString().equals(ping.dimension());
         double bearing = Math.toDegrees(Math.atan2(-(ping.x() + .5 - mc.player.getX()), ping.z() + .5 - mc.player.getZ()));
         double relative = (bearing - mc.player.getYRot() + 540) % 360 - 180;
         String arrow = new String[]{"↑", "↗", "→", "↘", "↓", "↙", "←", "↖"}[Math.floorMod((int)Math.round(relative / 45), 8)];
         String line = same ? String.format(Locale.ROOT, "%s %.0f m  %d s", arrow, mc.player.position().distanceTo(new net.minecraft.world.phys.Vec3(ping.x() + .5, ping.y(), ping.z() + .5)), seconds) : Component.translatable("holylois.party.other_dimension").getString();
-        g.text(mc.font, line, x + 6, y + 17, 0xFFE5EEE7);
-        if (same) g.text(mc.font, ping.x() + ", " + ping.y() + ", " + ping.z(), x + 6, y + 28, 0xFFAAAAAA);
-        g.text(mc.font,mc.font.plainSubstrByWidth(Component.translatable("holylois.party.rally_open").getString(),width-12),x+6,y+40,0xFF8EE3AA);
+        g.text(mc.font, line, x + 8, y + 18, Ui.TEXT, false);
+        if (same) g.text(mc.font, ping.x() + ", " + ping.y() + ", " + ping.z(), x + 8, y + 29, Ui.MUTED, false);
+        g.text(mc.font,mc.font.plainSubstrByWidth(Component.translatable("holylois.party.rally_open").getString(),width-16),x+8,y+41,Ui.alpha(Ui.SUCCESS,0.8f),false);
     }
 }

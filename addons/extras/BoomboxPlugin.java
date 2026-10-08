@@ -18,6 +18,11 @@ public final class BoomboxPlugin implements VoicechatPlugin {
                 .setDescription("Music from boomboxes nearby, held or placed").build());
             Boombox.voice = api;
         });
+        // Client: loudness of each boombox heard nearby, for the pulsing speaker cones (BoomboxPulse).
+        registration.registerEvent(de.maxhenkel.voicechat.api.events.ClientReceiveSoundEvent.LocationalSound.class, event -> {
+            var at = event.getPosition();
+            BoomboxPulse.heard(at.getX(), at.getY(), at.getZ(), event.getRawAudio());
+        });
         registration.registerEvent(VoicechatServerStoppedEvent.class, event -> {
             Boombox.stopAll();
             Boombox.voice = null;

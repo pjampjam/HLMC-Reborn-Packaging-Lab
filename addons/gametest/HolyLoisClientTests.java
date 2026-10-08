@@ -50,6 +50,10 @@ public final class HolyLoisClientTests implements FabricClientGameTest {
             run(failed, "boombox and water", context, world, HolyLoisClientTests::boomboxKeepsWaterSources);
             run(failed, "chest lid stays shut", context, world, HolyLoisClientTests::chestLidStaysShut);
             run(failed, "death marker cleanup", context, world, HolyLoisClientTests::deathMarkerGoesWhenLootIsGone);
+            run(failed, "trophy fish look", context, world, HolyLoisClientTests::trophyFishLook);
+            run(failed, "boombox model", context, world, HolyLoisClientTests::boomboxModel);
+            run(failed, "structure title", context, world, HolyLoisClientTests::structureTitle);
+            run(failed, "panorama capture", context, world, HolyLoisClientTests::panoramaCapture);
         } catch (Throwable setup) {
             failed.add("setup: " + setup);
             org.slf4j.LoggerFactory.getLogger("HolyLoisTest").error("Test world setup failed", setup);
@@ -219,6 +223,100 @@ public final class HolyLoisClientTests implements FabricClientGameTest {
         int after = context.computeOnClient(client -> deathMarkers());
         check(after == before - 1, "death marker removed after the loot was gone (" + before + " -> " + after + ")");
         context.takeScreenshot("05-after-loot-gone");
+    }
+
+    /** Test catches (/legends give): rarity, weight past the cod maximum for a Mythic, then how they look in the slots, hand and on the ground. */
+    private static void trophyFishLook(ClientGameTestContext context, TestSingleplayerContext world) {
+        var server = world.getServer();
+        server.runCommand("clear @a");
+        for (String rarity : new String[]{"mythic", "legendary", "epic", "rare"}) server.runCommand("execute as @p run legends give " + rarity);
+        context.waitTicks(10);
+        server.runOnServer(s -> {
+            var player = s.getPlayerList().getPlayers().getFirst();
+            var first = player.getInventory().getItem(0);
+            var data = first.get(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
+            check(data != null, "the test fish has custom data");
+            var fish = data.copyTag().getCompound("holylois_fish").orElseThrow();
+            check(fish.getStringOr("rarity", "").equals("mythic"), "first test fish is Mythic (" + fish + ")");
+            check(fish.getDoubleOr("kg", 0) >= 18 && fish.getDoubleOr("size", 0) >= 1.5, "a Mythic cod weighs past 1.5x the 12 kg maximum (" + fish + ")");
+            check(first.get(net.minecraft.core.component.DataComponents.CONSUMABLE).onConsumeEffects().size() >= 1, "a Mythic fish has eating buffs");
+            player.getInventory().setSelectedSlot(0);
+        });
+        context.waitTicks(20);
+        context.takeScreenshot("10-fish-hotbar-and-hand");
+        float scale = context.computeOnClient(client -> holylois.boombox.FishLook.scale(client.player.getMainHandItem(), net.minecraft.world.item.ItemDisplayContext.THIRD_PERSON_RIGHT_HAND));
+        float own = context.computeOnClient(client -> holylois.boombox.FishLook.scale(client.player.getMainHandItem(), net.minecraft.world.item.ItemDisplayContext.FIRST_PERSON_RIGHT_HAND));
+        check(scale > 2 && own > 1.2f && own < 1.6f, "a Mythic fish is drawn much bigger in the hand, less in your own view (" + scale + ", " + own + ")");
+        context.getInput().pressKey(options -> options.keyInventory);
+        context.waitForScreen(InventoryScreen.class);
+        context.waitTicks(5);
+        context.takeScreenshot("11-fish-inventory");
+        context.runOnClient(client -> client.player.closeContainer());
+        context.waitTicks(5);
+        BlockPos spot = context.computeOnClient(client -> client.player.blockPosition().offset(-1, 0, 3));
+        server.runOnServer(s -> {
+            var player = s.getPlayerList().getPlayers().getFirst();
+            var plain = new net.minecraft.world.entity.item.ItemEntity(s.overworld(), spot.getX() + 1.5, spot.getY() + 0.2, spot.getZ() + 0.5, new ItemStack(net.minecraft.world.item.Items.COD));
+            plain.setDeltaMovement(Vec3.ZERO); plain.setPickUpDelay(32767); s.overworld().addFreshEntity(plain);
+            for (int slot = 0; slot < 2; slot++) {
+                var item = new net.minecraft.world.entity.item.ItemEntity(s.overworld(), spot.getX() + 0.5, spot.getY() + 0.2, spot.getZ() + 0.5 + slot, player.getInventory().removeItemNoUpdate(slot));
+                item.setDeltaMovement(Vec3.ZERO); item.setPickUpDelay(32767);
+                s.overworld().addFreshEntity(item);
+            }
+        });
+        context.getInput().lookAt(spot);
+        context.waitTicks(120); // the rare catch card from /legends give fades after 5 s
+        log("ground fish scale " + context.computeOnClient(client -> {
+            var sb = new StringBuilder();
+            for (var e : client.level.entitiesForRendering()) if (e instanceof net.minecraft.world.entity.item.ItemEntity item)
+                sb.append(item.position()).append(" ").append(holylois.boombox.FishLook.scale(item.getItem(), net.minecraft.world.item.ItemDisplayContext.GROUND)).append("; ");
+            return sb.toString();
+        }));
+        context.takeScreenshot("12-fish-on-ground");
+        server.runCommand("kill @e[type=item]");
+    }
+
+    /** The 1.9.0 boombox model from the front, placed like a player would, then turned to face the camera. */
+    private static void boomboxModel(ClientGameTestContext context, TestSingleplayerContext world) {
+        BlockPos target = context.computeOnClient(client -> client.player.blockPosition().offset(-2, 0, 0));
+        world.getServer().runOnServer(s -> {
+            place(s, target);
+            var level = s.overworld();
+            level.setBlockAndUpdate(target, level.getBlockState(target).setValue(net.minecraft.world.level.block.HorizontalDirectionalBlock.FACING, Direction.EAST));
+        });
+        context.getInput().lookAt(target);
+        context.waitTicks(20);
+        context.takeScreenshot("13-boombox-model");
+    }
+
+    /** The client half of structure titles: the server says "you are in a pillager outpost", the title shows below Jade. */
+    private static void structureTitle(ClientGameTestContext context, TestSingleplayerContext world) {
+        world.getServer().runOnServer(s -> {
+            var player = s.getPlayerList().getPlayers().getFirst();
+            check(net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.canSend(player, holylois.boombox.StructureZone.TYPE), "client accepts structure zones");
+            net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(player, new holylois.boombox.StructureZone("minecraft:pillager_outpost", 77));
+        });
+        context.waitTicks(25);
+        context.takeScreenshot("14-structure-title");
+    }
+
+    /** /capture panorama 1: six square faces in screenshots/holylois-panorama-*. */
+    private static void panoramaCapture(ClientGameTestContext context, TestSingleplayerContext world) throws Exception {
+        int fovBefore = context.computeOnClient(client -> client.options.fov().get());
+        context.runOnClient(client -> client.player.connection.sendCommand("capture panorama 1"));
+        context.waitTicks(6 * 20 + 40);
+        var root = context.computeOnClient(client -> client.gameDirectory.toPath().resolve("screenshots"));
+        java.nio.file.Path folder;
+        try (var list = java.nio.file.Files.list(root)) {
+            folder = list.filter(path -> path.getFileName().toString().startsWith("holylois-panorama-")).max(java.util.Comparator.naturalOrder()).orElse(null);
+        }
+        check(folder != null, "panorama folder made");
+        for (int face = 0; face < 6; face++) {
+            var image = javax.imageio.ImageIO.read(folder.resolve("panorama_" + face + ".png").toFile());
+            check(image != null && image.getWidth() == image.getHeight() && image.getWidth() > 100, "panorama face " + face + " is a square image");
+        }
+        boolean hudBack = context.computeOnClient(client -> !client.gui.hud.isHidden() && client.options.fov().get() == fovBefore);
+        check(hudBack, "HUD and field of view restored after the capture");
     }
 
     private static int deathMarkers() {

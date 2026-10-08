@@ -42,8 +42,8 @@ public final class HomesScreen extends TravelScreen {
     }
     @Override public void extractRenderState(GuiGraphicsExtractor g,int x,int y,float tick){
         super.extractRenderState(g,x,y,tick);g.nextStratum();
-        g.centeredText(font,text(edit==TravelIntent.DELETE?"delete_warning":edit>=0?"name_hint":"homes_hint"),width/2,top+32,0xFFAAAAAA);
-        if(edit==TravelIntent.DELETE)g.centeredText(font,old,width/2,top+68,0xFFFFDD88);
-        if(edit==-1)for(int i=0;i<rows();i++){int index=page*rows()+i;if(index<state.homes().size())g.text(font,font.plainSubstrByWidth(state.homes().get(index).dimension(),panelWidth-24),left+14,top+73+i*46,0xFF8B8D91);}
+        g.centeredText(font,text(edit==TravelIntent.DELETE?"delete_warning":edit>=0?"name_hint":"homes_hint"),width/2,top+32,Ui.MUTED);
+        if(edit==TravelIntent.DELETE)g.centeredText(font,old,width/2,top+68,Ui.GOLD);
+        if(edit==-1)for(int i=0;i<rows();i++){int index=page*rows()+i;if(index<state.homes().size())g.text(font,font.plainSubstrByWidth(state.homes().get(index).dimension(),panelWidth-24),left+14,top+73+i*46,Ui.MUTED);}
     }
 }

@@ -121,6 +121,7 @@ public final class Boombox implements ModInitializer {
         }
         PvpDeath.register();
         DeathLootGone.register();
+        StructureZone.register();
         PackCheck.register();
         ModCheck.register();
         Legends.register();

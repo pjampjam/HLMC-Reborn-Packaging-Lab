@@ -35,6 +35,9 @@ public final class BoomboxClient implements ClientModInitializer {
         TravelClient.register();
         AccountScreen.register();
         RareCatchHud.register();
+        FishLook.register();
+        BoomboxPulse.register();
+        Capture.register();
         RelicTooltips.register();
         BoomboxUseGuard.register();
     }

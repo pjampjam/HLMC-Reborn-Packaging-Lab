@@ -11,7 +11,10 @@ import xaero.map.gui.dropdown.rightclick.RightClickOption;
 
 import java.util.ArrayList;
 
-/** Players without /tp rights never see Xaero's world map teleport entries (map, waypoint, player); operators keep them. */
+/**
+ * Players without /tp rights never see Xaero's world map teleport entries (map, waypoint); on a player the entry becomes a
+ * /tpa request (XaeroTpaOption). Operators keep Xaero's real teleports.
+ */
 @Pseudo
 @Mixin(targets = "xaero.map.gui.dropdown.rightclick.GuiRightClickMenu")
 public abstract class XaeroTeleportMenuMixin {
@@ -21,8 +24,14 @@ public abstract class XaeroTeleportMenuMixin {
         ArrayList<RightClickOption> options = target.getRightClickOptions();
         var player = Minecraft.getInstance().player;
         if (options == null || player == null || player.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER)) return options;
-        var visible = new ArrayList<>(options);
-        visible.removeIf(option -> ((XaeroOptionAccessor) option).holylois$name().contains("teleport"));
+        var visible = new ArrayList<RightClickOption>();
+        for (var option : options) {
+            String name = ((XaeroOptionAccessor) option).holylois$name();
+            if (name.equals("gui.xaero_right_click_player_teleport")) {
+                var tpa = holylois.boombox.XaeroTpaOption.replace(option, visible.size(), target);
+                if (tpa != null) visible.add(tpa);
+            } else if (!name.contains("teleport")) visible.add(option);
+        }
         return visible;
     }
 }

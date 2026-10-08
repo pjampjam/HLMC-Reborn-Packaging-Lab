@@ -47,6 +47,13 @@ public final class LegendsTest {
             check(fish.enabled && fish.fallback.length == 2 && !fish.tables.isEmpty(), "fish config");
             System.out.println(args[1] + ": " + fish.species.size() + " species");
         }
+        // Trophy fish look: weight labels fit a slot corner, size grows with weight, Mythic is huge but capped.
+        check(FishLook.shortWeight(0.854).equals("0.85") && FishLook.shortWeight(4.24).equals("4.2") && FishLook.shortWeight(12.6).equals("13")
+            && FishLook.shortWeight(1234).equals("1.2k"), "short fish weights");
+        check(FishLook.scale("common", -1) == 1 && FishLook.scale("uncommon", -1) == 1.1f, "small fish keep their size");
+        check(FishLook.scale("rare", 0.75) < FishLook.scale("legendary", 1.0) && FishLook.scale("legendary", 1.0) < FishLook.scale("mythic", 1.5), "bigger fish look bigger");
+        check(FishLook.scale("mythic", 2.5) == 3.5f && FishLook.scale("legendary", -1) > 1.6f, "mythic cap and old trophies");
+        check(LootRules.mythic(0) == 1.5 && LootRules.mythic(1) == 2.5 && LootRules.rarity(1.0) != LootRules.MYTHIC, "mythic only by the extra roll");
         System.out.println("LegendsTest passed");
     }
 
