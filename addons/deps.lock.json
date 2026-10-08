@@ -20,10 +20,10 @@
    "size": 397951,
    "side": "both"
   },
-  "AmbientSounds_FABRIC_v6.3.6_mc26.3.jar": {
-   "url": "https://cdn.modrinth.com/data/fM515JnW/versions/Rpue6AYp/AmbientSounds_FABRIC_v6.3.6_mc26.3.jar",
-   "sha256": "6827f0a7b3abdbf5e0f5012c40a4b9ee1ad5d8c844c2cd85af9c119a2b034eaa",
-   "size": 84821608,
+  "AmbientSounds_FABRIC_v6.3.10_mc26.3.jar": {
+   "url": "https://cdn.modrinth.com/data/fM515JnW/versions/T9Nl4OKj/AmbientSounds_FABRIC_v6.3.10_mc26.3.jar",
+   "sha256": "5505a777b64762a1094cc5ecbb41df0306cd2831f8df3327cbfe2a02ba45be85",
+   "size": 84824816,
    "side": "client"
   },
   "appleskin-fabric-mc26.3-3.0.10.jar": {
@@ -212,10 +212,10 @@
    "size": 181764,
    "side": "client"
   },
-  "FarmersDelight-26.3-3.6.28+refabricated.jar": {
-   "url": "https://cdn.modrinth.com/data/7vxePowz/versions/Zdr0cHIz/FarmersDelight-26.3-3.6.28%2Brefabricated.jar",
-   "sha256": "236b3d0068b9bf9a5272b41d3aa8f80042a9ef86a4698c7dc6dd1e2c5dcf1823",
-   "size": 3486887,
+  "FarmersDelight-26.3-3.6.27+refabricated.jar": {
+   "url": "https://cdn.modrinth.com/data/7vxePowz/versions/hTNvMewX/FarmersDelight-26.3-3.6.27%2Brefabricated.jar",
+   "sha256": "07aa1346c23010c5f40405ce63cb8a793f5c246cff331aa892ef9dfdae523f17",
+   "size": 3486296,
    "side": "both"
   },
   "fastquit-3.1.5+mc26.2.jar": {
@@ -344,10 +344,10 @@
    "size": 640902,
    "side": "client"
   },
-  "liteminer-fabric-4.5.1+26.3.jar": {
-   "url": "https://cdn.modrinth.com/data/VTnHoofC/versions/YjkkKPPk/liteminer-fabric-4.5.1%2B26.3.jar",
-   "sha256": "914b472420032204463b9808046c286c53823c05c41d52270ec9cec991a817d5",
-   "size": 184358,
+  "liteminer-fabric-4.5.0+26.3.jar": {
+   "url": "https://cdn.modrinth.com/data/VTnHoofC/versions/QsUrEyVQ/liteminer-fabric-4.5.0%2B26.3.jar",
+   "sha256": "b3c4c1e3a8bbc9e07adc27b17e4e0496399b5b57e919b5183c46d4394aa0d4e1",
+   "size": 184249,
    "side": "both"
   },
   "lithium-fabric-0.26.2+mc26.3.jar": {

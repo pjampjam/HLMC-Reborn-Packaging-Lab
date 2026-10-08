@@ -48,7 +48,9 @@
     "LocalPlayerPoseMixin",
     "PartyChatClickMixin",
     "BoomboxUseGuardMixin",
-    "BoomboxUseReleaseMixin"
+    "BoomboxUseReleaseMixin",
+    "XaeroTeleportMenuMixin",
+    "XaeroOptionAccessor"
   ],
   "injectors": {
     "defaultRequire": 0
