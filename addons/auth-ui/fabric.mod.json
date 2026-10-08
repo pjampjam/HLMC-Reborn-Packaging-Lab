@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "holylois-auth-ui",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "name": "Holy Lois Login",
   "description": "A masked password form backed by server EasyAuth and simple durability tooltips. No saved credentials.",
   "authors": [
@@ -28,7 +28,8 @@
     "java": ">=25",
     "fabricloader": ">=0.19.5",
     "fabric-api": "*",
-    "voicechat": ">=2.6.24"
+    "voicechat": ">=2.6.24",
+    "holylois-extras": ">=1.6.3"
   },
   "custom": {
     "modmenu": {

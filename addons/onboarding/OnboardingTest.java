@@ -61,9 +61,9 @@ public final class OnboardingTest {
         check(inRing,"Random teleport stays between 250 and 1800 blocks from spawn");
         check(SupportCommand.category("grief someone broke my farm").equals("grief")&&SupportCommand.category("BUG chest eats items").equals("bug")&&SupportCommand.category("hello?").equals("other"),"Support request categories come from the first word");
         check(CombatTag.BLOCKED.contains("rtp")&&CombatTag.BLOCKED.contains("home")&&!CombatTag.BLOCKED.contains("support"),"Combat blocks teleports but never /support");
-        for (String command : java.util.List.of("home tp base", "/Home", "essentialcommands:tpaccept Elza", "randomteleport", " /rtp ", "tpa\tElza", "spawn", "back", "warp tp town"))
+        for (String command : java.util.List.of("home tp base", "/Home", "essentialcommands:tpaccept Elza", "randomteleport", " /rtp ", "tpa\tElza", "spawn", "back", "warp tp town", "logout", "/LOGOUT", "easyauth:logout"))
             check(CombatTag.blocksCommand(command), "Combat recognizes " + command);
-        for (String command : java.util.List.of("support help", "tpdeny Elza", "rules", "homework", "tp Elza 0 80 0"))
+        for (String command : java.util.List.of("support help", "tpdeny Elza", "rules", "homework", "logouthelp", "tp Elza 0 80 0"))
             check(!CombatTag.blocksCommand(command), "Combat preserves " + command);
         check(Redeem.code("test-secret","2026-10-05").equals("HL-QZB2-QA3Q")&&Redeem.code("test-secret","2026-10-06").equals("HL-7AB3-Z0G0"),"Daily code matches the website's HMAC function");
         check(Redeem.normalize("hl-qzb2 qa3q").equals(Redeem.normalize("HL-QZB2-QA3Q"))&&Redeem.normalize("HL-0O1I").equals(Redeem.normalize("HL-001L")),"Typed codes ignore case, spaces, dashes and look-alikes");

@@ -52,7 +52,7 @@ public final class HolyLoisAuthClient implements ClientModInitializer {
                 if (client.gui.screen() instanceof HolyLoisAuthScreen) client.gui.setScreen(null);
             } else if (payload.mode() >= 1 && payload.mode() <= 3) {
                 if (client.gui.screen() instanceof HolyLoisAuthScreen screen) screen.update(payload);
-                else client.gui.setScreen(new HolyLoisAuthScreen(payload));
+                else if(!(client.gui.screen() instanceof holylois.boombox.AccountScreen))client.gui.setScreen(new HolyLoisAuthScreen(payload));
             }
         });
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> { status = null; pendingNotices.clear(); });
@@ -81,7 +81,7 @@ public final class HolyLoisAuthClient implements ClientModInitializer {
                 net.minecraft.client.gui.components.toasts.SystemToast.forceHide(client.gui.toastManager(),
                     net.minecraft.client.gui.components.toasts.SystemToast.SystemToastId.UNSECURE_SERVER_WARNING);
             if (status != null && status.mode() > 0 && client.getConnection() != null && client.player != null
-                && !(client.gui.screen() instanceof HolyLoisAuthScreen))
+                && !(client.gui.screen() instanceof HolyLoisAuthScreen) && !(client.gui.screen() instanceof holylois.boombox.AccountScreen))
                 client.gui.setScreen(new HolyLoisAuthScreen(status));
         });
     }

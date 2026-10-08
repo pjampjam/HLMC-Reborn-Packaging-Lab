@@ -18,7 +18,7 @@ public abstract class IpnSortKeyMixin {
     @Inject(method = {"doSort(Lnet/minecraft/world/inventory/AbstractContainerMenu;ZZ)V",
                       "doSortInColumns(Lnet/minecraft/world/inventory/AbstractContainerMenu;ZZ)V",
                       "doSortInRows(Lnet/minecraft/world/inventory/AbstractContainerMenu;ZZ)V"},
-            at = @At("HEAD"), cancellable = true, remap = false)
+            at = @At("HEAD"), cancellable = true, remap = false, require = 3)
     private void holyLoisRecipeFirst(AbstractContainerMenu menu, boolean a, boolean b, CallbackInfo callback) {
         var mc = Minecraft.getInstance();
         var mouse = mc.mouseHandler;
@@ -28,6 +28,6 @@ public abstract class IpnSortKeyMixin {
             if (slot != null && slot.hasItem()) { callback.cancel(); return; }
         }
         // The sort runs on this key press; REI must not also open a recipe for the item the sort just put under the cursor.
-        holylois.boombox.ToolSwap.sortRanAt = System.nanoTime();
+        holylois.boombox.SortKeyPress.sorted(mc.gui.screen());
     }
 }

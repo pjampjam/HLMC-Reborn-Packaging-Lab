@@ -19,5 +19,6 @@ public final class BoomboxClient implements ClientModInitializer {
         ShaderLights.register();
         PackCheckClient.register();
         PartyHud.register();
+        AccountScreen.register();
     }
 }

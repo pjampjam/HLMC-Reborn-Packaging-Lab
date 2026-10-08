@@ -16,8 +16,14 @@ public partial class SetupWindow : ThemedWindow
     {
         this.context = context; this.root = root; launcher = context.Settings.Launcher;
         InitializeComponent(); Localize.Apply(this, context.Settings.Language);
+        SetupNameBox.AddHandler(System.Windows.Input.Mouse.PreviewMouseWheelEvent, new System.Windows.Input.MouseWheelEventHandler(Name_MouseWheel), true);
         LanguageChoice.SelectedIndex = context.Settings.Language == "ru" ? 1 : context.Settings.Language == "lv" ? 2 : 0;
         Refresh();
+    }
+    private void Name_MouseWheel(object sender, System.Windows.Input.MouseWheelEventArgs e)
+    {
+        SetupScroll.ScrollToVerticalOffset(SetupScroll.VerticalOffset - e.Delta);
+        e.Handled = true;
     }
     private void Refresh()
     {
@@ -46,11 +52,6 @@ public partial class SetupWindow : ThemedWindow
             if (launcher != "official")
             {
                 if (!PlayerNames.IsValid(name)) { ErrorText.Text = Localize.Text("NameInvalid"); SetupNameBox.Focus(); return; }
-                if (!string.Equals(context.SuggestedPlayerName(), name, StringComparison.OrdinalIgnoreCase) && !PlayerNames.Known(context.Players, name))
-                {
-                    using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(6));
-                    if (await context.IsPremiumNameAsync(name, timeout.Token) == true) { ErrorText.Text = Localize.Text("NamePremium"); SetupNameBox.Focus(); return; }
-                }
             }
             ContinueButton.IsEnabled = OfficialCard.IsEnabled = SkCard.IsEnabled = LanguageChoice.IsEnabled = false; SetupProgress.Visibility = Visibility.Visible; ErrorText.Text = Localize.Text("Finishing");
             await Task.Run(LauncherStartup.InstallCurrent);

@@ -207,7 +207,6 @@ public sealed class ClientContext
             if (PlayerNames.FromGameLog(folder) is { } name) return name;
         return null;
     }
-    public Task<bool?> IsPremiumNameAsync(string name, CancellationToken token) => PlayerNames.IsPremiumAsync(http, name, token);
 
     // Fast start keeps Java and Minecraft in the app's own folder and reuses identical files from other launchers.
     public string GameRoot => SafePaths.Resolve(Root, "game");

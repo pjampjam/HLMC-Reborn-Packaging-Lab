@@ -13,7 +13,9 @@
     "HomeShortcutMixin",
     "HomeNameMixin",
     "PortalReturnMixin",
-    "SavedSkinLoginMixin"
+    "AccountAliasLoginMixin",
+    "AccountAliasRecordMixin",
+    "AuthFloatingMixin"
   ],
   "injectors": {
     "defaultRequire": 1

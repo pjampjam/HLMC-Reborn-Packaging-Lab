@@ -1,6 +1,5 @@
 package holylois.boombox.mixins;
 
-import holylois.boombox.ToolSwap;
 import net.minecraft.client.input.KeyEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
@@ -12,8 +11,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Pseudo
 @Mixin(targets = "me.shedaniel.rei.impl.client.gui.ScreenOverlayImpl", remap = false)
 public abstract class ReiSortGuardMixin {
-    @Inject(method = "keyPressed(Lnet/minecraft/client/input/KeyEvent;)Z", at = @At("HEAD"), cancellable = true, remap = false)
+    @Inject(method = "keyPressed(Lnet/minecraft/client/input/KeyEvent;)Z", at = @At("HEAD"), cancellable = true, remap = false, require = 1)
     private void holyLoisSortUsedThisKey(KeyEvent event, CallbackInfoReturnable<Boolean> callback) {
-        if (System.nanoTime() - ToolSwap.sortRanAt < 50_000_000L) callback.setReturnValue(true);
+        if (holylois.boombox.SortKeyPress.consumes(event.key(),net.minecraft.client.Minecraft.getInstance().gui.screen())) callback.setReturnValue(true);
     }
 }

@@ -111,6 +111,10 @@ public final class Boombox implements ModInitializer {
         CreativeModeTabEvents.modifyOutputEvent(ResourceKey.create(Registries.CREATIVE_MODE_TAB, Identifier.withDefaultNamespace("tools_and_utilities")))
             .register(output -> output.accept(ITEM));
         PayloadTypeRegistry.clientboundPlay().register(BoomboxNear.TYPE, BoomboxNear.CODEC);
+        if(net.fabricmc.loader.api.FabricLoader.getInstance().getEnvironmentType()==net.fabricmc.api.EnvType.CLIENT){
+            PayloadTypeRegistry.clientboundPlay().register(AccountNotice.TYPE,AccountNotice.CODEC);
+            PayloadTypeRegistry.serverboundPlay().register(AccountIntent.TYPE,AccountIntent.CODEC);
+        }
         PvpDeath.register();
         PackCheck.register();
         ModCheck.register();
