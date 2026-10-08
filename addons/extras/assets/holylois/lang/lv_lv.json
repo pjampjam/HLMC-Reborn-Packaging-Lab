@@ -95,6 +95,7 @@
   "holylois.travel.account_password_mismatch": "Paroles nesakrīt.",
   "holylois.travel.account_password_length": "Ievēro servera paroles garuma ierobežojumus.",
   "holylois.travel.account_code_invalid": "Kods noraidīts. Pārbaudi termiņu pie administratora.",
+  "holylois.travel.account_reminder_link_quick": "Iestati jaunu paroli: %s vai /account password. Kods nav vajadzīgs, administrators tev sāka ātro atiestatīšanu.",
   "holylois.travel.account_failed": "Neizdevās pabeigt. Jautā administratoram.",
   "holylois.relic.held": "Turot rokās:"
 }

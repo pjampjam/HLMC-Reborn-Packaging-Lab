@@ -95,6 +95,7 @@
   "holylois.travel.account_password_mismatch": "The two passwords do not match.",
   "holylois.travel.account_password_length": "Use a password within the server length limits.",
   "holylois.travel.account_code_invalid": "Code rejected. Ask the admin if it has expired.",
+  "holylois.travel.account_reminder_link_quick": "Set a new password: %s or /account password. No code needed, the admin started a quick reset for you.",
   "holylois.travel.account_failed": "This could not finish. Ask the admin for help.",
   "holylois.relic.held": "While held:"
 }

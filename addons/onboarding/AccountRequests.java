@@ -33,7 +33,9 @@ import java.util.*;
 public final class AccountRequests {
     static final Gson GSON=new Gson();
     static record Alias(UUID uuid,String canonical) {}
-    static final class Grant { UUID id,uuid;int kind,attempts;long expires,nextAttemptAt;String issuer,tokenHash;boolean processing; }
+    static final class Grant { UUID id,uuid;int kind,attempts;long expires,nextAttemptAt;String issuer,tokenHash;boolean processing,quick; }
+    /** Quick password reset: no recovery code, so it only lives this long and admins are told when it is used. */
+    static final long QUICK_RESET_MS=10*60_000L;
     static final class Store { Map<String,Alias> aliases=new java.util.concurrent.ConcurrentHashMap<>();Map<String,Grant> grants=new HashMap<>(); }
     private static volatile Store store=new Store();private static Path file,secretDirectory,backupDirectory;
     private static final Map<UUID,Long> reminders=new HashMap<>(),rate=new HashMap<>();
@@ -90,7 +92,7 @@ public final class AccountRequests {
             for(int kind:new int[]{1,2}){
                 String type=kind==1?"rename":"password";
                 var branch=Commands.literal(type).executes(c->{open(c.getSource().getPlayerOrException(),kind);return 1;});
-                for(String action:new String[]{"grant","revoke","status"})branch.then(Commands.literal(action).requires(AccountRequests::admin)
+                for(String action:kind==2?new String[]{"grant","reset","revoke","status"}:new String[]{"grant","revoke","status"})branch.then(Commands.literal(action).requires(AccountRequests::admin)
                     .then(Commands.argument("player",StringArgumentType.word()).executes(c->manage(c.getSource(),kind,action,StringArgumentType.getString(c,"player")))));
                 root.then(branch);
             }
@@ -118,14 +120,16 @@ public final class AccountRequests {
                 if(g==null || g.kind==1&&!PartySupport.ready(p) || now<reminders.getOrDefault(p.getUUID(),0L))continue;
                 boolean first=!reminders.containsKey(p.getUUID());reminders.put(p.getUUID(),now+30_000);
                 String command="/account "+(g.kind==1?"rename":"password");
-                p.sendSystemMessage(reminder(g.kind));
+                p.sendSystemMessage(reminder(g.kind,g.quick));
                 notice(p,g,first&&g.kind==2,"");
             }
         });
     }
-    static Component reminder(int kind){
+    static Component reminder(int kind){return reminder(kind,false);}
+    static Component reminder(int kind,boolean quick){
         String command="/account "+(kind==1?"rename":"password");
         var link=Component.translatableWithFallback("holylois.travel.account_open","[Open form]").withStyle(style->style.withColor(net.minecraft.ChatFormatting.AQUA).withUnderlined(true).withClickEvent(new ClickEvent.RunCommand(command)));
+        if(quick)return Component.translatableWithFallback("holylois.travel.account_reminder_link_quick","Set a new password: %s or /account password. No code needed, the admin started a quick reset for you.",link).withStyle(net.minecraft.ChatFormatting.YELLOW);
         return Component.translatableWithFallback("holylois.travel.account_reminder_link_"+kind,kind==1?"Choose your new name: %s or /account rename. Your progress stays with you.":"Set a new password: %s or /account password. Ask the admin for your recovery code if you cannot log in.",link).withStyle(net.minecraft.ChatFormatting.YELLOW);
     }
     private static int manage(CommandSourceStack source,int kind,String action,String name){
@@ -135,17 +139,19 @@ public final class AccountRequests {
             var entry=EasyAuth.DB.getUserData(name);
             if(entry==null || (entry.password==null||entry.password.isEmpty()) && entry.onlineAccount!=PlayerEntryV1.OnlineAccount.TRUE){source.sendSystemMessage(Component.literal("No registered account has that name."));return 0;}
             UUID id=identity(entry,source.getServer());String key=key(id,kind);var old=store.grants.get(key);
-            if(action.equals("status")){source.sendSystemMessage(Component.literal(pending(id,kind)==null?"No active request.":"One-use request pending until "+java.time.Instant.ofEpochMilli(old.expires)+"."));return 1;}
+            if(action.equals("status")){source.sendSystemMessage(Component.literal(pending(id,kind)==null?"No active request.":(old.quick?"Quick reset":"One-use request")+" pending until "+java.time.Instant.ofEpochMilli(old.expires)+"."));return 1;}
             if(action.equals("revoke")){store.grants.remove(key);save();if(old!=null)Files.deleteIfExists(secretDirectory.resolve(old.id+".token"));source.sendSystemMessage(Component.literal("Request revoked."));return 1;}
-            var grant=new Grant();grant.id=UUID.randomUUID();grant.uuid=id;grant.kind=kind;grant.issuer=source.getPlayer()==null?"console":source.getPlayer().getUUID().toString();grant.expires=System.currentTimeMillis()+(kind==1?7*86_400_000L:3_600_000L);
-            if(kind==2){byte[] bytes=new byte[32];RANDOM.nextBytes(bytes);String token=Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);grant.tokenHash=digest(token);atomic(secretDirectory.resolve(grant.id+".token"),token);}
+            var grant=new Grant();grant.id=UUID.randomUUID();grant.uuid=id;grant.kind=kind;grant.issuer=source.getPlayer()==null?"console":source.getPlayer().getUUID().toString();grant.quick=action.equals("reset");
+            grant.expires=System.currentTimeMillis()+(grant.quick?QUICK_RESET_MS:kind==1?7*86_400_000L:3_600_000L);
+            if(kind==2&&!grant.quick){byte[] bytes=new byte[32];RANDOM.nextBytes(bytes);String token=Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);grant.tokenHash=digest(token);atomic(secretDirectory.resolve(grant.id+".token"),token);}
             store.grants.put(key,grant);try{save();}catch(Exception error){if(old==null)store.grants.remove(key);else store.grants.put(key,old);Files.deleteIfExists(secretDirectory.resolve(grant.id+".token"));throw error;}
             if(old!=null)Files.deleteIfExists(secretDirectory.resolve(old.id+".token"));reminders.remove(id);
+            if(grant.quick){source.sendSystemMessage(Component.literal("Quick reset ready for 10 minutes: "+entry.username+" sets a new password right after joining, no code needed. Do it while you are in touch with them; you get a message when it is used."));return 1;}
             source.sendSystemMessage(Component.literal("One-use request granted. "+(kind==2?"Private recovery code file: holylois/private-recovery/"+grant.id+".token. Deliver it privately after verifying ownership.":"The player chooses an available new name after authenticating.")));return 1;
         }catch(Exception error){source.sendSystemMessage(Component.literal("Account request failed. No password or progress was changed."));return 0;}
     }
     private static void notice(ServerPlayer p,Grant g,boolean open,String message){
-        if(ServerPlayNetworking.canSend(p,AccountNotice.TYPE))ServerPlayNetworking.send(p,new AccountNotice(g.kind,g.id,(int)EasyAuth.extendedConfig.minPasswordLength,PartySupport.ready(p),open,message));
+        if(ServerPlayNetworking.canSend(p,AccountNotice.TYPE))ServerPlayNetworking.send(p,new AccountNotice(g.kind,g.id,(int)EasyAuth.extendedConfig.minPasswordLength,PartySupport.ready(p)||g.quick,open,message));
     }
     private static void open(ServerPlayer p,int kind){
         var grant=pending(p.getUUID(),kind);
@@ -163,7 +169,7 @@ public final class AccountRequests {
                 if(!PartySupport.ready(p)){notice(p,grant,true,"login_first");return;}
                 error=rename(p,intent.value(),grant);
             }else if(intent.kind()==2){
-                if(!PartySupport.ready(p)&&!tokenMatches(intent.token(),grant.tokenHash)){
+                if(!PartySupport.ready(p)&&!grant.quick&&!tokenMatches(intent.token(),grant.tokenHash)){
                     grant.attempts++;if(grant.attempts>=5){store.grants.remove(key(p.getUUID(),2));save();Files.deleteIfExists(secretDirectory.resolve(grant.id+".token"));}else save();notice(p,grant,true,"code_invalid");return;
                 }
                 if(!intent.value().equals(intent.confirmation()))error="password_mismatch";
@@ -189,6 +195,13 @@ public final class AccountRequests {
                 ServerPlayNetworking.send(p,new AccountNotice(0,grant.id,0,false,false,""));
                 if(intent.kind()==1)p.connection.disconnect(Component.literal("Your name is now "+intent.value()+". Reconnect with this name or your saved previous name. Both use the same protected profile and progress."));
                 else p.connection.disconnect(Component.literal("Password changed. Reconnect and log in with your new password."));
+            }
+            if(intent.kind()==2&&grant.quick){
+                String name=p.getGameProfile().name();
+                org.slf4j.LoggerFactory.getLogger("HolyLois").info("Holy Lois quick password reset used by {} ({})",name,p.getUUID());
+                for(var admin:p.level().getServer().getPlayerList().getPlayers())
+                    if(admin!=p&&admin.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER))
+                        admin.sendSystemMessage(Component.literal("[Holy Lois] "+name+" set a new password with the quick reset.").withStyle(net.minecraft.ChatFormatting.GOLD));
             }
         }catch(Exception failure){notice(p,grant,true,"failed");}
     }

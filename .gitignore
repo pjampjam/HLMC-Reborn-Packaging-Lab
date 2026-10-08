@@ -13,3 +13,5 @@ addons/.deps/
 addons/run/
 addons/run-gametest.log
 addons/gametest-threads.txt
+addons/.idea/
+addons/run-hotreload.log
