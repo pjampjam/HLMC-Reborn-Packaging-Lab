@@ -61,7 +61,8 @@ def syncServerMods = tasks.register('syncServerMods', Sync) {
 
 loom {
     runs {
-        client { runDir = '../run/client'; vmArgs '-Xmx4G' }
+        // Fixed name so the local test server can make it an operator (Test-Holy-Lois.cmd writes run/server/ops.json).
+        client { runDir = '../run/client'; vmArgs '-Xmx4G'; programArgs '--username', 'HolyLoisTester' }
         clientGameTest {
             client()
             runDir = '../run/gametest'
@@ -95,4 +96,14 @@ if (jbr != null) tasks.named('runClient') {
     }
 }
 // Console input (e.g. `stop`, `op NAME`) reaches the test server.
-tasks.named('runServer') { dependsOn syncServerMods, 'syncLegendsServer'; standardInput = System.in }
+// The test client (HolyLoisTester, offline mode) is an operator on the local test server, so /legends, /capture etc. work.
+tasks.register('opTestClient') {
+    def ops = rootProject.file('run/server/ops.json')
+    doLast {
+        if (ops.exists() && ops.text.contains('HolyLoisTester')) return
+        def id = UUID.nameUUIDFromBytes('OfflinePlayer:HolyLoisTester'.getBytes('UTF-8'))
+        ops.parentFile.mkdirs()
+        ops.text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson([[uuid: id.toString(), name: 'HolyLoisTester', level: 4, bypassesPlayerLimit: false]])) + System.lineSeparator()
+    }
+}
+tasks.named('runServer') { dependsOn syncServerMods, 'syncLegendsServer', 'opTestClient'; standardInput = System.in }
