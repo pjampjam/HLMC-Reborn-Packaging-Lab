@@ -32,6 +32,14 @@ final class CommandAudit {
                 .filter(node -> node != null && node.canUse(admin)).count();
             org.slf4j.LoggerFactory.getLogger("HolyLois").info("Holy Lois command audit: {} player command paths in holylois-player-commands.txt; operators keep {} admin-only commands",
                 lines.size(), kept);
+            // Lazily loaded mixin targets: load them now and confirm our handlers were woven in.
+            try {
+                var importer = Class.forName("de.maxhenkel.audioplayer.audioloader.importer.UrlImporter");
+                long hooks = java.util.Arrays.stream(importer.getDeclaredMethods()).filter(m -> m.getName().contains("holyLois")).count();
+                org.slf4j.LoggerFactory.getLogger("HolyLois").info("Holy Lois audio link guard: {} hooks in AudioPlayer's UrlImporter", hooks);
+            } catch (ClassNotFoundException missing) {
+                org.slf4j.LoggerFactory.getLogger("HolyLois").info("Holy Lois audio link guard: AudioPlayer not installed");
+            }
         } catch (Exception error) {
             org.slf4j.LoggerFactory.getLogger("HolyLois").warn("Holy Lois command audit failed", error);
         }

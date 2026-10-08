@@ -7,6 +7,7 @@ setlocal
 cd /d "%~dp0"
 if exist "C:\Program Files\Eclipse Adoptium\jdk-25.0.4.101-hotspot\bin\java.exe" set "JAVA_HOME=C:\Program Files\Eclipse Adoptium\jdk-25.0.4.101-hotspot"
 python fetch-deps.py || goto failed
+python fetch-client-files.py || goto failed
 call gradlew.bat --console=plain -q :extras:jar :onboarding:jar :auth-ui:jar || goto failed
 start "Holy Lois TEST server - type stop here to close it" cmd /k gradlew.bat --console=plain :dev:runServer
 echo Waiting for the test server to start...

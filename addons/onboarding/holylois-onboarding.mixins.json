@@ -22,7 +22,8 @@
     "AccountAliasRecordMixin",
     "AuthFloatingMixin",
     "CelebrationFireworkMixin",
-    "AdminCommandsMixin"
+    "AdminCommandsMixin",
+    "AudioUrlMixin"
   ],
   "injectors": {
     "defaultRequire": 1

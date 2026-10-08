@@ -138,6 +138,7 @@ public final class HolyLois implements ModInitializer {
         Afk.load(server.getWorldPath(LevelResource.ROOT));
         redeem.load(server);
         DeathLoot.load(server);
+        AudioUrlGuard.load(server.getWorldPath(LevelResource.ROOT));
         AdminCommands.lock(server.getCommands().getDispatcher()); // spark registers after the tree is built
         CommandAudit.run(server);
         try {

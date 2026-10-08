@@ -91,7 +91,13 @@ public final class OnboardingTest {
         check(loot.state.gone.size()==1,"A second death at the same spot with loot left keeps the marker");
         loot.state.active.get(0).time=0;loot.prune(DeathLoot.KEEP_ACTIVE_MS+1);
         check(loot.state.active.isEmpty()&&loot.byItem.isEmpty(),"Deaths in chunks nobody visits are forgotten after 30 days");
+        check(!AudioUrlGuard.isPublic(ip("127.0.0.1"))&&!AudioUrlGuard.isPublic(ip("10.0.0.5"))&&!AudioUrlGuard.isPublic(ip("169.254.169.254"))&&!AudioUrlGuard.isPublic(ip("100.64.1.1"))&&!AudioUrlGuard.isPublic(ip("192.168.1.1"))&&!AudioUrlGuard.isPublic(ip("0.0.0.0")),"Audio links never reach local, private or cloud metadata IPv4 addresses");
+        check(!AudioUrlGuard.isPublic(ip("::1"))&&!AudioUrlGuard.isPublic(ip("fd12::1"))&&!AudioUrlGuard.isPublic(ip("fe80::1"))&&!AudioUrlGuard.isPublic(ip("::ffff:10.0.0.1"))&&AudioUrlGuard.isPublic(ip("1.1.1.1"))&&AudioUrlGuard.isPublic(ip("2606:4700::1111")),"IPv6 private and mapped addresses are blocked, public ones pass");
+        check(rejects("http://example.com/a.mp3")&&rejects("file:///etc/passwd")&&rejects("https://user:pw@example.com/a.mp3")&&!rejects("https://example.com/a.mp3"),"Only plain https links are accepted");
+        check(AudioUrlGuard.waitMs(null,5000)==0&&AudioUrlGuard.waitMs(1000L,6000)==15000&&AudioUrlGuard.waitMs(1000L,30000)==0,"One audio link per player every 20 seconds");
         System.out.println("Passed " + checked + " onboarding, AFK ledger, secret code and quiet name, greeting, name day, bot wall, leaderboard, discovery, death, daily reward, chair, holiday, donate, land, rtp, support and combat checks");
     }
+    private static java.net.InetAddress ip(String text) {try{return java.net.InetAddress.getByName(text);}catch(Exception e){throw new AssertionError(e);}}
+    private static boolean rejects(String url) {try{AudioUrlGuard.parse(url);return false;}catch(IllegalArgumentException e){return true;}}
     private static void check(boolean value,String message) {checked++;if(!value)throw new AssertionError(message);}
 }
