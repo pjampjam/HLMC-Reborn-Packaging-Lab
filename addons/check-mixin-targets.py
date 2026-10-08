@@ -71,7 +71,7 @@ for addon in ADDONS:
             if rest and first in imports: full = imports[first] + '$' + rest.replace('.', '$')
             targets.append(full)
         methods = set()
-        for m in re.finditer(r'@(?:Inject|Redirect|ModifyVariable|ModifyArg|ModifyArgs|ModifyConstant|ModifyExpressionValue|ModifyReturnValue|WrapOperation|WrapWithCondition|Overwrite)\s*\((.*?)\)\s*(?:private|public|protected|static|@)', text, re.S):
+        for m in re.finditer(r'@(?:Inject|Redirect|ModifyVariable|ModifyArg|ModifyArgs|ModifyConstant|ModifyExpressionValue|ModifyReturnValue|WrapOperation|WrapWithCondition|WrapMethod|Overwrite)\s*\((.*?)\)\s*(?:private|public|protected|static|@)', text, re.S):
             spec_m = re.search(r'method\s*=\s*(\{[^}]*\}|"[^"]*")', m.group(1))
             if spec_m: methods |= {s.split('(')[0] for s in strings(spec_m.group(1))}
         for target in targets:

@@ -212,10 +212,10 @@
    "size": 181764,
    "side": "client"
   },
-  "FarmersDelight-26.3-3.6.27+refabricated.jar": {
-   "url": "https://cdn.modrinth.com/data/7vxePowz/versions/hTNvMewX/FarmersDelight-26.3-3.6.27%2Brefabricated.jar",
-   "sha256": "07aa1346c23010c5f40405ce63cb8a793f5c246cff331aa892ef9dfdae523f17",
-   "size": 3486296,
+  "FarmersDelight-26.3-3.6.28+refabricated.jar": {
+   "url": "https://cdn.modrinth.com/data/7vxePowz/versions/Zdr0cHIz/FarmersDelight-26.3-3.6.28%2Brefabricated.jar",
+   "sha256": "236b3d0068b9bf9a5272b41d3aa8f80042a9ef86a4698c7dc6dd1e2c5dcf1823",
+   "size": 3486887,
    "side": "both"
   },
   "fastquit-3.1.5+mc26.2.jar": {

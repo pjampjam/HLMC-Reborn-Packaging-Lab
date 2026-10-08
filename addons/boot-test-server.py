@@ -17,7 +17,7 @@ start, ready = time.time(), False
 while time.time() - start < limit and server.poll() is None:
     time.sleep(5)
     text = LOG.read_text(encoding='utf-8', errors='replace') if LOG.exists() else ''
-    if re.search(r'\]: Done \(', text): ready = True; break
+    if re.search(r'(\]:|\(Minecraft\)) Done \(', text): ready = True; break
     if re.search(r'Incompatible mods found|Failed to load datapacks|Crash report saved|Exception in server tick loop', text): break
 if server.poll() is None:
     if ready: server.stdin.write('stop\n'); server.stdin.flush()

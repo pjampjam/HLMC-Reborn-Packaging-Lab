@@ -13,7 +13,8 @@
     "ClaimFeedbackMixin",
     "RuneforgedAcquisitionInvoker",
     "RuneforgedChestTransferMixin",
-    "RuneforgedInventoryClickMixin"
+    "RuneforgedInventoryClickMixin",
+    "ReiTagBuildMixin"
   ],
   "client": [
     "LiteminerScrollMixin",
@@ -34,7 +35,6 @@
     "ReiSortGuardMixin",
     "SortKeyPressMixin",
     "BedCameraMixin",
-    "ReiTagBuildMixin",
     "FirstPersonAimMixin",
     "FirstPersonMapMixin",
     "WorldClaimFogMixin",
