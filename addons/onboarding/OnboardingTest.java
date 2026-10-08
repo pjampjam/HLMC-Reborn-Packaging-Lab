@@ -95,6 +95,7 @@ public final class OnboardingTest {
         check(!AudioUrlGuard.isPublic(ip("::1"))&&!AudioUrlGuard.isPublic(ip("fd12::1"))&&!AudioUrlGuard.isPublic(ip("fe80::1"))&&!AudioUrlGuard.isPublic(ip("::ffff:10.0.0.1"))&&AudioUrlGuard.isPublic(ip("1.1.1.1"))&&AudioUrlGuard.isPublic(ip("2606:4700::1111")),"IPv6 private and mapped addresses are blocked, public ones pass");
         check(rejects("http://example.com/a.mp3")&&rejects("file:///etc/passwd")&&rejects("https://user:pw@example.com/a.mp3")&&!rejects("https://example.com/a.mp3"),"Only plain https links are accepted");
         check(AudioUrlGuard.waitMs(null,5000)==0&&AudioUrlGuard.waitMs(1000L,6000)==15000&&AudioUrlGuard.waitMs(1000L,30000)==0,"One audio link per player every 20 seconds");
+        check(Seen.lastSeen("Bob",0,3*86_400_000L+5000).startsWith("Bob was last on 3 days ago")&&Seen.lastSeen("Bob",0,90*60_000L).contains("1h 30m ago"),"/seen says how long ago a player was on");
         System.out.println("Passed " + checked + " onboarding, AFK ledger, secret code and quiet name, greeting, name day, bot wall, leaderboard, discovery, death, daily reward, chair, holiday, donate, land, rtp, support and combat checks");
     }
     private static java.net.InetAddress ip(String text) {try{return java.net.InetAddress.getByName(text);}catch(Exception e){throw new AssertionError(e);}}
