@@ -102,7 +102,7 @@ public partial class App : Application
                 var nameFrame = (System.Windows.Controls.Border)setup.FindName("NamePicture");
                 if (pictures.Length != 1 || pictures.Any(p => p.Height != 155 || p.CornerRadius != new CornerRadius(6) || ((ImageBrush)p.Background).Stretch != Stretch.UniformToFill)
                     || nameFrame.Height != 155 || nameFrame.CornerRadius != new CornerRadius(6)
-                    || Math.Abs(pictures[0].ActualWidth-nameFrame.ActualWidth) > 1) throw new IOException("Setup picture frames no longer match or preserve crop proportions.");
+                    || Math.Abs(pictures[0].ActualWidth-nameFrame.ActualWidth) > 1) throw new IOException("Setup picture frames no longer match or preserve crop proportions. Picture count="+pictures.Length+", name width="+nameFrame.ActualWidth);
                 setup.Close();
                 var marker = new System.Windows.Controls.Border { Width=40,Height=40,Background=Brushes.White };
                 var motionWindow = new ThemedWindow { Content=marker,Width=120,Height=120 }; motionWindow.Show();

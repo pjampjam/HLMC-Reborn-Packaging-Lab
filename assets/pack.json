@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "version": "1.8.2",
+  "version": "1.8.3",
   "minecraft": "26.3",
   "fabric": "0.19.5",
   "java": 25,
@@ -224,17 +224,17 @@
       "policy": "managed"
     },
     {
-      "path": "mods/holylois-auth-ui-1.0.5+26.3.jar",
-      "url": "https://github.com/pjampjam/HLMC-Reborn/releases/download/pack-v1.8.2/holylois-auth-ui-1.0.5+26.3.jar",
-      "size": 29714,
-      "sha256": "495c3afcb85974a6323cd5a778f6982e4f51249e1a4efbbaf18610fc5698c6a2",
+      "path": "mods/holylois-auth-ui-1.0.6+26.3.jar",
+      "url": "https://github.com/pjampjam/HLMC-Reborn/releases/download/pack-v1.8.3/holylois-auth-ui-1.0.6+26.3.jar",
+      "size": 29758,
+      "sha256": "dd66e0047e00f220d0b56faf3e3446cc35c80098fbbe35d15d243d11794464b1",
       "policy": "managed"
     },
     {
-      "path": "mods/holylois-extras-1.6.2+26.3.jar",
-      "url": "https://github.com/pjampjam/HLMC-Reborn/releases/download/pack-v1.8.2/holylois-extras-1.6.2+26.3.jar",
-      "size": 399148,
-      "sha256": "9dcd132b0df0cc316ae79907d5e5791bb2e189868ea1cbba9a265ca65b2147ac",
+      "path": "mods/holylois-extras-1.6.3+26.3.jar",
+      "url": "https://github.com/pjampjam/HLMC-Reborn/releases/download/pack-v1.8.3/holylois-extras-1.6.3+26.3.jar",
+      "size": 424161,
+      "sha256": "3c78fc5387f3ac0a75f242724a5e0a9df9175cb88a3081d6fafc5f62f13f2706",
       "policy": "managed"
     },
     {
@@ -641,12 +641,28 @@
   ],
   "defaults": {
     "path": "defaults.zip",
-    "url": "https://github.com/pjampjam/HLMC-Reborn/releases/download/pack-v1.8.2/defaults.zip",
+    "url": "https://github.com/pjampjam/HLMC-Reborn/releases/download/pack-v1.8.3/defaults.zip",
     "size": 53046,
     "sha256": "fff4f18d365943e0f07707660965b81a97cc6b5d17b98e8dd97e92101509e847",
     "policy": "seed"
   },
   "history": [
+    {
+      "version": "1.8.3",
+      "date": "2026-10-08",
+      "summary": "Keep your name and progress, with smoother login and inventory controls.",
+      "added": [
+        "Quick start accepts valid names without a Minecraft ownership check. Existing Holy Lois accounts still need their server password.",
+        "Launcher setup keeps every shortcut option reachable while you enter your name.",
+        "Admin-requested name changes keep your inventory, homes and progress. Previous names stay protected.",
+        "Recover a server password through a private form and one-use code from an admin.",
+        "Login no longer triggers false flying kicks, and account changes cannot bypass combat restrictions.",
+        "R sorts from an empty slot without opening a recipe when an item moves under the cursor.",
+        "Matching runestones stack more reliably when taken from chests. Different special variants stay separate."
+      ],
+      "removed": [],
+      "updated": []
+    },
     {
       "version": "1.8.2",
       "date": "2026-10-07",
@@ -946,19 +962,6 @@
       "removed": [],
       "updated": [
         "Inventory Profiles Next default: continuous crafting off."
-      ]
-    },
-    {
-      "version": "1.5.2",
-      "date": "2026-10-01",
-      "summary": "Quiet server login and download notices, opt-in inventory locks and silent replacement alerts.",
-      "added": [],
-      "removed": [],
-      "updated": [
-        "Hide routine auth reminders and resource-pack progress on Holy Lois",
-        "Dismiss the repeated insecure-chat popup on Holy Lois",
-        "Keep welcome, command tips and real download failures",
-        "Premium and offline joins tested by owner"
       ]
     }
   ],

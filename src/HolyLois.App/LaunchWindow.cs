@@ -32,12 +32,12 @@ public sealed class LaunchWindow : ThemedWindow
 
     public LaunchWindow(string player, bool join)
     {
-        Title = "Holy Lois: Reborn"; Icon = new BitmapImage(new Uri("pack://application:,,,/Assets/compact.png")); Width = 520; SizeToContent = SizeToContent.Height; ResizeMode = ResizeMode.NoResize;
+        Title = "Holy Lois: Reborn"; Width = 520; SizeToContent = SizeToContent.Height; ResizeMode = ResizeMode.NoResize;
         WindowStartupLocation = WindowStartupLocation.CenterOwner; Background = Res("Surface"); FontFamily = new FontFamily("Segoe UI");
         var panel = new StackPanel { Margin = new Thickness(28, 22, 28, 24) };
         var heading = new Grid();
         heading.ColumnDefinitions.Add(new() { Width = GridLength.Auto }); heading.ColumnDefinitions.Add(new());
-        heading.Children.Add(new Image { Source = new BitmapImage(new Uri("pack://application:,,,/Assets/compact.png")), Width = 32, Height = 32, Stretch = Stretch.Uniform, Margin = new Thickness(0, 0, 14, 0), VerticalAlignment = VerticalAlignment.Top });
+        heading.Children.Add(new Image { Source = new BitmapImage(new Uri("pack://application:,,,/Assets/logo.png")), Width = 44, Height = 44, Stretch = Stretch.Uniform, Margin = new Thickness(0, 0, 14, 0), VerticalAlignment = VerticalAlignment.Top });
         var names = new StackPanel(); Grid.SetColumn(names, 1); heading.Children.Add(names);
         title = new TextBlock { Text = Localize.Text("StartTitle"), FontSize = 22, FontWeight = FontWeights.SemiBold };
         subtitle = new TextBlock { Text = string.Format(Localize.Text(join ? "StartAsJoin" : "StartAsTitle"), player), FontSize = 13, Foreground = Res("Muted"), Margin = new Thickness(0, 4, 0, 0) };

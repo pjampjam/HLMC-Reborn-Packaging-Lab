@@ -29,15 +29,6 @@ final class SkinStats {
             return url.matches("https://textures\\.minecraft\\.net/texture/[a-fA-F0-9]{32,128}") ? url : null;
         } catch (Exception ignored) { return null; }
     }
-    static String selectedTexture(UUID id) throws ReflectiveOperationException {
-        var apiType = Class.forName("net.skinsrestorer.api.SkinsRestorer");
-        var api = Class.forName("net.skinsrestorer.api.SkinsRestorerProvider").getMethod("get").invoke(null);
-        var storage = apiType.getMethod("getPlayerStorage").invoke(api);
-        var selected = (Optional<?>) Class.forName("net.skinsrestorer.api.storage.PlayerStorage")
-                .getMethod("getSkinOfPlayer", UUID.class).invoke(storage, id);
-        return selected.isEmpty() ? null : texture((String) Class.forName("net.skinsrestorer.api.property.SkinProperty")
-                .getMethod("getValue").invoke(selected.get()));
-    }
     private static void refresh(net.minecraft.server.MinecraftServer server) {
         if (!BUSY.compareAndSet(false, true)) return;
         Path destination = server.getWorldPath(LevelResource.ROOT).resolve("holylois/skin-textures.json");
