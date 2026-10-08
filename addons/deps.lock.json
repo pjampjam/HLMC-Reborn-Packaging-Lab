@@ -146,6 +146,12 @@
    "size": 549323,
    "side": "server"
   },
+  "elytra_physics-fabric-2.6.3_mc26.3.jar": {
+   "url": "https://cdn.modrinth.com/data/jfvCMH0K/versions/gWeGx7Ew/elytra_physics-fabric-2.6.3_mc26.3.jar",
+   "sha256": "40de7830aa5b9a87ba42faf5330144819502b0b41d7271f4189f07ba532b3c5c",
+   "size": 481083,
+   "side": "client"
+  },
   "EnchantmentDescriptions-fabric-MC26.3-26.3.0.2.jar": {
    "url": "https://cdn.modrinth.com/data/UVtY3ZAC/versions/uZf2qbql/EnchantmentDescriptions-fabric-MC26.3-26.3.0.2.jar",
    "sha256": "83afc7f920f3d8873d3e2ce805ad9922b3b165b967ef8ed35eda4a5bdefe3227",
@@ -170,10 +176,10 @@
    "size": 792734,
    "side": "client"
   },
-  "entityculling-fabric-1.11.2-mc26.3.jar": {
-   "url": "https://cdn.modrinth.com/data/NNAgCjsB/versions/F4loCvYt/entityculling-fabric-1.11.2-mc26.3.jar",
-   "sha256": "3ff36c560bc35b5b3ebe09aa4520fae438dfa34c6cd8e5fdf481aac1181fade0",
-   "size": 1508273,
+  "entityculling-fabric-1.11.3-mc26.3.jar": {
+   "url": "https://cdn.modrinth.com/data/NNAgCjsB/versions/X1g3VhTx/entityculling-fabric-1.11.3-mc26.3.jar",
+   "sha256": "d2f80514ee3382b1fa7afda4df762df50743226e3cd320b829ee507357aeafbc",
+   "size": 1508547,
    "side": "client"
   },
   "Epic Dungeons v1.2.6 (26.3).jar": {

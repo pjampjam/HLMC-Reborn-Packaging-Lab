@@ -1,15 +1,15 @@
 """Give the local test client what players get besides mods: the pack's shaderpacks and resource packs (from the signed
 assets/pack.json, sha256-checked) and the shipped settings (assets/defaults.zip, applied by YOSBR on the first start).
 
-Usage: python fetch-client-files.py   (run/client; existing files with the right hash are kept, settings never overwrite
+Usage: python fetch-client-files.py [run/client|run/gametest]   (default run/client; existing files with the right hash are kept, settings never overwrite
 what the test client already changed).
 """
-import hashlib, json, urllib.request, zipfile
+import hashlib, json, sys, urllib.request, zipfile
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ASSETS = HERE.parent / 'assets'
-CLIENT = HERE / 'run/client'
+CLIENT = HERE / (sys.argv[1] if len(sys.argv) > 1 else 'run/client')  # e.g. run/gametest
 
 
 def sha256(path):

@@ -50,7 +50,8 @@
     "BoomboxUseGuardMixin",
     "BoomboxUseReleaseMixin",
     "XaeroTeleportMenuMixin",
-    "XaeroOptionAccessor"
+    "XaeroOptionAccessor",
+    "XaeroPartyMarkerMixin"
   ],
   "injectors": {
     "defaultRequire": 0
