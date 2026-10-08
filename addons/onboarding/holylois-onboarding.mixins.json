@@ -21,7 +21,8 @@
     "AccountAliasLoginMixin",
     "AccountAliasRecordMixin",
     "AuthFloatingMixin",
-    "CelebrationFireworkMixin"
+    "CelebrationFireworkMixin",
+    "AdminCommandsMixin"
   ],
   "injectors": {
     "defaultRequire": 1

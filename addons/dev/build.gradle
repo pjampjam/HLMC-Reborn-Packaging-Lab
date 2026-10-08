@@ -32,7 +32,7 @@ def syncServerMods = tasks.register('syncServerMods', Sync) {
 loom {
     runs {
         client { runDir = '../run/client'; vmArgs '-Xmx4G' }
-        server { runDir = '../run/server'; vmArgs '-Xmx4G' }
+        server { runDir = '../run/server'; vmArgs '-Xmx4G', '-Dholylois.commandAudit=true' }
     }
 }
 tasks.named('runClient') { dependsOn syncClientMods }

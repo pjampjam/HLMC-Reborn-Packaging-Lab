@@ -44,7 +44,7 @@ members_cache = {}
 def members(cls):
     if cls not in members_cache:
         out = subprocess.run([JAVAP, '-p', '-cp', str(index[cls]), cls], capture_output=True, text=True).stdout
-        names = set(re.findall(r'(?:^|\s)([\w$<>]+)\(', out))
+        names = {name.rsplit('.', 1)[-1] for name in re.findall(r'(?:^|\s)([\w$<>.]+)\(', out)}  # constructors print fully qualified
         simple = cls.rsplit('.', 1)[-1].split('$')[-1]
         if simple in names: names.add('<init>')
         members_cache[cls] = names
