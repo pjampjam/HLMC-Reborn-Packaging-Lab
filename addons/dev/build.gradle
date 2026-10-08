@@ -36,4 +36,5 @@ loom {
     }
 }
 tasks.named('runClient') { dependsOn syncClientMods }
-tasks.named('runServer') { dependsOn syncServerMods }
+// Console input (e.g. `stop`, `op NAME`) reaches the test server.
+tasks.named('runServer') { dependsOn syncServerMods; standardInput = System.in }

@@ -34,6 +34,9 @@ jobs:
       # The live radio test needs real internet streams; it runs locally before releases instead.
       - name: Build and run every add-on test
         run: ./gradlew build -PskipNetworkTests --console=plain
+      # Extras mixins are optional (defaultRequire 0) and fail silently at runtime; this fails the build instead.
+      - name: Check every mixin target exists in the shipped jars
+        run: python3 check-mixin-targets.py
       - uses: actions/upload-artifact@v4
         with:
           name: holylois-addons
