@@ -1,0 +1,5 @@
+// Onboarding shares the travel/account payload types with Holy Lois Extras.
+dependencies {
+    compileOnly project(':extras')
+    testRuntimeOnly project(':extras')
+}

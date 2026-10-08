@@ -1,0 +1,77 @@
+// Holy Lois add-ons. Minecraft 26.3 is unobfuscated, so Loom needs no mappings. Every add-on keeps its flat folder:
+// *.java (tests are *Test.java with a main method), fabric.mod.json, *.mixins.json and assets/data next to them.
+// Third-party mods are compile-only jars from deps.lock.json (run `python fetch-deps.py` first): the exact pack/server bytes.
+import groovy.json.JsonSlurper
+
+plugins {
+    id 'net.fabricmc.fabric-loom' version '1.18.3' apply false
+}
+
+def deps = file('.deps')
+def legends = file('../../HLMC-Reborn/server/legends')
+
+subprojects {
+    apply plugin: 'net.fabricmc.fabric-loom'
+
+    def meta = new JsonSlurper().parse(file('fabric.mod.json'))
+    version = meta.version
+    base.archivesName = meta.id
+
+    java {
+        toolchain.languageVersion = JavaLanguageVersion.of(25)
+    }
+    tasks.withType(JavaCompile).configureEach {
+        options.encoding = 'UTF-8'
+        options.release = 25
+        options.compilerArgs += ['-Xlint:-options', '-proc:none']
+    }
+
+    sourceSets {
+        main {
+            java { srcDirs = ['.']; include '*.java'; exclude '*Test.java' }
+            resources {
+                srcDirs = ['.']
+                include 'fabric.mod.json', '*.mixins.json', 'assets/**', 'data/**', 'icon.png', 'pack.png', 'README.md', '*.txt'
+            }
+        }
+        test {
+            java { srcDirs = ['.']; include '*Test.java' }
+            resources { srcDirs = [] }
+            compileClasspath += main.output + main.compileClasspath
+            runtimeClasspath += main.output + main.compileClasspath
+        }
+    }
+
+    dependencies {
+        minecraft 'com.mojang:minecraft:26.3'
+        implementation 'net.fabricmc:fabric-loader:0.19.5'
+        compileOnly fileTree(dir: deps, include: '*.jar')
+        compileOnly fileTree(dir: new File(deps, 'nested'), include: '*.jar')
+    }
+
+    // Shipped jars carry their sources (minus tests) under src/, as the old compile scripts did.
+    jar {
+        archiveFileName = "${meta.id}-${meta.version}+26.3.jar"
+        from(sourceSets.main.java) { into 'src' }
+    }
+
+    // Every *Test.java is a main-method test (no JUnit); `check` runs them all. -PskipNetworkTests skips the live radio test.
+    tasks.named('test') { enabled = false }
+    def tests = fileTree(dir: projectDir, include: '*Test.java').files.collect { it.name - '.java' }.sort()
+    tests.each { test ->
+        def testPackage = (file("${test}.java").text =~ /package\s+([\w.]+);/)[0][1]
+        def run = tasks.register("run${test}", JavaExec) {
+            group = 'verification'
+            description = "Runs ${test}"
+            classpath = sourceSets.test.runtimeClasspath
+            mainClass = "${testPackage}.${test}"
+            // Tests may write logs/configs; keep them out of the source folder.
+            workingDir = layout.buildDirectory.dir('test-run').get().asFile
+            doFirst { workingDir.mkdirs() }
+            javaLauncher = javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(25) }
+            if (test == 'BoomboxTest') { args '16'; onlyIf { !project.hasProperty('skipNetworkTests') } }
+            if (test == 'LegendsTest') { args(['holylois-legends.json', 'holylois-fish.json'].collect { new File(legends, it) }.findAll { it.exists() }*.path) }
+        }
+        tasks.named('check') { dependsOn run }
+    }
+}

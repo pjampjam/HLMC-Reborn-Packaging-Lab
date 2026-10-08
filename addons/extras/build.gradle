@@ -1,0 +1,26 @@
+// JLayer (LGPL-2.1) decodes the boombox MP3 streams. Fabric only loads nested jars with their own fabric.mod.json,
+// so the jar ships as META-INF/jars/jlayer-1.0.1-holylois.jar with a small generated one (see fabric.mod.json "jars").
+import groovy.json.JsonOutput
+
+configurations { jlayer }
+dependencies {
+    jlayer 'javazoom:jlayer:1.0.1'
+    compileOnly 'javazoom:jlayer:1.0.1'
+    testRuntimeOnly 'javazoom:jlayer:1.0.1'
+}
+repositories { mavenCentral() }
+
+def wrapJlayer = tasks.register('wrapJlayer', Zip) {
+    archiveFileName = 'jlayer-1.0.1-holylois.jar'
+    destinationDirectory = layout.buildDirectory.dir('jlayer')
+    from({ zipTree(configurations.jlayer.singleFile) }) {
+        exclude { it.path.toUpperCase().startsWith('META-INF/') && !it.path.toUpperCase().startsWith('META-INF/LICENSE') }
+    }
+    from(resources.text.fromString(JsonOutput.toJson([schemaVersion: 1, id: 'jlayer', version: '1.0.1',
+            name: 'JLayer (javazoom, LGPL-2.1)', license: 'LGPL-2.1']))) { rename { 'fabric.mod.json' } }
+}
+
+jar {
+    dependsOn wrapJlayer
+    from(wrapJlayer) { into 'META-INF/jars' }
+}

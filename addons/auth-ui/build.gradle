@@ -1,0 +1,5 @@
+// The login screen steps aside for the Extras account screen.
+dependencies {
+    compileOnly project(':extras')
+    testRuntimeOnly project(':extras')
+}

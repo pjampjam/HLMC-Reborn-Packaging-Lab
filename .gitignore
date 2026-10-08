@@ -9,3 +9,5 @@ test-output/
 *.dll
 *.pdb
 *.cab
+addons/.deps/
+addons/run/
