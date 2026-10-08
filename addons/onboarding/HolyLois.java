@@ -74,7 +74,8 @@ public final class HolyLois implements ModInitializer {
             dispatcher.register(net.minecraft.commands.Commands.literal("structures").executes(context -> Discoveries.here(context.getSource().getPlayerOrException())));
         });
         ServerLifecycleEvents.SERVER_STARTED.register(this::load);
-        ServerLifecycleEvents.SERVER_STOPPING.register(server -> Afk.save());
+        ServerLifecycleEvents.SERVER_STOPPING.register(server -> { Afk.save(); DeathLoot.save(); });
+        net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents.ENTITY_UNLOAD.register((entity, level) -> safely("death loot", () -> DeathLoot.unloaded(entity)));
         net.fabricmc.fabric.api.event.player.UseItemCallback.EVENT.register((player, level, hand) ->
             player instanceof net.minecraft.server.level.ServerPlayer sp && openLootbox(sp, sp.getItemInHand(hand))
                 ? net.minecraft.world.InteractionResult.SUCCESS : net.minecraft.world.InteractionResult.PASS);
@@ -136,6 +137,7 @@ public final class HolyLois implements ModInitializer {
         claims.load(server);
         Afk.load(server.getWorldPath(LevelResource.ROOT));
         redeem.load(server);
+        DeathLoot.load(server);
         try {
             if (Files.exists(stateFile)) {
                 state = JSON.fromJson(Files.readString(stateFile),State.class);
@@ -189,6 +191,7 @@ public final class HolyLois implements ModInitializer {
         safely("events", () -> events.tick(server));
         safely("afk", () -> Afk.tick(server));
         safely("redeem", () -> redeem.tick(server));
+        safely("death loot", () -> DeathLoot.tick(server));
         safely("rtp", () -> rtp.tick(server, rtpRadius));
         safely("combat", () -> CombatTag.tick(server));
         if (server.getTickCount()%6000 == 0) for (var player : server.getPlayerList().getPlayers()) safely("claims", () -> claims.refresh(player));

@@ -35,6 +35,9 @@ mods = re.search(r'Loading (\d+) mods', text)
 print('ready:', ready, f'({int(time.time() - start)} s)', '| mods:', mods.group(1) if mods else '?')
 for line in text.splitlines():
     if re.search(r'holylois|Holy Lois', line, re.I) and 'INFO' in line: print('  ' + line[:200])
-problems = [l for l in text.splitlines() if re.search(r'/ERROR\]|Mixin apply failed|InvalidInjectionException|could not find any targets|Critical injection failure', l)]
+# Known noise, also on live: REI cannot show ~290 brewing recipes; Windows performance counters.
+NOISE = r'Failed to fill display for recipe|HkeyPerformanceDataUtil'
+problems = [l for l in text.splitlines() if re.search(r'/ERROR\]|Mixin apply failed|InvalidInjectionException|could not find any targets|Critical injection failure', l)
+            and not re.search(NOISE, l)]
 print(f'{len(problems)} error lines'); print('\n'.join('  ' + l[:240] for l in problems[:25]))
 sys.exit(0 if ready else 1)

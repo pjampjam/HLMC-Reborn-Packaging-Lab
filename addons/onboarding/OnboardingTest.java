@@ -79,6 +79,18 @@ public final class OnboardingTest {
         check(Afk.effective(72000,600)==60000&&Afk.effective(100,600)==0,"AFK seconds come off the played time and never below zero");
         check(!Quiet.allow("pjampjam left the game","multiplayer.player.left")&&!Quiet.allow("pjampjam has made the advancement [X]","chat.type.advancement.task")&&!Quiet.allow("pjampjam is now AFK.","")
             &&Quiet.allow("pjampjam fell from a high place","death.fell.accident.generic")&&Quiet.allow("Elza left the game","multiplayer.player.left")&&Quiet.allow("pjampjams cat left","")==true,"Quiet names hide joins, leaves, AFK and advancements but not deaths or other players");
+        var loot=new DeathLoot.Tracker();var owner=java.util.UUID.randomUUID();var a=java.util.UUID.randomUUID();var b=java.util.UUID.randomUUID();var c=java.util.UUID.randomUUID();
+        loot.track(owner,"minecraft:overworld",10,64,10,1000,java.util.List.of(a,b));loot.track(owner,"minecraft:overworld",500,64,500,2000,java.util.List.of());
+        check(loot.state.active.size()==1,"A death without drops is not tracked");
+        loot.merged(a,c);loot.removed(a);loot.removed(b);
+        check(loot.state.gone.isEmpty()&&loot.state.active.size()==1,"Death loot merged into another stack keeps the marker");
+        loot.removed(c);
+        check(loot.state.gone.size()==1&&loot.state.active.isEmpty()&&loot.byItem.isEmpty(),"The marker goes once every drop is gone");
+        var d=java.util.UUID.randomUUID();var e=java.util.UUID.randomUUID();
+        loot.track(owner,"minecraft:overworld",10,64,10,3000,java.util.List.of(d));loot.track(owner,"minecraft:overworld",11,64,10,4000,java.util.List.of(e));loot.removed(d);
+        check(loot.state.gone.size()==1,"A second death at the same spot with loot left keeps the marker");
+        loot.state.active.get(0).time=0;loot.prune(DeathLoot.KEEP_ACTIVE_MS+1);
+        check(loot.state.active.isEmpty()&&loot.byItem.isEmpty(),"Deaths in chunks nobody visits are forgotten after 30 days");
         System.out.println("Passed " + checked + " onboarding, AFK ledger, secret code and quiet name, greeting, name day, bot wall, leaderboard, discovery, death, daily reward, chair, holiday, donate, land, rtp, support and combat checks");
     }
     private static void check(boolean value,String message) {checked++;if(!value)throw new AssertionError(message);}

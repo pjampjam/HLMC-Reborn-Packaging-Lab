@@ -120,6 +120,7 @@ public final class Boombox implements ModInitializer {
             PayloadTypeRegistry.serverboundPlay().register(AccountIntent.TYPE,AccountIntent.CODEC);
         }
         PvpDeath.register();
+        DeathLootGone.register();
         PackCheck.register();
         ModCheck.register();
         Legends.register();
