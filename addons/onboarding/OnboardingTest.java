@@ -68,7 +68,9 @@ public final class OnboardingTest {
         check(Redeem.code("test-secret","2026-10-05").equals("HL-QZB2-QA3Q")&&Redeem.code("test-secret","2026-10-06").equals("HL-7AB3-Z0G0"),"Daily code matches the website's HMAC function");
         check(Redeem.normalize("hl-qzb2 qa3q").equals(Redeem.normalize("HL-QZB2-QA3Q"))&&Redeem.normalize("HL-0O1I").equals(Redeem.normalize("HL-001L")),"Typed codes ignore case, spaces, dashes and look-alikes");
         var noon=java.time.LocalDateTime.of(2026,10,6,12,0); var early=java.time.LocalDateTime.of(2026,10,6,0,30);
-        check(Redeem.matches("test-secret","HL-7AB3-Z0G0",noon)&&!Redeem.matches("test-secret","HL-QZB2-QA3Q",noon)&&Redeem.matches("test-secret","HL-QZB2-QA3Q",early)&&!Redeem.matches("test-secret","HL-0000-0000",noon),"Today's code works, yesterday's only until 01:00 UTC");
+        check(Redeem.matches("test-secret","HL-7AB3-Z0G0",noon)&&!Redeem.matches("test-secret","HL-QZB2-QA3Q",noon)&&Redeem.matches("test-secret","HL-QZB2-QA3Q",early)&&!Redeem.matches("test-secret","HL-0000-0000",noon),"Today's code works, yesterday's only until 01:00 Riga time");
+        check(Redeem.eligibility(3599,9999).contains("2 hours")&&Redeem.eligibility(7200,1199).contains("1 min more today")&&Redeem.eligibility(7200,1200)==null&&Redeem.eligibility(50000,0).contains("20 min more today"),"Codes need 2 h active play and 20 active minutes that day");
+        check(Redeem.duration(4500).equals("1h 15m")&&Redeem.duration(30).equals("1 min"),"Redeem waits read as hours and minutes");
         var player=java.util.UUID.fromString("00000000-0000-0000-0000-000000000042");
         check(Redeem.roll("test-secret",player,"2026-10-05").equals(Redeem.roll("test-secret",player,"2026-10-05")),"The prize cannot be rerolled");
         var counts=new java.util.HashMap<String,Integer>();

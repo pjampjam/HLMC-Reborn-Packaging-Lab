@@ -23,13 +23,14 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 import java.util.*;
 
 /**
- * /redeem CODE: the secret code of the day from the holylois.com gold block easter egg. One code per UTC day for everybody, one redeem
+ * /redeem CODE: the secret code of the day from the holylois.com gold block easter egg. One code per Riga day for everybody, one redeem
  * per player per day, and the prize is rolled from the player and the date so trying again cannot change it. The code is
- * "HL-XXXX-XXXX" from HMAC-SHA256(secret, "holylois-daily:" + UTC date), the same function the website runs (docs/DAILY-CODE.md there).
+ * "HL-XXXX-XXXX" from HMAC-SHA256(secret, "holylois-daily:" + Riga date), the same function the website runs (docs/DAILY-CODE.md there).
+ * Against alt accounts a redeem needs 2 hours of active play in total and 20 active minutes on the code's day (AFK time never counts).
  * The secret lives in config/holylois-daily.secret; without it the command says the code is not active.
  */
 final class Redeem {
@@ -37,12 +38,19 @@ final class Redeem {
     private static final Gson JSON = new GsonBuilder().setPrettyPrinting().create();
     private static final String ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
     private static final Path SECRET = Path.of("config", "holylois-daily.secret");
-    static final class State { public int version = 1; public Map<String, String> last = new HashMap<>(); }
+    static final class State {
+        public int version = 1; public Map<String, String> last = new HashMap<>();
+        /** Active (online, not AFK) seconds per player on activeDay; reset when the Riga day changes. */
+        public String activeDay = ""; public Map<String, Long> activeToday = new HashMap<>();
+    }
+    static final ZoneId ZONE = ZoneId.of("Europe/Riga");
+    static final long TOTAL_ACTIVE_SECONDS = 2 * 3600, TODAY_ACTIVE_SECONDS = 20 * 60;
 
     private final DailyRewards daily;
     private State state = new State();
     private Path file;
     private final Map<UUID, long[]> misses = new HashMap<>(); // {count, window start}
+    private boolean activeDirty;
 
     Redeem(DailyRewards daily) { this.daily = daily; }
 
@@ -62,7 +70,7 @@ final class Redeem {
         catch (Exception error) { return null; }
     }
 
-    /** The code for a UTC date, identical to the website's. */
+    /** The code for a Riga date, identical to the website's. */
     static String code(String secret, String day) {
         try {
             var mac = Mac.getInstance("HmacSHA256");
@@ -79,11 +87,35 @@ final class Redeem {
         return input.toUpperCase(Locale.ROOT).replaceAll("[^A-Z0-9]", "").replace('O', '0').replace('I', '1').replace('L', '1');
     }
 
-    /** Does the typed text match today's code, or yesterday's until 01:00 UTC? */
-    static boolean matches(String secret, String typed, LocalDateTime nowUtc) {
-        String want = normalize(code(secret, nowUtc.toLocalDate().toString()));
+    /** Does the typed text match today's code, or yesterday's until 01:00 Riga time? */
+    static boolean matches(String secret, String typed, LocalDateTime nowRiga) {
+        String want = normalize(code(secret, nowRiga.toLocalDate().toString()));
         if (normalize(typed).equals(want)) return true;
-        return nowUtc.getHour() < 1 && normalize(typed).equals(normalize(code(secret, nowUtc.toLocalDate().minusDays(1).toString())));
+        return nowRiga.getHour() < 1 && normalize(typed).equals(normalize(code(secret, nowRiga.toLocalDate().minusDays(1).toString())));
+    }
+
+    /** Null when the player may redeem, otherwise the reason (alt protection: real play, every day). */
+    static String eligibility(long totalActiveSeconds, long todayActiveSeconds) {
+        if (totalActiveSeconds < TOTAL_ACTIVE_SECONDS)
+            return "Codes unlock after 2 hours of active play on Holy Lois. You have " + duration(totalActiveSeconds) + " so far.";
+        if (todayActiveSeconds < TODAY_ACTIVE_SECONDS)
+            return "Play " + duration(TODAY_ACTIVE_SECONDS - todayActiveSeconds) + " more today, then redeem again. AFK time does not count.";
+        return null;
+    }
+
+    static String duration(long seconds) {
+        long minutes = Math.max(1, (seconds + 59) / 60);
+        return minutes >= 60 ? (minutes / 60) + "h " + (minutes % 60) + "m" : minutes + " min";
+    }
+
+    /** Once per second: count active time on the current Riga day. */
+    void tick(MinecraftServer server) {
+        if (file == null) return;
+        String day = LocalDate.now(ZONE).toString();
+        if (!day.equals(state.activeDay)) { state.activeDay = day; state.activeToday.clear(); activeDirty = true; }
+        for (ServerPlayer player : server.getPlayerList().getPlayers())
+            if (!Afk.afkNow(player)) { state.activeToday.merge(player.getUUID().toString(), 1L, Long::sum); activeDirty = true; }
+        if (activeDirty && server.getTickCount() % 1200 == 0) { save(); activeDirty = false; }
     }
 
     record Prize(String key, int weight) {}
@@ -113,11 +145,12 @@ final class Redeem {
         var server = player.level().getServer();
         String secret = secret();
         if (secret == null || file == null) { say(player, "The secret code is not active right now.", ChatFormatting.GRAY); return 0; }
-        var now = LocalDateTime.now(ZoneOffset.UTC);
+        var now = LocalDateTime.now(ZONE);
         String day = now.toLocalDate().toString();
         var id = player.getUUID();
-        long[] miss = misses.computeIfAbsent(id, k -> new long[] {0, now.toEpochSecond(ZoneOffset.UTC)});
-        if (now.toEpochSecond(ZoneOffset.UTC) - miss[1] > 3600) { miss[0] = 0; miss[1] = now.toEpochSecond(ZoneOffset.UTC); }
+        long epoch = now.atZone(ZONE).toEpochSecond();
+        long[] miss = misses.computeIfAbsent(id, k -> new long[] {0, epoch});
+        if (epoch - miss[1] > 3600) { miss[0] = 0; miss[1] = epoch; }
         if (miss[0] >= 5) { say(player, "Too many wrong codes. Try again in an hour.", ChatFormatting.RED); return 0; }
         if (!matches(secret, typed, now)) {
             miss[0]++;
@@ -125,6 +158,10 @@ final class Redeem {
             return 0;
         }
         if (day.equals(state.last.get(id.toString()))) { say(player, "You already used today's code. A new one comes tomorrow.", ChatFormatting.YELLOW); return 0; }
+        long played = player.getStats().getValue(net.minecraft.stats.Stats.CUSTOM.get(net.minecraft.stats.Stats.PLAY_TIME));
+        String blocked = eligibility(Afk.effectiveTicks(id, played) / 20,
+            day.equals(state.activeDay) ? state.activeToday.getOrDefault(id.toString(), 0L) : 0L);
+        if (blocked != null) { say(player, blocked, ChatFormatting.YELLOW); return 0; }
         state.last.put(id.toString(), day);
         save();
         String name = player.getGameProfile().name();
@@ -141,7 +178,7 @@ final class Redeem {
     }
 
     private String give(MinecraftServer server, ServerPlayer player, String prize, String name) {
-        var random = new Random(player.getUUID().getLeastSignificantBits() ^ LocalDate.now(ZoneOffset.UTC).toEpochDay());
+        var random = new Random(player.getUUID().getLeastSignificantBits() ^ LocalDate.now(ZONE).toEpochDay());
         switch (prize) {
             case "lootbox" -> {
                 DailyRewards.give(player, DailyRewards.lootbox(1, name));

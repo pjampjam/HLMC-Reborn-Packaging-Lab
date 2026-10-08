@@ -188,6 +188,7 @@ public final class HolyLois implements ModInitializer {
         if (server.getTickCount()%2400 == 0) Leaderboards.refreshAsync();
         safely("events", () -> events.tick(server));
         safely("afk", () -> Afk.tick(server));
+        safely("redeem", () -> redeem.tick(server));
         safely("rtp", () -> rtp.tick(server, rtpRadius));
         safely("combat", () -> CombatTag.tick(server));
         if (server.getTickCount()%6000 == 0) for (var player : server.getPlayerList().getPlayers()) safely("claims", () -> claims.refresh(player));
