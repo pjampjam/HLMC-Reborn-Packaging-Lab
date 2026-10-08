@@ -1,0 +1,4 @@
+// Test-only mod: never shipped. Compiles against Holy Lois Extras and the locked client jars (Xaero, Fabric API).
+dependencies {
+    compileOnly project(':extras')
+}

@@ -11,3 +11,5 @@ test-output/
 *.cab
 addons/.deps/
 addons/run/
+addons/run-gametest.log
+addons/gametest-threads.txt

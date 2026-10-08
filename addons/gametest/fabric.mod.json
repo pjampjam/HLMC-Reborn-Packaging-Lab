@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "id": "holylois-gametest",
+  "version": "1.0.0",
+  "name": "Holy Lois client tests",
+  "description": "Automated in-game tests for the Holy Lois add-ons (gradlew :dev:runClientGameTest). Never shipped to players.",
+  "authors": ["pjampjam"],
+  "license": "MIT",
+  "environment": "client",
+  "entrypoints": {
+    "fabric-client-gametest": ["holylois.gametest.HolyLoisClientTests"]
+  },
+  "depends": {
+    "fabricloader": ">=0.19.5",
+    "fabric-client-gametest-api-v1": "*",
+    "holylois-extras": "*"
+  }
+}

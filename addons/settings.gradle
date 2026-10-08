@@ -7,4 +7,4 @@ pluginManagement {
 }
 
 rootProject.name = 'holylois-addons'
-include 'extras', 'onboarding', 'auth-ui', 'dev'
+include 'extras', 'onboarding', 'auth-ui', 'gametest', 'dev'

@@ -1,4 +1,4 @@
-package holylois.boombox;
+package holylois.boombox.mixins;
 
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;

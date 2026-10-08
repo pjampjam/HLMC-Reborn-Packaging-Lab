@@ -2,6 +2,9 @@
 // the client gets the pack's mods, the server gets the live server's mods, both get our freshly built add-ons.
 //   gradlew :dev:runServer   -> addons/run/server (join localhost:25565; accept the EULA once in eula.txt)
 //   gradlew :dev:runClient   -> addons/run/client (offline dev name; the server runs offline-mode)
+//   gradlew :dev:runClientGameTest -> addons/run/gametest: automated in-game tests (gametest/), exits with the result
+// Hot reload: when IntelliJ's JetBrains Runtime is installed, runClient uses it with enhanced class redefinition and the
+// Mixin agent. Start runClient with Debug in IntelliJ, edit, then Build > Recompile: changes apply without a restart.
 import groovy.json.JsonSlurper
 
 apply plugin: 'net.fabricmc.fabric-loom'
@@ -16,11 +19,38 @@ dependencies {
 def lock = new JsonSlurper().parse(rootProject.file('deps.lock.json')).jars
 def lockedJars = { sides -> lock.findAll { name, entry -> entry.side in sides }.keySet().collect { rootProject.file(".deps/${it}") } }
 
+// Some mods carry stray copies of other libraries: Iceberg an old NightConfig, Runeforged ModMenu's API. In the dev launcher
+// such a copy can win over the real one and crash start-up (NoSuchFieldError / NoSuchMethodError). Players get the real
+// ones, so test runs drop the copies (python check-duplicate-classes.py finds new ones).
+def strays = ['Iceberg-': 'com/electronwill/**', 'runeforged-': 'com/terraformersmc/**']
+def strayJars = strays.collectEntries { prefix, pkg -> [(prefix): lock.keySet().find { it.startsWith(prefix) }] }.findAll { it.value }
+def withoutStrays = tasks.register('withoutStrayLibraries', Sync) {
+    into layout.buildDirectory.dir('patched-mods')
+}
+strayJars.each { prefix, jar ->
+    def zip = tasks.register("patch${prefix.replaceAll('[^A-Za-z]', '')}", Zip) {
+        archiveFileName = jar
+        destinationDirectory = layout.buildDirectory.dir("patched/${prefix}")
+        from(zipTree(rootProject.file(".deps/${jar}"))) { exclude strays[prefix] }
+    }
+    withoutStrays.configure { from zip }
+}
+def clientJars = { lockedJars(['client', 'both']).findAll { jar -> !strayJars.values().contains(jar.name) } }
+
 def syncClientMods = tasks.register('syncClientMods', Sync) {
-    from lockedJars(['client', 'both'])
+    from clientJars()
+    from withoutStrays
     from project(':extras').tasks.named('jar')
     from project(':auth-ui').tasks.named('jar')
     into rootProject.file('run/client/mods')
+}
+def syncGameTestMods = tasks.register('syncGameTestMods', Sync) {
+    from clientJars()
+    from withoutStrays
+    from project(':extras').tasks.named('jar')
+    from project(':auth-ui').tasks.named('jar')
+    from project(':gametest').tasks.named('jar')
+    into rootProject.file('run/gametest/mods')
 }
 def syncServerMods = tasks.register('syncServerMods', Sync) {
     from lockedJars(['server', 'both'])
@@ -32,9 +62,29 @@ def syncServerMods = tasks.register('syncServerMods', Sync) {
 loom {
     runs {
         client { runDir = '../run/client'; vmArgs '-Xmx4G' }
+        clientGameTest {
+            client()
+            runDir = '../run/gametest'
+            vmArgs '-Xmx4G', '-Dfabric.client.gametest', '-Dfabric.client.gametest.disableJoinAsyncStackTraces=true'
+        }
         server { runDir = '../run/server'; vmArgs '-Xmx4G', '-Dholylois.commandAudit=true' }
     }
 }
 tasks.named('runClient') { dependsOn syncClientMods }
+// A stuck test freezes the window (the game only ticks when the test says so): stop it after 10 minutes.
+tasks.named('runClientGameTest') { dependsOn syncGameTestMods; timeout = java.time.Duration.ofMinutes(10) }
+
+def jbr = (file('C:/Program Files/JetBrains').listFiles() ?: []).collect { new File(it, 'jbr/bin/java.exe') }
+    .findAll { it.exists() }.sort { it.parentFile.parentFile.parentFile.name }.reverse().find()
+if (jbr != null) tasks.named('runClient') {
+    javaLauncher.value(null as org.gradle.jvm.toolchain.JavaLauncher)
+    executable = jbr.absolutePath
+    jvmArgs '-XX:+AllowEnhancedClassRedefinition'
+    doFirst {
+        def mixin = configurations.runtimeClasspath.find { it.name.startsWith('sponge-mixin') }
+        if (mixin) jvmArgs "-javaagent:${mixin.absolutePath}"
+        logger.lifecycle("Hot reload ready: ${jbr.parentFile.parentFile.parentFile.name} JetBrains Runtime + Mixin agent")
+    }
+}
 // Console input (e.g. `stop`, `op NAME`) reaches the test server.
 tasks.named('runServer') { dependsOn syncServerMods; standardInput = System.in }

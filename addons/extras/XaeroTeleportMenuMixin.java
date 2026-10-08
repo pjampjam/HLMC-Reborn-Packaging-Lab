@@ -1,4 +1,4 @@
-package holylois.boombox;
+package holylois.boombox.mixins;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.server.permissions.Permissions;

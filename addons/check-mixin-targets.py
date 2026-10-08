@@ -4,7 +4,7 @@ Extras uses defaultRequire 0, so a renamed target fails silently at runtime (the
 that). This catches it at build time. Usage: python check-mixin-targets.py [MINECRAFT_JAR]   (needs javap on PATH or JAVA_HOME)
 Exit code 1 lists every missing class or method.
 """
-import os, re, shutil, subprocess, sys, zipfile
+import json, os, re, shutil, subprocess, sys, zipfile
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -85,7 +85,16 @@ for addon in ADDONS:
             if missing and len(targets) > 1:
                 missing = [x for x in missing if not any(t in index and x in members(t) for t in targets)]
             for name in missing: problems.append(f'{addon}/{source.name}: {target} has no method {name}')
-print(f'Checked {checked} mixin targets in {len(ADDONS)} add-ons against {len(index)} classes.')
+# Every class a mixin config lists must exist under the config's package (a wrong package fails silently in game).
+for addon in ADDONS:
+    for config in (HERE / addon).glob('*.mixins.json'):
+        data = json.loads(config.read_text(encoding='utf-8'))
+        for side in ('mixins', 'client', 'server'):
+            for name in data.get(side, []):
+                full = data['package'] + '.' + name
+                if full not in own: problems.append(f'{addon}/{config.name}: {side} lists {name}, but no class {full} exists (package?)')
+                checked += 1
+print(f'Checked {checked} mixin targets and config entries in {len(ADDONS)} add-ons against {len(index)} classes.')
 if problems:
     print('\n'.join('MISSING ' + p for p in problems)); sys.exit(1)
 print('All mixin target classes and injected methods exist.')
