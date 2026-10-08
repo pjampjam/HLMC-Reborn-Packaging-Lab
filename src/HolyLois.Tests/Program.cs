@@ -296,6 +296,24 @@ tests.Add(("Fresh installs activate resource packs before options exist", async 
     await installer.InstallAsync(manifest,new Dictionary<string,byte[]>{["config/yosbr/options.txt"]=Encoding.UTF8.GetBytes("resourcePacks:[\"vanilla\"]\nrenderDistance:12\n")});
     Check(File.ReadAllText(Path.Combine(game,"options.txt")).Contains("file/Objects.zip")&&installer.ReadReceipt()!.Version==manifest.Version,"Fresh resource pack activation failed.");
 }));
+tests.Add(("Optional visuals stay off on installation and repair; toggling preserves personal options", async () => {
+    var d=Dir("optional-visuals");var game=Path.Combine(d,"game");var down=new FakeDownloader(Path.Combine(d,"cache"));
+    down.Data["mods/a.jar"]="mod";down.Data["resourcepacks/Optional3D.zip"]="model";
+    var optional=FileSpec("resourcepacks/Optional3D.zip","model") with {AutoEnable=false};
+    var manifest=Manifest(FileSpec("mods/a.jar","mod"),optional) with {ApplyDefaultsOnUpdate=true};
+    var installer=new PackInstaller(game,Path.Combine(d,"state"),down);
+    await installer.InstallAsync(manifest,new Dictionary<string,byte[]>{["config/yosbr/options.txt"]=Encoding.UTF8.GetBytes("resourcePacks:[\"vanilla\",\"file/personal.zip\"]\nkeybind:mine\n")});
+    var path=Path.Combine(game,"options.txt");var original=File.ReadAllBytes(path);
+    Check(!Encoding.UTF8.GetString(original).Contains("Optional3D")&&!ModGuard.EnsureResourcePacks(game,manifest),"Optional pack activated without selection.");
+    var enabled=ResourcePackOptions.SetPack(original,"Optional3D.zip",true);
+    Check(Encoding.UTF8.GetString(enabled).Contains("Optional3D")&&Encoding.UTF8.GetString(enabled).Contains("file/personal.zip"),"Enabling lost a personal pack.");
+    var disabled=ResourcePackOptions.SetPack(enabled,"Optional3D.zip",false);
+    Check(disabled.SequenceEqual(original),"Disabling altered unrelated options or packs.");
+    Check(ResourcePackOptions.SetPack(disabled,"Optional3D.zip",false).SequenceEqual(original),"Repeated disabling was not idempotent.");
+    await Throws(()=>{_=ResourcePackOptions.SetPack(Encoding.UTF8.GetBytes("garbage"),"Optional3D.zip",false);return Task.CompletedTask;});
+    await Throws(()=>{_=ResourcePackOptions.SetPack(original,"../Optional3D.zip",false);return Task.CompletedTask;});
+    await Throws(()=>{ManifestSecurity.Validate(manifest with {Files=[FileSpec("mods/a.jar","mod") with {AutoEnable=false}]});return Task.CompletedTask;});
+}));
 tests.Add(("Private default files remain excluded", async () => {
     foreach(var path in new[]{"config/yosbr/config/voicechat/voicechat-client.properties","config/yosbr/config/accounts.json","config/yosbr/saves/world.txt"})await Throws(()=>{_=SharedDefaults.Target(path);return Task.CompletedTask;});
 }));
@@ -458,6 +476,9 @@ tests.Add(("Mod guard moves foreign jars aside, flags damaged mods and re-enable
     Check(report.Damaged.OrderBy(x => x).SequenceEqual(new[] { "mods/gone.jar", "mods/worn.jar" }), "Damaged or missing pack mods were not reported.");
     Check(report.PacksRestored && File.ReadAllText(Path.Combine(game, "options.txt")).Contains("\"file/Holy.zip\"") && File.ReadAllText(Path.Combine(game, "options.txt")).Contains("keybind:x"), "Resource pack was not re-enabled with settings kept.");
     Check(ModGuard.Run(game, state, manifest) is { Moved.Length: 0, PacksRestored: false }, "A second run changed things again.");
+    var optional = FileSpec("resourcepacks/Optional3D.zip", "optional") with { AutoEnable = false };
+    var optionalManifest = Manifest(good, worn, gone, pack, optional);
+    Check(!ModGuard.EnsureResourcePacks(game, optionalManifest) && !File.ReadAllText(Path.Combine(game,"options.txt")).Contains("Optional3D"),"An optional visual pack was forcibly activated.");
     File.WriteAllText(Path.Combine(game, "options.txt"), "garbage");
     Check(!ModGuard.EnsureResourcePacks(game, manifest) && File.ReadAllText(Path.Combine(game, "options.txt")) == "garbage", "Unreadable options were rewritten.");
     Check(ModGuard.Run(Path.Combine(root, "guard-missing"), state, manifest).Clean, "A missing instance was not ignored.");

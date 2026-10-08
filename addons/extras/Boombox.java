@@ -80,7 +80,7 @@ public final class Boombox implements ModInitializer {
             new Station("laut.fm Hardstyle", "https://stream.laut.fm/hardstyle"),
             new Station("laut.fm Techno", "https://stream.laut.fm/techno")));
         public float distance = 24f, volume = 0.55f;
-        public int maxPlaying = 6, maxPlayingPerChunk = 2;
+        public int maxPlaying = 6, maxPlayingPerChunk = 6;
     }
 
     record Session(RadioStream stream, AudioPlayer player, AudioChannel channel, int station, long[] lastHeld, float[] range) {}
@@ -111,11 +111,20 @@ public final class Boombox implements ModInitializer {
         CreativeModeTabEvents.modifyOutputEvent(ResourceKey.create(Registries.CREATIVE_MODE_TAB, Identifier.withDefaultNamespace("tools_and_utilities")))
             .register(output -> output.accept(ITEM));
         PayloadTypeRegistry.clientboundPlay().register(BoomboxNear.TYPE, BoomboxNear.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(RareCatchNotice.TYPE,RareCatchNotice.CODEC);
+        if (net.fabricmc.loader.api.FabricLoader.getInstance().getEnvironmentType()==net.fabricmc.api.EnvType.CLIENT) {
+            PayloadTypeRegistry.clientboundPlay().register(HomeState.TYPE,HomeState.CODEC);
+            PayloadTypeRegistry.clientboundPlay().register(MenuOpen.TYPE,MenuOpen.CODEC);
+            PayloadTypeRegistry.serverboundPlay().register(TravelIntent.TYPE,TravelIntent.CODEC);
+            PayloadTypeRegistry.clientboundPlay().register(AccountNotice.TYPE,AccountNotice.CODEC);
+            PayloadTypeRegistry.serverboundPlay().register(AccountIntent.TYPE,AccountIntent.CODEC);
+        }
         PvpDeath.register();
         PackCheck.register();
         ModCheck.register();
         Legends.register();
         PartySupport.register();
+        RelicPowers.register();
         PayloadTypeRegistry.serverboundPlay().register(BoomboxVolume.TYPE, BoomboxVolume.CODEC);
         ServerPlayNetworking.registerGlobalReceiver(BoomboxVolume.TYPE, (payload, context) -> changeVolume(context.player(), payload));
         loadConfig();

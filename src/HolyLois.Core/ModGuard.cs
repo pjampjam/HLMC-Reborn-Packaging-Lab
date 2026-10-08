@@ -49,7 +49,7 @@ public static class ModGuard
     {
         var options = SafePaths.Resolve(instanceRoot, "options.txt");
         if (!File.Exists(options)) return false;
-        var packs = manifest.Files.Where(f => f.Path.StartsWith("resourcepacks/", StringComparison.Ordinal))
+        var packs = manifest.Files.Where(f => f.Path.StartsWith("resourcepacks/", StringComparison.Ordinal) && f.AutoEnable != false)
             .Select(f => Path.GetFileName(f.Path)).ToArray();
         if (packs.Length == 0) return false;
         try

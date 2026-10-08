@@ -75,7 +75,7 @@ static async Task PreparePack(string key, string baseManifest, string profile, s
                 if (remoteFile.GetProperty("size").GetInt64() != size) throw new InvalidDataException("Publisher file size mismatch.");
                 url = remoteFile.GetProperty("url").GetString()!;
             }
-            files.Add(new(relative, url, size, hash));
+            files.Add(new(relative, url, size, hash, "managed", known?.AutoEnable));
             Console.WriteLine("Verified publisher source: " + relative);
         }
     }

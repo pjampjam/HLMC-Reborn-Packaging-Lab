@@ -4,7 +4,8 @@ using System.Text.Json.Serialization;
 
 namespace HolyLois.Core;
 
-public sealed record PackFile(string Path, string Url, long Size, string Sha256, string Policy = "managed");
+public sealed record PackFile(string Path, string Url, long Size, string Sha256, string Policy = "managed",
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)] bool? AutoEnable = null);
 public sealed record PackManifest(int Schema, string Version, string Minecraft, string Fabric,
     int Java, string Server, PackFile[] Files, PackFile[] LoaderFiles, PackFile? Defaults = null, ReleaseNote[]? History = null, bool ApplyDefaultsOnUpdate = false);
 public sealed record ReleaseNote(string Version, string Date, string Summary, string[] Added, string[] Removed, string[] Updated);
@@ -54,6 +55,8 @@ public static class ManifestSecurity
         foreach (var file in manifest.Files)
         {
             ValidateFile(file);
+            if(file.AutoEnable is not null && !file.Path.StartsWith("resourcepacks/",StringComparison.Ordinal))
+                throw new InvalidDataException("Optional activation is only supported for resource packs.");
             if (!paths.Add(file.Path)) throw new InvalidDataException("Release contains duplicate file paths.");
             var permitted = file.Path.StartsWith("mods/", StringComparison.Ordinal) && file.Path.EndsWith(".jar", StringComparison.Ordinal)
                 || file.Path.StartsWith("resourcepacks/", StringComparison.Ordinal) && file.Path.EndsWith(".zip", StringComparison.Ordinal)

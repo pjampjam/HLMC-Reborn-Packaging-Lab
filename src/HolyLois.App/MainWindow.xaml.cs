@@ -337,25 +337,19 @@ public partial class MainWindow : ThemedWindow
     }
     private async void SaveName_Click(object sender, RoutedEventArgs e) => await SaveNameAsync();
     private async void NameBox_KeyDown(object sender, System.Windows.Input.KeyEventArgs e) { if (e.Key == System.Windows.Input.Key.Enter) { e.Handled = true; await SaveNameAsync(); } }
-    private async Task SaveNameAsync()
+    private Task SaveNameAsync()
     {
         var name = NameBox.Text.Trim();
-        if (!PlayerNames.IsValid(name)) { ShowNameNote(T("NameInvalid"), true); return; }
+        if (!PlayerNames.IsValid(name)) { ShowNameNote(T("NameInvalid"), true); return Task.CompletedTask; }
         NameSaveButton.IsEnabled = false;
         try
         {
-            // A name this folder already played with is the player's own; only new names are checked against bought accounts.
-            var played = string.Equals(context.SuggestedPlayerName(), name, StringComparison.OrdinalIgnoreCase);
-            if (!played && !PlayerNames.Known(context.Players, name))
-            {
-                using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(6));
-                if (await context.IsPremiumNameAsync(name, timeout.Token) == true) { ShowNameNote(T("NamePremium"), true); return; }
-            }
             context.UsePlayerName(name); nameNote = null;
             StatusText.Text = string.Format(T("NameSaved"), context.PlayerName);
         }
         catch (Exception ex) when (ex is IOException or InvalidDataException or UnauthorizedAccessException) { ShowNameNote(ex.Message, true); }
         finally { NameSaveButton.IsEnabled = cancellation is null; Refresh(); }
+        return Task.CompletedTask;
     }
     private void ShowNameNote(string text, bool error)
     {

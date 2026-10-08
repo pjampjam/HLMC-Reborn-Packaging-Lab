@@ -59,6 +59,8 @@ public final class HolyLois implements ModInitializer {
         SkinStats.register();
         BlueMapSkins.register();
         PartyAliases.register();
+        TravelMenus.register();
+        AccountRequests.register();
         PayloadTypeRegistry.clientboundPlay().register(AuthStatus.TYPE, AuthStatus.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(holylois.auth.RewardNotice.TYPE, holylois.auth.RewardNotice.CODEC);
         if (net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("placeholder-api")) TabPlaceholders.register();
@@ -69,7 +71,6 @@ public final class HolyLois implements ModInitializer {
             claims.register(dispatcher);
             redeem.register(dispatcher);
             rtp.register(dispatcher);
-            HomeAlias.register(dispatcher);
             dispatcher.register(net.minecraft.commands.Commands.literal("structures").executes(context -> Discoveries.here(context.getSource().getPlayerOrException())));
         });
         ServerLifecycleEvents.SERVER_STARTED.register(this::load);

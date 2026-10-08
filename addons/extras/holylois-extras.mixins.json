@@ -10,7 +10,10 @@
     "ClaimMobPushMixin",
     "ClaimMobDamageMixin",
     "PartyEffectsMixin",
-    "ClaimFeedbackMixin"
+    "ClaimFeedbackMixin",
+    "RuneforgedAcquisitionInvoker",
+    "RuneforgedChestTransferMixin",
+    "RuneforgedInventoryClickMixin"
   ],
   "client": [
     "LiteminerScrollMixin",
@@ -29,6 +32,7 @@
     "ClickCommandMixin",
     "IpnToolSkipMixin",
     "ReiSortGuardMixin",
+    "SortKeyPressMixin",
     "BedCameraMixin",
     "ReiTagBuildMixin",
     "FirstPersonAimMixin",
@@ -41,7 +45,10 @@
     "VanillaFishingCurve",
     "FishingRenderedTipMixin",
     "LocalPlayerRenderStateMixin",
-    "LocalPlayerPoseMixin"
+    "LocalPlayerPoseMixin",
+    "PartyChatClickMixin",
+    "BoomboxUseGuardMixin",
+    "BoomboxUseReleaseMixin"
   ],
   "injectors": {
     "defaultRequire": 0

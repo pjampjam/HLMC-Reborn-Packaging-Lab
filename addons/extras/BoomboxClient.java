@@ -19,5 +19,10 @@ public final class BoomboxClient implements ClientModInitializer {
         ShaderLights.register();
         PackCheckClient.register();
         PartyHud.register();
+        TravelClient.register();
+        AccountScreen.register();
+        RareCatchHud.register();
+        RelicTooltips.register();
+        BoomboxUseGuard.register();
     }
 }

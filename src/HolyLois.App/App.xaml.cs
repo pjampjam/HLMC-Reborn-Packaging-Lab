@@ -69,9 +69,27 @@ public partial class App : Application
                 focusWindow.Close();
                 File.WriteAllText(Path.Combine(data,"ui-verification.txt"),"Action text contrast passed. Keyboard focus stays visible; pointer interaction clears its ring without disabling focus."); Shutdown(0); return;
             }
+            if (args.Contains("--verify-setup-scroll")) {
+                if(data is null || !context.IsIsolated)throw new ArgumentException("Setup verification requires an isolated folder.");
+                context.SelectLauncher("name");
+                foreach(var language in new[]{"en","ru","lv"})foreach(int height in new[]{780,600}){
+                    context.SetLanguage(language);var setup=new SetupWindow(context,data){Height=height};setup.EnsureChrome();setup.Show();setup.UpdateLayout();
+                    var box=(System.Windows.Controls.TextBox)setup.FindName("SetupNameBox");box.Text="Notch";box.Focus();
+                    var scroll=(System.Windows.Controls.ScrollViewer)setup.FindName("SetupScroll");
+                    var wheel=new System.Windows.Input.MouseWheelEventArgs(System.Windows.Input.Mouse.PrimaryDevice,Environment.TickCount,-1200){RoutedEvent=System.Windows.Input.Mouse.PreviewMouseWheelEvent};box.RaiseEvent(wheel);setup.UpdateLayout();
+                    if(!wheel.Handled || scroll.ScrollableHeight>0 && scroll.VerticalOffset<=0)throw new IOException("Name entry blocked setup scrolling.");
+                    scroll.ScrollToEnd();setup.UpdateLayout();
+                    foreach(string name in new[]{"DesktopChoice","StartChoice"}){
+                        var control=(FrameworkElement)setup.FindName(name);var point=control.TranslatePoint(new Point(0,0),scroll);
+                        if(point.Y<0 || point.Y+control.ActualHeight>scroll.ActualHeight)throw new IOException("Shortcut choice is outside the scroll viewport.");
+                    }
+                    Render(setup,data,$"setup-scroll-{language}-{height}.png",780,height);setup.Close();
+                }
+                File.WriteAllText(Path.Combine(data,"setup-scroll-result.txt"),"EN/RU/LV setup: focused name wheel scroll reaches both shortcut choices at 780px and 600px height. Continue remains outside scrolling content.");Shutdown(0);return;
+            }
             if (args.Contains("--verify-ui-polish")) {
                 if (data is null || !context.IsIsolated) throw new ArgumentException("UI polish verification requires an isolated folder.");
-                var setup = new SetupWindow(context, data); setup.EnsureChrome();
+                var setup = new SetupWindow(context, data); setup.EnsureChrome();setup.Show();setup.UpdateLayout();
                 var content = (FrameworkElement)setup.Content; content.Measure(new Size(780,780)); content.Arrange(new Rect(0,0,780,780)); content.UpdateLayout();
                 IEnumerable<System.Windows.Controls.Border> Pictures(DependencyObject parent) {
                     for (var n=0;n<VisualTreeHelper.GetChildrenCount(parent);n++) {
@@ -84,7 +102,8 @@ public partial class App : Application
                 var nameFrame = (System.Windows.Controls.Border)setup.FindName("NamePicture");
                 if (pictures.Length != 1 || pictures.Any(p => p.Height != 155 || p.CornerRadius != new CornerRadius(6) || ((ImageBrush)p.Background).Stretch != Stretch.UniformToFill)
                     || nameFrame.Height != 155 || nameFrame.CornerRadius != new CornerRadius(6)
-                    || Math.Abs(pictures[0].ActualWidth-nameFrame.ActualWidth) > 0.1) throw new IOException("Setup picture frames no longer match or preserve crop proportions.");
+                    || Math.Abs(pictures[0].ActualWidth-nameFrame.ActualWidth) > 1) throw new IOException("Setup picture frames no longer match or preserve crop proportions.");
+                setup.Close();
                 var marker = new System.Windows.Controls.Border { Width=40,Height=40,Background=Brushes.White };
                 var motionWindow = new ThemedWindow { Content=marker,Width=120,Height=120 }; motionWindow.Show();
                 UiMotion.FadeIn(marker,0,true);

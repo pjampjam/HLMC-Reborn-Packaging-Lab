@@ -13,10 +13,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class FirstPersonMapMixin {
     @Inject(method = "showVanillaHands(Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/item/ItemStack;)Z", at = @At("HEAD"), cancellable = true, require = 1)
     private void holyLoisReadableMap(ItemStack main, ItemStack off, CallbackInfoReturnable<Boolean> callback) {
+        if(Boolean.getBoolean("holylois.preview.bodyHands"))return;
         if (FirstPersonAPI.isEnabled() && (map(main) || map(off) || consuming())) callback.setReturnValue(true);
     }
     @Inject(method = "hideArmsAndItems(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/item/ItemStack;)Z", at = @At("HEAD"), cancellable = true, require = 1)
     private void holyLoisSingleMapHands(net.minecraft.world.entity.LivingEntity player, ItemStack main, ItemStack off, CallbackInfoReturnable<Boolean> callback) {
+        if(Boolean.getBoolean("holylois.preview.bodyHands"))return;
         if (FirstPersonAPI.isEnabled() && (map(main) || map(off) || consuming())) callback.setReturnValue(true);
     }
     private static boolean consuming() {

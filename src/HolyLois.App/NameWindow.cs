@@ -24,7 +24,7 @@ public sealed class NameWindow : ThemedWindow
         {
             Background = Res("GoldSoft"), BorderBrush = Res("Gold"), BorderThickness = new Thickness(1), CornerRadius = (CornerRadius)Application.Current.Resources["Radius"],
             Padding = new Thickness(14, 10, 14, 10), Margin = new Thickness(0, 14, 0, 0),
-            Child = new TextBlock { Text = Localize.Text("NameWarning"), FontSize = 13 }
+            Child = new TextBlock { Text = Localize.Text("NameWarning"), FontSize = 13, TextWrapping=TextWrapping.Wrap }
         });
         var error = new TextBlock { FontSize = 12, Foreground = Res("Danger"), Margin = new Thickness(0, 8, 0, 0), Visibility = Visibility.Collapsed };
         void Fail(string text) { error.Text = text; error.Visibility = Visibility.Visible; }
@@ -45,7 +45,7 @@ public sealed class NameWindow : ThemedWindow
         }
         panel.Children.Add(new TextBlock { Text = Localize.Text("NameNew"), FontSize = 14, FontWeight = FontWeights.SemiBold, Foreground = Res("Gold"), Margin = new Thickness(0, 18, 0, 0) });
         panel.Children.Add(new TextBlock { Text = Localize.Text("NameRules") + " " + string.Format(Localize.Text("NamesLeft"), PlayerNames.NewNamesLeft(book, DateTimeOffset.UtcNow)),
-            FontSize = 12, Foreground = Res("Muted"), Margin = new Thickness(0, 3, 0, 8) });
+            FontSize = 12, Foreground = Res("Muted"), Margin = new Thickness(0, 3, 0, 8),TextWrapping=TextWrapping.Wrap });
         var row = new Grid();
         row.ColumnDefinitions.Add(new()); row.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
         var box = new TextBox { MaxLength = 16, FontSize = 14, Padding = new Thickness(10, 8, 10, 8) };
@@ -53,25 +53,20 @@ public sealed class NameWindow : ThemedWindow
         var use = new Button { Content = Localize.Text("NameUse"), Style = (Style)Application.Current.Resources["PrimaryButton"], Margin = new Thickness(8, 0, 0, 0), Padding = new Thickness(14, 8, 14, 8) };
         Grid.SetColumn(use, 1); row.Children.Add(box); row.Children.Add(use);
         panel.Children.Add(row); panel.Children.Add(error);
-        async Task Save()
+        void Save()
         {
             var name = box.Text.Trim();
             if (!PlayerNames.IsValid(name)) { Fail(Localize.Text("NameInvalid")); return; }
             use.IsEnabled = false;
             try
             {
-                if (!PlayerNames.Known(context.Players, name))
-                {
-                    using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(6));
-                    if (await context.IsPremiumNameAsync(name, timeout.Token) == true) { Fail(Localize.Text("NamePremium")); return; }
-                }
                 context.UsePlayerName(name); DialogResult = true;
             }
             catch (Exception ex) { Fail(ex.Message); }
             finally { if (!IsClosed) use.IsEnabled = true; }
         }
-        use.Click += async (_, _) => await Save();
-        box.KeyDown += async (_, e) => { if (e.Key == Key.Enter) { e.Handled = true; await Save(); } };
+        use.Click += (_, _) => Save();
+        box.KeyDown += (_, e) => { if (e.Key == Key.Enter) { e.Handled = true; Save(); } };
         var close = new Button { Content = Localize.Text("CancelAction"), Style = (Style)Application.Current.Resources["CancelButton"], IsCancel = true, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 22, 0, 0) };
         close.Click += (_, _) => Close();
         panel.Children.Add(close);

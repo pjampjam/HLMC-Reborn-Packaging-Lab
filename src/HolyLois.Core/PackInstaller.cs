@@ -76,7 +76,7 @@ public sealed class PackInstaller(string instanceRoot, string stateRoot, IFileDo
             }
         }
         // Activate only newly introduced packs. A later verify must respect packs the player disabled.
-        var addedPacks = manifest.Files.Where(f => f.Path.StartsWith("resourcepacks/", StringComparison.Ordinal)
+        var addedPacks = manifest.Files.Where(f => f.Path.StartsWith("resourcepacks/", StringComparison.Ordinal) && f.AutoEnable != false
             && (old is null || !old.ManagedFiles.ContainsKey(f.Path))).Select(f => Path.GetFileName(f.Path)).ToArray();
         if (addedPacks.Length > 0)
             foreach (var relative in new[] { "options.txt", "config/yosbr/options.txt" })

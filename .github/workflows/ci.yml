@@ -1,0 +1,24 @@
+name: Launcher checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Build and test
+        shell: pwsh
+        run: |
+          [xml]$taskProject = Get-Content src/HolyLois.App/HolyLois.App.csproj
+          $taskVersion = @($taskProject.Project.PropertyGroup.Version) | Where-Object { $_ } | Select-Object -First 1
+          ./build.ps1 -Version $taskVersion

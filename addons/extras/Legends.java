@@ -259,6 +259,12 @@ public final class Legends {
             lines.add(Component.literal("Weight: " + LootRules.kg(kilograms)).withStyle(s -> s.withColor(ChatFormatting.WHITE).withItalic(false)));
             lines.add(Component.literal((angler == null ? "Caught on " : "Caught by " + angler + ", ") + day).withStyle(s -> s.withColor(ChatFormatting.GRAY).withItalic(true)));
             fishTag.putDouble("kg", kilograms);
+            if(angler!=null){
+                var catcher=level.getServer().getPlayerList().getPlayerByName(angler);
+                if(catcher!=null&&PartySupport.ready(catcher)&&net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.canSend(catcher,RareCatchNotice.TYPE)){
+                    net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(catcher,new RareCatchNotice(id,rarity.name().toLowerCase(Locale.ROOT),kilograms));
+                }
+            }
             fishTag.putString("species", id);
             fishTag.putString("day", day);
             if (angler != null) fishTag.putString("by", angler);

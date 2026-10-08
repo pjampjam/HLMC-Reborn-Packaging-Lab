@@ -28,7 +28,6 @@ public final class ToolSwap {
     private static int activeTicks;
     private static long lastNotice;
     /** Nanotime of the last keyboard sort by Inventory Profiles Next (read by ReiSortGuardMixin). */
-    public static volatile long sortRanAt;
 
     private ToolSwap() {}
 

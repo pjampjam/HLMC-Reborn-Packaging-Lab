@@ -49,6 +49,28 @@ public sealed class SettingsWindow : ThemedWindow
             if (picker.ShowDialog(this) == true) { context.SetLauncher(picker.FileName); path.Text = context.DetectLauncher(); }
         });
         panel = outer;
+        var visualPacks = context.OptionalVisualPacks.ToList();
+        if (visualPacks.Count > 0)
+        {
+            Text(Localize.Text("VisualOptions"),14,true);
+            Text(Localize.Text("VisualOptionsInfo"),12);
+            foreach (var pack in visualPacks)
+            {
+                var label = pack.Path.Contains("3D-Armor",StringComparison.OrdinalIgnoreCase) ? Localize.Text("VisualArmor") : Path.GetFileNameWithoutExtension(pack.Path);
+                var choice = new CheckBox { Content = label, IsChecked = context.IsVisualPackEnabled(pack), Margin = new Thickness(0,10,0,0) };
+                bool changing = false;
+                void Toggle() {
+                    if (changing) return;
+                    try { context.SetVisualPack(pack, choice.IsChecked == true); }
+                    catch (Exception error) {
+                        changing = true; choice.IsChecked = context.IsVisualPackEnabled(pack); changing = false;
+                        AppDialog.Show(this,Localize.Text("Error"),Localize.Error(error));
+                    }
+                }
+                choice.Checked += (_,_) => Toggle(); choice.Unchecked += (_,_) => Toggle();
+                panel.Children.Add(choice);
+            }
+        }
         Text(Localize.Text("Reports"),14,true);
         Text(Localize.Text("ReportsInfo"),12);
         var reportStatus = new TextBlock { TextWrapping = TextWrapping.Wrap, Foreground = (Brush)Application.Current.Resources["Muted"], Margin = new Thickness(0,8,0,0) };
@@ -110,7 +132,7 @@ public sealed class SettingsWindow : ThemedWindow
         }, !context.IsIsolated && LauncherStartup.IsInstalled);
         Text(Localize.Text("KeepPersonalFiles"),12);
         Content = new ScrollViewer { Content = panel, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled };
-        void Text(string text, int size = 13, bool strong = false) => panel.Children.Add(new TextBlock { Text = text, FontSize = size, FontWeight = strong ? FontWeights.SemiBold : FontWeights.Normal, Foreground = (Brush)Application.Current.Resources[strong ? "Gold" : "Muted"], Margin = new Thickness(0,strong ? 16 : 8,0,0) });
+        void Text(string text, int size = 13, bool strong = false) => panel.Children.Add(new TextBlock { Text = text, TextWrapping = TextWrapping.Wrap, FontSize = size, FontWeight = strong ? FontWeights.SemiBold : FontWeights.Normal, Foreground = (Brush)Application.Current.Resources[strong ? "Gold" : "Muted"], Margin = new Thickness(0,strong ? 16 : 8,0,0) });
         void Choice(string title, string info, bool fast, bool selected)
         {
             var text = new StackPanel();

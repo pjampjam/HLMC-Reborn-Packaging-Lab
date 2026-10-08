@@ -25,7 +25,8 @@
     "java": ">=25",
     "fabricloader": ">=0.19.5",
     "fabric-api": "*",
-    "easyauth": "3.4.4"
+    "easyauth": "3.4.4",
+    "holylois-extras": ">=1.6.3"
   },
   "recommends": {
     "openpartiesandclaims": "*"
