@@ -10,7 +10,7 @@ plugins {
 def deps = file('.deps')
 def legends = file('../../HLMC-Reborn/server/legends')
 
-subprojects {
+configure(subprojects.findAll { it.name != 'dev' }) {
     apply plugin: 'net.fabricmc.fabric-loom'
 
     def meta = new JsonSlurper().parse(file('fabric.mod.json'))

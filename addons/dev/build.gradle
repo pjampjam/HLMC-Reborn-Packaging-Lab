@@ -1,0 +1,39 @@
+// Local test client and server on this PC. Minecraft 26.3 + Fabric Loader with exactly the locked mods:
+// the client gets the pack's mods, the server gets the live server's mods, both get our freshly built add-ons.
+//   gradlew :dev:runServer   -> addons/run/server (join localhost:25565; accept the EULA once in eula.txt)
+//   gradlew :dev:runClient   -> addons/run/client (offline dev name; the server runs offline-mode)
+import groovy.json.JsonSlurper
+
+apply plugin: 'net.fabricmc.fabric-loom'
+
+java { toolchain.languageVersion = JavaLanguageVersion.of(25) }
+
+dependencies {
+    minecraft 'com.mojang:minecraft:26.3'
+    implementation 'net.fabricmc:fabric-loader:0.19.5'
+}
+
+def lock = new JsonSlurper().parse(rootProject.file('deps.lock.json')).jars
+def lockedJars = { sides -> lock.findAll { name, entry -> entry.side in sides }.keySet().collect { rootProject.file(".deps/${it}") } }
+
+def syncClientMods = tasks.register('syncClientMods', Sync) {
+    from lockedJars(['client', 'both'])
+    from project(':extras').tasks.named('jar')
+    from project(':auth-ui').tasks.named('jar')
+    into rootProject.file('run/client/mods')
+}
+def syncServerMods = tasks.register('syncServerMods', Sync) {
+    from lockedJars(['server', 'both'])
+    from project(':extras').tasks.named('jar')
+    from project(':onboarding').tasks.named('jar')
+    into rootProject.file('run/server/mods')
+}
+
+loom {
+    runs {
+        client { runDir = '../run/client'; vmArgs '-Xmx4G' }
+        server { runDir = '../run/server'; vmArgs '-Xmx4G' }
+    }
+}
+tasks.named('runClient') { dependsOn syncClientMods }
+tasks.named('runServer') { dependsOn syncServerMods }

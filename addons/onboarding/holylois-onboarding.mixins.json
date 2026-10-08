@@ -20,7 +20,8 @@
     "HomeMessageMixin",
     "AccountAliasLoginMixin",
     "AccountAliasRecordMixin",
-    "AuthFloatingMixin"
+    "AuthFloatingMixin",
+    "CelebrationFireworkMixin"
   ],
   "injectors": {
     "defaultRequire": 1

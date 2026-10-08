@@ -27,6 +27,8 @@ import java.util.*;
  */
 public final class ServerEvents {
     private static final Logger LOG = LoggerFactory.getLogger("HolyLois");
+    /** Rockets with this tag explode harmlessly (CelebrationFireworkMixin). */
+    public static final String CELEBRATION_TAG = "holylois_celebration";
     private static final Gson JSON = new GsonBuilder().setPrettyPrinting().create();
 
     record Holiday(String key, String greeting, int[] colors, boolean lootbox, String gift, int giftCount, String giftLabel) {}
@@ -135,8 +137,15 @@ public final class ServerEvents {
             rocket.set(DataComponents.FIREWORKS, new Fireworks(1 + i % 2, List.of(new FireworkExplosion(
                 FireworkExplosion.Shape.values()[i % FireworkExplosion.Shape.values().length], IntList.of(colors), IntList.of(0xFFFFFF), true, i % 2 == 0))));
             double angle = Math.PI * 2 * i / count;
-            level.addFreshEntity(new FireworkRocketEntity(level, player.getX() + Math.cos(angle) * 3, player.getY() + 1, player.getZ() + Math.sin(angle) * 3, rocket));
+            launch(level, player.getX() + Math.cos(angle) * 3, player.getY() + 1, player.getZ() + Math.sin(angle) * 3, rocket);
         }
+    }
+
+    /** Launches a celebration rocket: full colours and sound, no damage to anyone nearby. */
+    static void launch(net.minecraft.world.level.Level level, double x, double y, double z, ItemStack rocket) {
+        var entity = new FireworkRocketEntity(level, x, y, z, rocket);
+        entity.addTag(CELEBRATION_TAG);
+        level.addFreshEntity(entity);
     }
 
     private void save() {

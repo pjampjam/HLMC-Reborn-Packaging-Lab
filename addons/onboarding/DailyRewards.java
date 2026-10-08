@@ -21,7 +21,6 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.entity.projectile.FireworkRocketEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.CustomData;
@@ -269,7 +268,7 @@ public final class DailyRewards {
             var rocket = new ItemStack(Items.FIREWORK_ROCKET);
             rocket.set(DataComponents.FIREWORKS, new Fireworks(1, List.of(new FireworkExplosion(
                 i % 2 == 0 ? FireworkExplosion.Shape.STAR : FireworkExplosion.Shape.BURST, IntList.of(colors), IntList.of(0xFFFFFF), true, true))));
-            level.addFreshEntity(new FireworkRocketEntity(level, player.getX() + (i - 1) * 1.5, player.getY() + 1, player.getZ() + (i % 2) * 1.5, rocket));
+            ServerEvents.launch(level, player.getX() + (i - 1) * 1.5, player.getY() + 1, player.getZ() + (i % 2) * 1.5, rocket);
         }
         level.playSound(null, player.blockPosition(), SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 0.7f, 1.2f);
         title(player, Component.literal("✦ Holy Lootbox ✦").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD), Component.literal("Tier " + tier).withStyle(ChatFormatting.YELLOW));
