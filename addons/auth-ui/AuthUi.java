@@ -14,7 +14,9 @@ public final class AuthUi {
     public static final int CANVAS = 0xFF050506, SURFACE = 0xFF0C0C0E, RAISED = 0xFF16171A, CONTROL = 0xFF1C1D21,
         CONTROL_HOVER = 0xFF2B2C32, LINE = 0xFF2C2E34, LINE_STRONG = 0xFF6E717A, TEXT = 0xFFFFFFFF, MUTED = 0xFFAAAAAA,
         GOLD = 0xFFFFFF55, GOLD_SOFT = 0xFF2E2E14, ON_GOLD = 0xFF000000, GREEN = 0xFF55FF55, SUCCESS = 0xFF55FF55,
-        DANGER = 0xFFFF5555, DANGER_FILL = 0xFFC2362F, HEALTH = 0xFFFF4545, FOOD = 0xFFFFAA00;
+        DANGER = 0xFFFF5555, DANGER_FILL = 0xFFC2362F, HEALTH = 0xFFFF4545, FOOD = 0xFFFFAA00,
+        // Yes/no buttons: the standard success green and danger red (Bootstrap 5), white labels at 4.5:1 (owner round 5).
+        CONFIRM_BUTTON = 0xFF198754, DANGER_BUTTON = 0xFFDC3545;
 
     /** Same colour with alpha a (0..1). */
     /** Blends two ARGB colours (t = 0 gives a, 1 gives b). */
@@ -52,12 +54,12 @@ public final class AuthUi {
 
     public enum Kind { NORMAL, PRIMARY, CONFIRM, DANGER }
 
-    /** Button: control fill; gold for a highlight, solid green for yes-actions, solid red for cancel and destructive ones. */
+    /** Button: control fill; gold for a highlight, success green for yes-actions, danger red for cancel and destructive ones. */
     public static void button(GuiGraphicsExtractor g, Font font, int x, int y, int w, int h, Component label, boolean hover, boolean focus, boolean active, Kind kind) {
-        int solid = switch (kind) { case PRIMARY -> GOLD; case CONFIRM -> GREEN; case DANGER -> DANGER; default -> 0; };
-        int fill = solid != 0 ? (hover ? mix(solid, 0xFFFFFFFF, 0.45f) : solid) : hover ? CONTROL_HOVER : CONTROL;
+        int solid = switch (kind) { case PRIMARY -> GOLD; case CONFIRM -> CONFIRM_BUTTON; case DANGER -> DANGER_BUTTON; default -> 0; };
+        int fill = solid != 0 ? (hover ? mix(solid, 0xFFFFFFFF, kind == Kind.PRIMARY ? 0.45f : 0.15f) : solid) : hover ? CONTROL_HOVER : CONTROL;
         int border = focus ? TEXT : solid != 0 ? solid : hover ? LINE_STRONG : LINE;
-        int text = solid != 0 ? ON_GOLD : TEXT;
+        int text = kind == Kind.PRIMARY ? ON_GOLD : solid != 0 ? 0xFFFFFFFF : TEXT;
         if (!active) { fill = CONTROL; border = LINE; text = alpha(MUTED, 0.55f); }
         box(g, x, y, w, h, fill, border);
         String shown = font.plainSubstrByWidth(label.getString(), w - 10);

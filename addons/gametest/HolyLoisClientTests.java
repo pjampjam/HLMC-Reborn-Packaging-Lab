@@ -342,6 +342,14 @@ public final class HolyLoisClientTests implements FabricClientGameTest {
         context.runOnClient(client -> client.gui.setScreen(new holylois.auth.HolyLoisAuthScreen(new holylois.auth.AuthStatus(2, 6))));
         context.waitTicks(5);
         context.takeScreenshot("27-register");
+        // Signed in: the form's last frame fades out over the world instead of cutting to it.
+        context.runOnClient(client -> client.gui.setScreen(null));
+        context.waitTicks(4);
+        boolean fading = context.computeOnClient(client -> holylois.auth.PanoramaFade.fading() && client.gui.screen() == null);
+        context.takeScreenshot("27-entry-fade");
+        context.waitTicks(30);
+        boolean done = context.computeOnClient(client -> !holylois.auth.PanoramaFade.fading());
+        check(fading && done, "the login backdrop fades into the world (" + fading + ", " + done + ")");
         // The resource pack download on the loading bar, text under it, no toast.
         holylois.boombox.PackLoadingBar.downloadStart(java.util.OptionalLong.of(1000));
         holylois.boombox.PackLoadingBar.downloaded(450);

@@ -112,7 +112,12 @@ public final class HolyLoisAuthScreen extends Screen {
     @Override public boolean shouldCloseOnEsc() { return false; }
     @Override public boolean isPauseScreen() { return false; }
     @Override public boolean isInGameUi() { return false; }
-    @Override public void extractBackground(GuiGraphicsExtractor g, int x, int y, float delta) { g.fill(0, 0, width, height, AuthUi.CANVAS); }
+    /** The title panorama, blurred like the connecting and loading screens before it, so the way in looks like one place. */
+    @Override public void extractBackground(GuiGraphicsExtractor g, int x, int y, float delta) {
+        extractPanorama(g, delta);
+        extractBlurredBackground(g);
+        g.fill(0, 0, width, height, AuthUi.alpha(AuthUi.CANVAS, 0.35f));
+    }
     @Override public void extractRenderState(GuiGraphicsExtractor g, int x, int y, float delta) {
         if (state.mode() == 3 && !quitting) {
             g.centeredText(font, "HOLY LOIS: REBORN", width/2, height/2 - 16, AuthUi.GOLD);

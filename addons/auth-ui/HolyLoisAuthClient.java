@@ -27,6 +27,8 @@ public final class HolyLoisAuthClient implements ClientModInitializer {
     }
     @Override public void onInitializeClient() {
         VoiceRecovery.register();
+        PanoramaFade.register();
+        TitleTweaks.register();
         RewardHud.register();
         ItemTooltipCallback.EVENT.register((stack, tooltipContext, tooltipFlag, lines) -> {
             if (!stack.isDamageableItem() || lines.isEmpty()) return;
