@@ -185,9 +185,10 @@ public final class DailyRewards {
             : BuiltInRegistries.ITEM.containsKey(PRESENT) ? BuiltInRegistries.ITEM.getValue(PRESENT) : Items.CHEST;
         var stack = new ItemStack(item, 1);
         stack.set(DataComponents.CUSTOM_NAME, Component.literal("Holy Lootbox").withStyle(s -> s.withColor(ChatFormatting.GOLD).withBold(true).withItalic(false)));
+        // Translated on the player's client (Holy Lois Extras); the key shown is the player's own Use binding.
         stack.set(DataComponents.LORE, new ItemLore(List.of(
-            Component.literal("Tier " + tier + " - a gift for " + owner).withStyle(s -> s.withColor(ChatFormatting.YELLOW).withItalic(false)),
-            Component.literal("Right-click to open").withStyle(s -> s.withColor(ChatFormatting.GRAY).withItalic(false)))));
+            Component.translatable("item.holylois.holy_lootbox.tier", tier, owner).withStyle(s -> s.withColor(ChatFormatting.YELLOW).withItalic(false)),
+            Component.translatable("item.holylois.holy_lootbox.open", Component.keybind("key.use")).withStyle(s -> s.withColor(ChatFormatting.GRAY).withItalic(false)))));
         var tag = new CompoundTag();
         tag.putInt(LOOTBOX_KEY, tier);
         CustomData.set(DataComponents.CUSTOM_DATA, stack, tag);
@@ -196,7 +197,10 @@ public final class DailyRewards {
 
     static int lootboxTier(ItemStack stack) {
         var data = stack.get(DataComponents.CUSTOM_DATA);
-        return data == null ? 0 : data.copyTag().getIntOr(LOOTBOX_KEY, 0);
+        int tier = data == null ? 0 : data.copyTag().getIntOr(LOOTBOX_KEY, 0);
+        // A Holy Lootbox without a tier (given by an admin or from creative) still opens, as tier 1.
+        if (tier <= 0 && BuiltInRegistries.ITEM.getKey(stack.getItem()).equals(LOOTBOX)) return 1;
+        return tier;
     }
 
     /** Opens a lootbox held by the player: -1 when the stack is not a lootbox, 1 with a named special item, else 0. */

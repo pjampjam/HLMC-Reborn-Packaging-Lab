@@ -891,6 +891,12 @@ public final class HolyLoisClientTests implements FabricClientGameTest {
         context.runOnClient(client -> { client.options.setCameraType(net.minecraft.client.CameraType.THIRD_PERSON_FRONT); client.player.setXRot(15); });
         context.waitTicks(20);
         context.takeScreenshot("43-lootbox-held");
+        // The tooltip says there is something inside and which key opens it (the player's own Use binding).
+        String tip = context.computeOnClient(client -> String.join(" | ", client.player.getMainHandItem()
+            .getTooltipLines(net.minecraft.world.item.Item.TooltipContext.of(client.level), client.player,
+                net.minecraft.world.item.TooltipFlag.NORMAL).stream().map(net.minecraft.network.chat.Component::getString).toList()));
+        log("lootbox tooltip: " + tip);
+        check(tip.contains("Something good is inside") && tip.contains("in your hand to open"), "the lootbox tooltip explains how to open it");
         context.runOnClient(client -> { client.options.setCameraType(net.minecraft.client.CameraType.FIRST_PERSON); client.player.setXRot(30); });
         context.waitTicks(10);
         context.takeScreenshot("43-lootbox-first-person");
