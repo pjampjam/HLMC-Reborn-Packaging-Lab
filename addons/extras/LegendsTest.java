@@ -53,6 +53,8 @@ public final class LegendsTest {
         check(FishData.scale("common", -1) == 1 && FishData.scale("uncommon", -1) == 1.1f, "small fish keep their size");
         check(FishData.scale("rare", 0.75) < FishData.scale("legendary", 1.0) && FishData.scale("legendary", 1.0) < FishData.scale("mythic", 1.5), "bigger fish look bigger");
         check(FishData.scale("mythic", 2.5) == 3.5f && FishData.scale("legendary", -1) > 1.6f, "mythic cap and old trophies");
+        check(FishData.scaleKg(10) - FishData.scaleKg(2) > 0.8 && FishData.scaleKg(20) - FishData.scaleKg(10) > 0.6, "2, 10 and 20 kg look clearly different");
+        check(FishData.scaleKg(0) == 1 && FishData.scaleKg(500) == 5.5f && FishData.scaleKg(1) > 1.3f, "kg scale floor and cap");
         check(LootRules.mythic(0) == 1.5 && LootRules.mythic(1) == 2.5 && LootRules.rarity(1.0) != LootRules.MYTHIC, "mythic only by the extra roll");
         System.out.println("LegendsTest passed");
     }

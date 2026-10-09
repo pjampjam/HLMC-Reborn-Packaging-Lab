@@ -16,7 +16,8 @@
     "RuneforgedInventoryClickMixin",
     "ReiTagBuildMixin",
     "FilletMixin",
-    "CookedFishMixin"
+    "CookedFishMixin",
+    "FishDeathMessageMixin"
   ],
   "client": [
     "LiteminerScrollMixin",
@@ -38,7 +39,6 @@
     "SortKeyPressMixin",
     "BedCameraMixin",
     "FirstPersonAimMixin",
-    "FirstPersonMapMixin",
     "WorldClaimFogMixin",
     "MiniClaimFogMixin",
     "RodHandPoseMixin",
@@ -58,7 +58,13 @@
     "FishRenderStateMixin",
     "FishLayerMixin",
     "FishSlotMixin",
-    "ChestReplayMixin"
+    "ChestReplayMixin",
+    "ShineTextMixin",
+    "KeptArmsCaptureMixin",
+    "KeptArmsPlayerMixin",
+    "KeptArmsLayerMixin",
+    "KeptArmsDrawMixin",
+    "KeptArmsPartMixin"
   ],
   "injectors": {
     "defaultRequire": 0

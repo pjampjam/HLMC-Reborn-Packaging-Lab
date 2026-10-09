@@ -82,17 +82,21 @@ public final class PartyHud {
             g.text(mc.font, count, x + width - 8 - mc.font.width(count), y + 6, Ui.MUTED, false);
             y += 18;
             for (var member : state.members().stream().limit(visible).toList()) {
-                g.text(mc.font, mc.font.plainSubstrByWidth(member.name(), width - 30), x + 8, y, member.online() ? Ui.TEXT : Ui.MUTED, false);
-                if (!member.sameDimension() && member.online()) g.text(mc.font, "*", x + width - 12, y, 0xFFBBAADD, false);
-                if (!member.online()) g.text(mc.font, Component.translatable("holylois.party.offline"), x + 8, y + 10, Ui.alpha(Ui.MUTED, 0.7f), false);
-                else {
+                // Name left, health right on the same line; the bar spans the whole card under them.
+                String hp = "";
+                if (member.online()) {
                     float health = safe(member.health()), maximum = Math.max(1, safe(member.maximum()));
-                    int barWidth = width - 44;
-                    Ui.bar(g, x + 8, y + 11, barWidth, 4, health / maximum, Ui.HEALTH, Ui.alpha(Ui.HEALTH, 0.22f));
-                    if (member.absorption() > 0) g.fill(x + 8, y + 11, x + 8 + Math.min(barWidth, Math.round(barWidth * safe(member.absorption()) / maximum)), y + 12, Ui.GOLD);
-                    String hp = String.format(Locale.ROOT, "%.0f", health) + (member.absorption() > 0 ? "+" + Math.round(safe(member.absorption())) : "");
-                    g.text(mc.font, hp, x + 12 + barWidth, y + 9, member.absorption() > 0 ? Ui.GOLD : Ui.TEXT, false);
-                }
+                    hp = String.format(Locale.ROOT, "%.0f/%.0f", health, maximum) + (member.absorption() > 0 ? " +" + Math.round(safe(member.absorption())) : "");
+                    int barWidth = width - 16, filled = Math.round(barWidth * Math.min(1, health / maximum));
+                    Ui.bar(g, x + 8, y + 11, barWidth, 5, health / maximum, Ui.HEALTH, Ui.alpha(Ui.HEALTH, 0.2f));
+                    if (member.absorption() > 0) {
+                        int extra = Math.min(barWidth - Math.max(0, filled - 1), Math.round(barWidth * safe(member.absorption()) / maximum));
+                        if (extra > 0) Ui.box(g, x + 8 + Math.max(0, filled - 1), y + 11, extra, 5, Ui.GOLD, 0);
+                    }
+                    if (!member.sameDimension()) hp = "* " + hp;
+                    g.text(mc.font, hp, x + width - 8 - mc.font.width(hp), y, member.absorption() > 0 ? Ui.GOLD : Ui.TEXT, false);
+                } else g.text(mc.font, Component.translatable("holylois.party.offline"), x + 8, y + 10, Ui.alpha(Ui.MUTED, 0.7f), false);
+                g.text(mc.font, mc.font.plainSubstrByWidth(member.name(), width - 20 - mc.font.width(hp)), x + 8, y, member.online() ? Ui.TEXT : Ui.MUTED, false);
                 y += 24;
             }
             if (visible < state.members().size()) { g.text(mc.font, "+" + (state.members().size() - visible), x + 8, y - 2, Ui.MUTED, false); y += 11; }

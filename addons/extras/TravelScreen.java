@@ -15,6 +15,8 @@ abstract class TravelScreen extends Screen {
     TravelScreen(String key){super(text(key));}
     static Component text(String key,Object...args){return Component.translatable("holylois.travel."+key,args);}
     void panel(){panelWidth=Math.min(350,width-20);panelHeight=Math.min(310,height-16);left=(width-panelWidth)/2;top=(height-panelHeight)/2;}
+    /** Shrinks the panel to its content (no empty band at the bottom) and centres it again. */
+    void fit(int content){panelHeight=Math.min(content,height-16);top=(height-panelHeight)/2;}
     Button button(int x,int y,int w,String key,Runnable run){
         return addRenderableWidget(new TravelButton(x,y,w,text(key),b->run.run(),PRIMARY.contains(key)?Ui.Kind.PRIMARY:DANGER.contains(key)?Ui.Kind.DANGER:Ui.Kind.NORMAL));
     }
@@ -23,6 +25,8 @@ abstract class TravelScreen extends Screen {
     }
     Button buttonText(int x,int y,int w,Component title,Runnable run){return addRenderableWidget(new TravelButton(x,y,w,title,b->run.run(),Ui.Kind.NORMAL));}
     Button buttonText(int x,int y,int w,int h,Component title,Runnable run){return addRenderableWidget(new TravelButton(x,y,w,h,title,b->run.run(),Ui.Kind.NORMAL));}
+    /** A list row: label on the left (room on the right for details drawn by the screen). */
+    Button rowButton(int x,int y,int w,int h,Component title,Runnable run){var b=new TravelButton(x,y,w,h,title,p->run.run(),Ui.Kind.NORMAL);b.leftLabel=true;return addRenderableWidget(b);}
     @Override public boolean isPauseScreen(){return false;}
     @Override public void extractBackground(GuiGraphicsExtractor g,int x,int y,float tick){g.fill(0,0,width,height,Ui.alpha(Ui.CANVAS,0.78f));}
     @Override public void extractRenderState(GuiGraphicsExtractor g,int x,int y,float tick){
@@ -30,11 +34,13 @@ abstract class TravelScreen extends Screen {
         g.nextStratum();super.extractRenderState(g,x,y,tick);
     }
     private final class TravelButton extends Button {
-        private final Ui.Kind kind;
+        private final Ui.Kind kind;boolean leftLabel;
         TravelButton(int x,int y,int w,Component label,OnPress press,Ui.Kind kind){this(x,y,w,22,label,press,kind);}
         TravelButton(int x,int y,int w,int h,Component label,OnPress press,Ui.Kind kind){super(x,y,w,h,label,press,DEFAULT_NARRATION);this.kind=kind;}
         @Override protected void extractContents(GuiGraphicsExtractor g,int x,int y,float delta){
-            Ui.button(g,font,getX(),getY(),getWidth(),getHeight(),getMessage(),isHovered(),isFocused(),active,kind);
+            if(!leftLabel){Ui.button(g,font,getX(),getY(),getWidth(),getHeight(),getMessage(),isHovered(),isFocused(),active,kind);return;}
+            Ui.button(g,font,getX(),getY(),getWidth(),getHeight(),Component.empty(),isHovered(),isFocused(),active,kind);
+            g.text(font,font.plainSubstrByWidth(getMessage().getString(),getWidth()*3/5),getX()+9,getY()+(getHeight()-8)/2,Ui.TEXT,false);
         }
     }
 }

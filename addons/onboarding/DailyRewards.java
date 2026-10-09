@@ -141,6 +141,19 @@ public final class DailyRewards {
         save();
         return streak;
     }
+    /** /dailytest DAY (operators): shows the reward card for that day of the week. Nothing is given or saved. */
+    static void registerTest(com.mojang.brigadier.CommandDispatcher<net.minecraft.commands.CommandSourceStack> dispatcher) {
+        dispatcher.register(net.minecraft.commands.Commands.literal("dailytest")
+            .requires(source -> source.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER))
+            .then(net.minecraft.commands.Commands.argument("day", com.mojang.brigadier.arguments.IntegerArgumentType.integer(1, 7)).executes(context -> {
+                var player = context.getSource().getPlayerOrException();
+                int day = com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(context, "day");
+                String item = day == 7 ? BuiltInRegistries.ITEM.getKey(lootbox(1, player.getGameProfile().name()).getItem()).toString() : DAYS.get(day - 1).getFirst().item();
+                int count = day == 7 ? 1 : DAYS.get(day - 1).getFirst().count();
+                notify(player, item, count, day, day % 2 == 0 ? 100 : 0, 0);
+                return 1;
+            })));
+    }
     private static void notify(ServerPlayer player, String item, int count, int streak, long coins, long waiting) {
         if (net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.canSend(player, holylois.auth.RewardNotice.TYPE))
             net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(player, new holylois.auth.RewardNotice(item, count, streak, coins, Math.max(0, waiting)));

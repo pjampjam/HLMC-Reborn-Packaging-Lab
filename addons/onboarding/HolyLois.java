@@ -72,6 +72,7 @@ public final class HolyLois implements ModInitializer {
             redeem.register(dispatcher);
             rtp.register(dispatcher);
             Seen.register(dispatcher);
+            DailyRewards.registerTest(dispatcher);
             dispatcher.register(net.minecraft.commands.Commands.literal("structures").executes(context -> Discoveries.here(context.getSource().getPlayerOrException())));
         });
         ServerLifecycleEvents.SERVER_STARTED.register(this::load);

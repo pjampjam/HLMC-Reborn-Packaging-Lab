@@ -40,6 +40,16 @@ public final class ClientDefaults implements PreLaunchEntrypoint {
                 if (!next.equals(text)) Files.writeString(options, next, StandardCharsets.UTF_8);
                 done.add("no-pause-on-alt-tab");
             }
+            // Ji AFK Cinematic starts with the server: when Essential Commands marks you AFK (15 min) or a few seconds after a
+            // cast, not after 30 s of standing still. Only while the file still has the mod's own 30 s / 10 s.
+            var cinematic = loader.getConfigDir().resolve("ji-afk-cinematic.json");
+            if (!done.contains("afk-cinematic-timing") && Files.exists(cinematic)) {
+                String text = Files.readString(cinematic, StandardCharsets.UTF_8);
+                String next = text.replace("\"afkThresholdSeconds\": 30,", "\"afkThresholdSeconds\": 900,")
+                    .replace("\"fishingCinematicThresholdSeconds\": 10,", "\"fishingCinematicThresholdSeconds\": 5,");
+                if (!next.equals(text)) Files.writeString(cinematic, next, StandardCharsets.UTF_8);
+                done.add("afk-cinematic-timing");
+            }
             Files.write(marker, done);
         } catch (Exception error) {
             org.slf4j.LoggerFactory.getLogger("HolyLoisExtras").warn("Could not apply Holy Lois client defaults", error);

@@ -126,5 +126,9 @@
   "holylois.travel.account_code_invalid": "Code rejected. Ask the admin if it has expired.",
   "holylois.travel.account_reminder_link_quick": "Set a new password: %s or /account password. No code needed, the admin started a quick reset for you.",
   "holylois.travel.account_failed": "This could not finish. Ask the admin for help.",
-  "holylois.relic.held": "While held:"
+  "holylois.relic.held": "While held:",
+  "holylois.travel.dim.overworld": "Overworld",
+  "holylois.travel.dim.the_nether": "Nether",
+  "holylois.travel.dim.the_end": "End",
+  "holylois.catch.shiny": "Shiny"
 }

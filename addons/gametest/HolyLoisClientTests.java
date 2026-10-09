@@ -47,6 +47,11 @@ public final class HolyLoisClientTests implements FabricClientGameTest {
             world.getConnection().waitForChunksRender();
             context.takeScreenshot("02-world");
             run(failed, "inventory opens", context, world, HolyLoisClientTests::inventoryOpens);
+            run(failed, "enter submits the login form", context, world, HolyLoisClientTests::enterSubmitsLogin);
+            run(failed, "menus and daily card", context, world, HolyLoisClientTests::menusAndDailyCard);
+            run(failed, "fish carry, shine and catch card", context, world, HolyLoisClientTests::fishCarryShineCard);
+            run(failed, "fish fillet cuts", context, world, HolyLoisClientTests::filletCuts);
+            run(failed, "arm animations", context, world, HolyLoisClientTests::armAnimations);
             run(failed, "boombox and water", context, world, HolyLoisClientTests::boomboxKeepsWaterSources);
             run(failed, "chest lid stays shut", context, world, HolyLoisClientTests::chestLidStaysShut);
             run(failed, "death marker cleanup", context, world, HolyLoisClientTests::deathMarkerGoesWhenLootIsGone);
@@ -65,6 +70,9 @@ public final class HolyLoisClientTests implements FabricClientGameTest {
     }
 
     private static void run(List<String> failed, String name, ClientGameTestContext context, TestSingleplayerContext world, Test test) {
+        // HOLYLOIS_TEST_ONLY=word runs only the tests whose name contains it (quick loops while fixing one thing).
+        String only = System.getenv("HOLYLOIS_TEST_ONLY");
+        if (only != null && !only.isBlank() && !name.contains(only)) return;
         try {
             test.run(context, world);
             log("TEST OK: " + name);
@@ -276,6 +284,202 @@ public final class HolyLoisClientTests implements FabricClientGameTest {
         server.runCommand("kill @e[type=item]");
     }
 
+    /** The daily card (centred above the hotbar, star pop, item pop, fade) and every Holy Lois menu, for the look and spacing. */
+    @SuppressWarnings("unchecked")
+    private static void menusAndDailyCard(ClientGameTestContext context, TestSingleplayerContext world) throws Exception {
+        context.runOnClient(client -> {
+            try {
+                var field = Class.forName("holylois.auth.RewardHud").getDeclaredField("queue"); field.setAccessible(true);
+                ((java.util.Deque<Object>) field.get(null)).addLast(new holylois.auth.RewardNotice("minecraft:bread", 6, 3, 100, 0));
+            } catch (ReflectiveOperationException error) { throw new RuntimeException(error); }
+        });
+        context.waitTicks(4);
+        fakeParty(context);
+        context.takeScreenshot("20-daily-card-fading-in");
+        context.waitTicks(16);
+        fakeParty(context);
+        context.takeScreenshot("21-daily-card-star");
+        context.waitTicks(40);
+        fakeParty(context);
+        context.takeScreenshot("22-daily-card");
+        context.waitTicks(150);
+        var homes = new holylois.boombox.HomeState(true, 3, 1, List.of(new holylois.boombox.HomeState.Home("Base", "minecraft:overworld")));
+        context.runOnClient(client -> client.gui.setScreen(new holylois.boombox.HomesScreen(homes)));
+        context.waitTicks(5);
+        context.takeScreenshot("23-homes");
+        context.runOnClient(client -> client.gui.setScreen(new holylois.boombox.PartyScreen()));
+        context.waitTicks(5);
+        context.takeScreenshot("24-party");
+        context.runOnClient(client -> client.gui.setScreen(new holylois.boombox.RallyScreen()));
+        context.waitTicks(5);
+        context.takeScreenshot("25-rally");
+        context.runOnClient(client -> client.gui.setScreen(new holylois.boombox.AccountScreen(new holylois.boombox.AccountNotice(2, java.util.UUID.randomUUID(), 6, false, true, ""))));
+        context.waitTicks(5);
+        context.takeScreenshot("26-account-password");
+        context.runOnClient(client -> client.gui.setScreen(new holylois.auth.HolyLoisAuthScreen(new holylois.auth.AuthStatus(2, 6))));
+        context.waitTicks(5);
+        context.takeScreenshot("27-register");
+        context.runOnClient(client -> client.gui.setScreen(null));
+    }
+
+    /** A party of four (one with absorption, one in another dimension, one offline) and a rally, fresh for the next 3 s. */
+    private static void fakeParty(ClientGameTestContext context) {
+        context.runOnClient(client -> {
+            var me = client.player.getUUID();
+            var members = List.of(
+                new holylois.boombox.PartyState.Member(me, client.player.getGameProfile().name(), true, true, 20, 20, 0, 20, true),
+                new holylois.boombox.PartyState.Member(java.util.UUID.randomUUID(), "Marek", true, true, 13, 20, 6, 18, false),
+                new holylois.boombox.PartyState.Member(java.util.UUID.randomUUID(), "LongNameExplorer", true, false, 6, 24, 0, 9, false),
+                new holylois.boombox.PartyState.Member(java.util.UUID.randomUUID(), "Sleepy", false, false, 0, 20, 0, 0, false));
+            var rally = new holylois.boombox.PartyState.Rally(members.get(1).id(), "Marek", client.level.dimension().identifier().toString(), 40, -60, 25, 75);
+            try {
+                var hud = holylois.boombox.PartyHud.class;
+                var state = hud.getDeclaredField("state"); state.setAccessible(true); state.set(null, new holylois.boombox.PartyState(java.util.UUID.randomUUID(), members, rally));
+                var at = hud.getDeclaredField("receivedAt"); at.setAccessible(true); at.setLong(null, System.currentTimeMillis());
+            } catch (ReflectiveOperationException error) { throw new RuntimeException(error); }
+        });
+    }
+
+    /** A Shiny Legendary (20-40 kg): catch card with sweep and sparkles, shimmering chat, carried in both arms (you and a mannequin). */
+    private static void fishCarryShineCard(ClientGameTestContext context, TestSingleplayerContext world) {
+        var server = world.getServer();
+        server.runCommand("clear @a");
+        server.runCommand("kill @e[type=mannequin]");
+        server.runCommand("execute as @p run legends give shiny");
+        context.waitTicks(8);
+        context.takeScreenshot("30-catch-card-sweep");
+        context.waitTicks(14);
+        context.takeScreenshot("31-catch-card");
+        server.runOnServer(s -> {
+            var player = s.getPlayerList().getPlayers().getFirst();
+            var fish = player.getInventory().getItem(0);
+            check(holylois.boombox.FishData.twoHanded(fish), "a Legendary is carried in both arms (" + fish.get(net.minecraft.core.component.DataComponents.CUSTOM_DATA) + ")");
+            player.getInventory().setSelectedSlot(0);
+        });
+        context.waitTicks(100); // the catch card fades after 5.5 s
+        context.runOnClient(client -> { client.player.setXRot(0); client.options.setCameraType(net.minecraft.client.CameraType.THIRD_PERSON_FRONT); });
+        context.waitTicks(15);
+        context.takeScreenshot("32-fish-two-handed-front");
+        // Two still mannequins 3 blocks ahead: the left one faces the camera, the right one shows its side.
+        var look = context.computeOnClient(client -> client.player.getLookAngle().multiply(1, 0, 1).normalize());
+        var base = context.computeOnClient(client -> client.player.position());
+        var right = new net.minecraft.world.phys.Vec3(-look.z, 0, look.x);
+        float facing = context.computeOnClient(client -> client.player.getYRot() + 180);
+        var front = base.add(look.scale(3)).add(right.scale(-1));
+        var side = base.add(look.scale(3)).add(right.scale(1));
+        server.runCommand(String.format(java.util.Locale.ROOT, "summon mannequin %.2f %.2f %.2f {Tags:[\"hltest\"],Rotation:[%.1ff,0f]}", front.x, front.y, front.z, facing));
+        server.runCommand(String.format(java.util.Locale.ROOT, "summon mannequin %.2f %.2f %.2f {Tags:[\"hltest\"],Rotation:[%.1ff,0f]}", side.x, side.y, side.z, facing - 90));
+        server.runOnServer(s -> {
+            var fish = s.getPlayerList().getPlayers().getFirst().getInventory().getItem(0);
+            for (var e : s.overworld().getAllEntities()) if (e.entityTags().contains("hltest") && e instanceof net.minecraft.world.entity.LivingEntity living)
+                living.setItemSlot(net.minecraft.world.entity.EquipmentSlot.MAINHAND, fish.copy());
+        });
+        context.runOnClient(client -> { client.options.setCameraType(net.minecraft.client.CameraType.FIRST_PERSON); client.player.setXRot(-5); });
+        server.runCommand("clear @a");
+        context.waitTicks(20);
+        context.takeScreenshot("33-fish-two-handed-mannequins");
+        server.runCommand("kill @e[type=mannequin]");
+    }
+
+    /** A Legendary on the cutting board: several knife cuts, a damage bar after each, slices by weight, equal slices stack. */
+    private static void filletCuts(ClientGameTestContext context, TestSingleplayerContext world) {
+        var server = world.getServer();
+        server.runCommand("clear @a");
+        server.runCommand("kill @e[type=item]");
+        server.runCommand("execute as @p run legends give legendary");
+        context.waitTicks(5);
+        server.runOnServer(s -> {
+            try {
+                var player = s.getPlayerList().getPlayers().getFirst();
+                var level = s.overworld();
+                var fish = player.getInventory().getItem(0).copy();
+                int slices = holylois.boombox.FishData.slices(fish), cuts = holylois.boombox.FishData.cuts(fish);
+                check(slices >= 15 && cuts >= 4, "a 20-40 kg Legendary gives 15+ slices over 4+ cuts (" + slices + ", " + cuts + ")");
+                BlockPos pos = player.blockPosition().offset(3, 0, 3);
+                level.setBlockAndUpdate(pos, BuiltInRegistries.BLOCK.getValue(Identifier.parse("farmersdelight:cutting_board")).defaultBlockState());
+                var board = level.getBlockEntity(pos);
+                board.getClass().getMethod("addItem", ItemStack.class).invoke(board, fish);
+                var knife = new ItemStack(BuiltInRegistries.ITEM.getValue(Identifier.parse("farmersdelight:iron_knife")));
+                var cut = board.getClass().getMethod("processStoredItemUsingTool", ItemStack.class, net.minecraft.world.entity.player.Player.class);
+                var stored = board.getClass().getMethod("getStoredItem");
+                int used = 0;
+                while (used < cuts + 3 && !((ItemStack) stored.invoke(board)).isEmpty()) {
+                    cut.invoke(board, knife, player);
+                    used++;
+                    var left = (ItemStack) stored.invoke(board);
+                    if (used == 1) check(!left.isEmpty() && left.getDamageValue() == 1 && left.isDamaged(), "after the first cut the fish is still there, one cut damaged (" + left.getDamageValue() + ")");
+                }
+                check(used == cuts, "the fish is used up on the last cut (" + used + " of " + cuts + ")");
+                int dropped = 0; var kinds = new java.util.HashSet<String>();
+                for (var item : level.getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class, new net.minecraft.world.phys.AABB(pos).inflate(3)))
+                    if (holylois.boombox.FishData.fillet(item.getItem())) { dropped += item.getItem().getCount(); kinds.add(item.getItem().getComponents().toString()); }
+                check(dropped == slices, "slices dropped match the weight (" + dropped + " of " + slices + ")");
+                check(kinds.size() == 1, "all slices are the same, so they stack (" + kinds.size() + " kinds)");
+                level.setBlockAndUpdate(pos, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState());
+            } catch (ReflectiveOperationException error) { throw new RuntimeException(error); }
+        });
+        context.waitTicks(5);
+        server.runCommand("kill @e[type=item]");
+    }
+
+    /**
+     * Not Enough Animations with the FirstPerson body and Fresh Animations (KeptArms): a map held up in view, eating at the
+     * mouth and a lantern, in first person (body arms, no vanilla hands) and from the front.
+     */
+    private static void armAnimations(ClientGameTestContext context, TestSingleplayerContext world) {
+        var server = world.getServer();
+        server.runCommand("gamemode survival @a");
+        String[][] cases = {{"filled_map", "map"}, {"cooked_beef", "eat"}, {"lantern", "lantern"}};
+        for (var c : cases) {
+            server.runCommand("clear @a");
+            server.runCommand("give @a " + c[0] + " 8");
+            context.waitTicks(c[1].equals("eat") ? 40 : 10);
+            context.runOnClient(client -> { client.player.getInventory().setSelectedSlot(0); client.player.setXRot(25); client.options.setCameraType(net.minecraft.client.CameraType.FIRST_PERSON); });
+            boolean eat = c[1].equals("eat");
+            // Peaceful refills food, so the player is made hungry right before each bite.
+            if (eat) { server.runOnServer(s -> s.getPlayerList().getPlayers().forEach(p -> p.getFoodData().setFoodLevel(6))); context.getInput().holdKey(options -> options.keyUse); }
+            context.waitTicks(eat ? 12 : 6);
+            context.takeScreenshot("40-" + c[1] + "-first-person");
+            if (eat) { context.getInput().releaseKey(options -> options.keyUse); context.waitTicks(4); }
+            context.runOnClient(client -> { client.player.setXRot(0); client.options.setCameraType(net.minecraft.client.CameraType.THIRD_PERSON_FRONT); });
+            if (eat) { server.runOnServer(s -> s.getPlayerList().getPlayers().forEach(p -> p.getFoodData().setFoodLevel(6))); context.getInput().holdKey(options -> options.keyUse); }
+            context.waitTicks(12);
+            context.takeScreenshot("41-" + c[1] + "-front");
+            if (eat) context.getInput().releaseKey(options -> options.keyUse);
+        }
+        context.runOnClient(client -> client.options.setCameraType(net.minecraft.client.CameraType.FIRST_PERSON));
+        server.runCommand("clear @a");
+        server.runCommand("effect clear @a");
+        server.runCommand("effect give @a saturation 3 20 true");
+        server.runCommand("effect give @a instant_health 1 10 true");
+        context.waitTicks(40);
+    }
+
+    /** Typing a password and pressing Enter sends it, like clicking Log in (the field is cleared once sent). */
+    private static void enterSubmitsLogin(ClientGameTestContext context, TestSingleplayerContext world) throws Exception {
+        context.runOnClient(client -> client.gui.setScreen(new holylois.auth.HolyLoisAuthScreen(new holylois.auth.AuthStatus(1, 6))));
+        context.waitTicks(5);
+        context.getInput().typeChars("secret123");
+        context.waitTicks(2);
+        String typed = context.computeOnClient(client -> passwordOf(client.gui.screen()));
+        context.getInput().pressKey(257);
+        context.waitTicks(3);
+        String after = context.computeOnClient(client -> passwordOf(client.gui.screen()));
+        String screen = context.computeOnClient(client -> String.valueOf(client.gui.screen()));
+        log("login form: typed=" + typed.length() + " after=" + after.length() + " screen=" + screen);
+        context.runOnClient(client -> client.gui.setScreen(null));
+        check(typed.length() == 9, "the password box takes typed text (" + typed.length() + ")");
+        check(after.isEmpty(), "Enter sent the login form (field cleared)");
+    }
+
+    private static String passwordOf(Object screen) {
+        try {
+            var field = screen.getClass().getDeclaredField("password"); field.setAccessible(true);
+            var box = (net.minecraft.client.gui.components.EditBox) field.get(screen);
+            return box == null ? "" : box.getValue();
+        } catch (ReflectiveOperationException error) { return "no field on " + screen; }
+    }
+
     /** The 1.9.0 boombox model from the front, placed like a player would, then turned to face the camera. */
     private static void boomboxModel(ClientGameTestContext context, TestSingleplayerContext world) {
         BlockPos target = context.computeOnClient(client -> client.player.blockPosition().offset(-2, 0, 0));
@@ -309,6 +513,19 @@ public final class HolyLoisClientTests implements FabricClientGameTest {
         context.takeScreenshot("15-boombox-held-third-person");
         context.runOnClient(client -> client.options.setCameraType(net.minecraft.client.CameraType.FIRST_PERSON));
         world.getServer().runCommand("clear @a");
+        // Mannequins 3 blocks ahead: one faces the camera, one shows its side (hand on the handle, speakers out).
+        var look = context.computeOnClient(client -> client.player.getLookAngle().multiply(1, 0, 1).normalize());
+        var base = context.computeOnClient(client -> client.player.position());
+        var right = new net.minecraft.world.phys.Vec3(-look.z, 0, look.x);
+        float faceCamera = context.computeOnClient(client -> client.player.getYRot() + 180);
+        var front = base.add(look.scale(3)).add(right.scale(-1));
+        var side = base.add(look.scale(3)).add(right.scale(1));
+        world.getServer().runCommand(String.format(java.util.Locale.ROOT, "summon mannequin %.2f %.2f %.2f {Tags:[\"hlbox\"],Rotation:[%.1ff,0f],equipment:{mainhand:{id:\"holylois:boombox\",count:1}}}", front.x, front.y, front.z, faceCamera));
+        world.getServer().runCommand(String.format(java.util.Locale.ROOT, "summon mannequin %.2f %.2f %.2f {Tags:[\"hlbox\"],Rotation:[%.1ff,0f],equipment:{mainhand:{id:\"holylois:boombox\",count:1}}}", side.x, side.y, side.z, faceCamera + 90));
+        context.runOnClient(client -> client.player.setXRot(15));
+        context.waitTicks(20);
+        context.takeScreenshot("16-boombox-held-mannequins");
+        world.getServer().runCommand("kill @e[tag=hlbox]");
     }
 
     /** The client half of structure titles: the server says "you are in a pillager outpost", the title shows below Jade. */

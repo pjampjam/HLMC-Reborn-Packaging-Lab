@@ -126,5 +126,9 @@
   "holylois.travel.account_code_invalid": "Код отклонён. Уточни его срок у админа.",
   "holylois.travel.account_reminder_link_quick": "Задай новый пароль: %s или /account password. Код не нужен, админ запустил быстрый сброс для тебя.",
   "holylois.travel.account_failed": "Не удалось завершить. Обратись к админу.",
-  "holylois.relic.held": "В руках:"
+  "holylois.relic.held": "В руках:",
+  "holylois.travel.dim.overworld": "Верхний мир",
+  "holylois.travel.dim.the_nether": "Незер",
+  "holylois.travel.dim.the_end": "Энд",
+  "holylois.catch.shiny": "Сияющая"
 }

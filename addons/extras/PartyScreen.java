@@ -7,9 +7,12 @@ import java.util.*;
 
 public final class PartyScreen extends TravelScreen {
     private EditBox name;private boolean wasMember;private int page;private boolean confirmLeave,confirmDestroy;
-    private int rows(){return Math.max(1,Math.min(5,(panelHeight-186)/15));}
+    private int shown=1;
+    private int rows(){return shown;}
     @Override protected void init(){
-        panel();var state=PartyHud.current();wasMember=!state.members().isEmpty();int x=left+12,w=panelWidth-24;
+        panel();var state=PartyHud.current();wasMember=!state.members().isEmpty();
+        int room=Math.max(1,Math.min(5,(panelHeight-186)/15));shown=Math.max(1,Math.min(room,state.members().size()));
+        fit(confirmLeave||confirmDestroy?124:48+shown*15+(state.members().size()>shown?26:0)+143);int x=left+12,w=panelWidth-24;
         if(confirmLeave || confirmDestroy){
             button(x,top+86,w/2-4,confirmDestroy?"disband":"leave",()->{TravelClient.send(confirmDestroy?TravelIntent.DESTROY_PARTY:TravelIntent.LEAVE,"","",0);confirmLeave=false;confirmDestroy=false;rebuildWidgets();});
             button(x+w/2+4,top+86,w/2-4,"cancel",()->{confirmLeave=false;confirmDestroy=false;rebuildWidgets();});return;
@@ -50,9 +53,9 @@ public final class PartyScreen extends TravelScreen {
         if(state.members().isEmpty())g.centeredText(font,text("no_party"),width/2,top+58,Ui.MUTED);
         else for(int i=0;i<rows();i++){
             int index=page*rows()+i;if(index>=state.members().size())break;var m=state.members().get(index);
-            String details=m.online()?String.format(Locale.ROOT,"%.0f/%.0f  %d/20",m.health(),m.maximum(),m.food()):text("offline").getString();
+            String details=m.online()?String.format(Locale.ROOT,"%.0f/%.0f",m.health(),m.maximum()):text("offline").getString();
             g.text(font,font.plainSubstrByWidth(m.name(),Math.max(40,w-100)),left+12,top+48+i*15,Ui.TEXT);
-            g.text(font,details,left+panelWidth-108,top+48+i*15,m.online()?Ui.SUCCESS:Ui.MUTED);
+            g.text(font,details,left+panelWidth-12-font.width(details),top+48+i*15,m.online()?Ui.SUCCESS:Ui.MUTED);
         }
         g.text(font,text(wasMember?"invite_hint":"accept_hint"),left+12,top+panelHeight-135,Ui.MUTED);
     }

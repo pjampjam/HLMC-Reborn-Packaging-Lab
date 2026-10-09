@@ -10,10 +10,11 @@ import net.minecraft.network.chat.Component;
  */
 public final class Ui {
     private Ui() {}
-    public static final int CANVAS = 0xFF111215, SURFACE = 0xFF18191C, RAISED = 0xFF202226, CONTROL = 0xFF282A2F,
-        CONTROL_HOVER = 0xFF32353B, LINE = 0xFF3A3D44, LINE_STRONG = 0xFF5E626C, TEXT = 0xFFF3F0E8, MUTED = 0xFFADA99F,
-        GOLD = 0xFFFFE24D, GOLD_SOFT = 0xFF3A3220, ON_GOLD = 0xFF1A1500, GREEN = 0xFF2BC46E, SUCCESS = 0xFF7ED3A0,
-        DANGER = 0xFFFF928A, DANGER_FILL = 0xFFC2362F, HEALTH = 0xFFE5484D, FOOD = 0xFFE0A85A;
+    // Owner palette 2026-10-09: near-black like the cinematic bars, chat yellow (#FFFF55) as the accent, chat green/red.
+    public static final int CANVAS = 0xFF050506, SURFACE = 0xFF0C0C0E, RAISED = 0xFF16171A, CONTROL = 0xFF1C1D21,
+        CONTROL_HOVER = 0xFF2B2C32, LINE = 0xFF2C2E34, LINE_STRONG = 0xFF6E717A, TEXT = 0xFFFFFFFF, MUTED = 0xFFAAAAAA,
+        GOLD = 0xFFFFFF55, GOLD_SOFT = 0xFF2E2E14, ON_GOLD = 0xFF000000, GREEN = 0xFF55FF55, SUCCESS = 0xFF55FF55,
+        DANGER = 0xFFFF5555, DANGER_FILL = 0xFFC2362F, HEALTH = 0xFFFF4545, FOOD = 0xFFFFAA00;
 
     /** Same colour with alpha a (0..1). */
     public static int alpha(int color, float a) { return (Math.round(Math.max(0, Math.min(1, a)) * 255) << 24) | (color & 0xFFFFFF); }
@@ -46,7 +47,7 @@ public final class Ui {
 
     /** Button like the launcher's: control fill, gold for the main action, red text for destructive ones. */
     public static void button(GuiGraphicsExtractor g, Font font, int x, int y, int w, int h, Component label, boolean hover, boolean focus, boolean active, Kind kind) {
-        int fill = kind == Kind.PRIMARY ? (hover ? 0xFFFFEA7A : GOLD) : hover ? CONTROL_HOVER : CONTROL;
+        int fill = kind == Kind.PRIMARY ? (hover ? 0xFFFFFFAA : GOLD) : hover ? CONTROL_HOVER : CONTROL;
         int border = focus ? GOLD : kind == Kind.PRIMARY ? GOLD : hover ? LINE_STRONG : LINE;
         int text = kind == Kind.PRIMARY ? ON_GOLD : kind == Kind.DANGER ? DANGER : TEXT;
         if (!active) { fill = CONTROL; border = LINE; text = alpha(MUTED, 0.55f); }

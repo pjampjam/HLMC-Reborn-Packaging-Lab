@@ -100,22 +100,23 @@ for old in ("boombox_side", "boombox_top"):
     (TEX / f"{old}.png").unlink(missing_ok=True)
 
 # Inventory icon: the front of the 3D model, drawn flat like a vanilla item (antenna, handle, two speakers, display).
+# Like vanilla sprites it keeps a clear margin (1 px at the sides, 2 below); 12 px of body between the outlines.
 ICON_ROWS = [
-    "..............g.",
-    "..............s.",
-    "...sSSSSSSSSs.s.",
-    "...s........s.s.",
-    "...s........s.s.",
-    ".OOOOOOOOOOOOOO.",
-    "OEEEEEoEEgEEEEEO",
-    "OPlSsPLggPPlSsPO",
-    "OlCcCsDDDDlCcCsO",
-    "OScgCdDrrDScgCdO",
-    "OsCcCdDDDDsCcCdO",
-    "OPsddPPPPPPsddPO",
-    "OttttttttttttttO",
-    "OHHHHHHHHHHHHHHO",
-    ".OOOOOOOOOOOOOO.",
+    "................",
+    ".............g..",
+    "....sSSSSSSs.s..",
+    "....s......s.s..",
+    "..OOOOOOOOOOOO..",
+    ".OEEEEoEEgEEEEO.",
+    ".OPlSsPggPlSsPO.",
+    ".OlCcCsDDlCcCsO.",
+    ".OScgCdrrScgCdO.",
+    ".OsCcCdDDsCcCdO.",
+    ".OPsddPPPPsddPO.",
+    ".OttttttttttttO.",
+    ".OHHHHHHHHHHHHO.",
+    "..OOOOOOOOOOOO..",
+    "................",
     "................",
 ]
 ICON = {".": None, "O": (16, 17, 20), "E": EDGE, "P": PLASTIC, "H": SHADOW, "t": GOLD_DIM, "g": GOLD, "L": GOLD_LIGHT,

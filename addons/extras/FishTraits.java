@@ -60,12 +60,20 @@ public final class FishTraits {
 
     /** Writes the eat effects, the held bonus and their tooltip lines; returns the lines (empty for Common/Uncommon). */
     static List<Component> apply(ItemStack stack, String species, String rarity, double size, boolean shiny, boolean cooked) {
+        return apply(stack, species, rarity, size, shiny, cooked, 1, true);
+    }
+
+    /**
+     * share: part of the whole fish's effect (a fillet gives a quarter, one level weaker, at least 10 s); held: whether the
+     * main-hand bonus applies (whole fish only).
+     */
+    static List<Component> apply(ItemStack stack, String species, String rarity, double size, boolean shiny, boolean cooked, float share, boolean held) {
         var lines = new ArrayList<Component>();
         if (tier(rarity) == 0) return lines;
         var trait = SPECIES.getOrDefault(species, FALLBACK);
         var food = stack.get(DataComponents.CONSUMABLE);
         if (trait.eat() != null && food != null) {
-            int ticks = seconds(rarity, size, shiny, cooked) * 20, level = amplifier(rarity);
+            int ticks = Math.max(200, Math.round(seconds(rarity, size, shiny, cooked) * 20 * share)), level = Math.max(0, amplifier(rarity) - (share < 1 ? 1 : 0));
             var effects = new ArrayList<MobEffectInstance>();
             // Instant-ish effects (Saturation) would be absurd for minutes: a few seconds of them, by tier.
             boolean instant = trait.eat().value().isInstantaneous() || trait.eat() == MobEffects.SATURATION;
@@ -84,13 +92,26 @@ public final class FishTraits {
         } else if (trait.eat() == null) {
             lines.add(Component.literal("A pure trophy: no effect when eaten").withStyle(s -> s.withColor(ChatFormatting.DARK_GRAY).withItalic(true)));
         }
-        if (trait.held() != null) {
+        if (held && trait.held() != null) {
             double times = switch (tier(rarity)) { case 2 -> 1.5; case 3 -> 2; case 4 -> 3; default -> 1; } * (shiny ? 1.5 : 1);
             var operation = "base".equals(trait.heldOp()) ? AttributeModifier.Operation.ADD_MULTIPLIED_BASE : AttributeModifier.Operation.ADD_VALUE;
             var modifier = new AttributeModifier(Identifier.fromNamespaceAndPath("holylois", "trophy_fish"), Math.round(trait.amount() * times * 100) / 100.0, operation);
             stack.set(DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.builder().add(trait.held(), modifier, EquipmentSlotGroup.MAINHAND).build());
         }
         return lines;
+    }
+
+    /**
+     * A heavier fish fills you up more: hunger +2 at 1 kg, +7 at 10 kg, +11 at 40 kg (20 at most), saturation alike.
+     * Trophies are rare, so a filling meal from one is a reward, not a balance problem.
+     */
+    static void food(ItemStack stack, double kg) {
+        var food = stack.get(DataComponents.FOOD);
+        if (food == null || !(kg > 0)) return;
+        double extra = Math.log(1 + kg) / Math.log(2) * 2;
+        int nutrition = (int) Math.min(20, Math.round(food.nutrition() + extra));
+        float saturation = (float) Math.min(20, food.saturation() + extra * 0.8);
+        stack.set(DataComponents.FOOD, new net.minecraft.world.food.FoodProperties(nutrition, saturation, food.canAlwaysEat()));
     }
 
     static String time(int seconds) { return seconds / 60 + ":" + String.format(java.util.Locale.ROOT, "%02d", seconds % 60); }

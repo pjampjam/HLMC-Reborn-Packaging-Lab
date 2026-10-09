@@ -9,12 +9,15 @@ public final class HomesScreen extends TravelScreen {
     public HomesScreen(HomeState state){super("homes_title");this.state=state;}
     void update(HomeState next){state=next;edit=-1;rebuildWidgets();}
     /** Rows per page: 5, fewer on small screens. Slots past the player's limit show as grey boxes (unlocked later). */
-    private int rows(){return Math.max(1,Math.min(5,(panelHeight-110)/ROW));}
+    private int rows(){return Math.max(1,Math.min(5,(Math.min(310,height-16)-110)/ROW));}
     private static final int ROW=32,BUTTON=26;
     /** Shown slots: the unlocked ones, filled up with locked boxes to a full page (so 3 homes show 2 locked). */
     private int slots(){int unlocked=Math.max(state.limit(),state.homes().size());return Math.max(unlocked,((unlocked+rows()-1)/rows())*rows());}
     @Override protected void init(){
-        panel();int x=left+12,w=panelWidth-24,y=top+44;
+        panel();
+        if(edit>=0)fit(170);
+        else{int count=slots(),shown=Math.min(rows(),count-Math.min(page,Math.max(0,(count-1)/rows()))*rows());fit(44+shown*ROW+(count>rows()?30:0)+40);}
+        int x=left+12,w=panelWidth-24,y=top+44;
         if(edit>=0){
             input=addRenderableWidget(new EditBox(font,x,y+18,w,22,text("name")));input.setMaxLength(32);input.setValue(old);
             setInitialFocus(input);
@@ -27,12 +30,12 @@ public final class HomesScreen extends TravelScreen {
                 int row=y+i*ROW;
                 if(index<state.homes().size()){
                     var h=state.homes().get(index);
-                    buttonText(x,row,w-112,BUTTON,Component.literal(h.name()),()->{TravelClient.send(TravelIntent.GO,h.name(),"",state.revision());minecraft.gui.setScreen(null);});
+                    rowButton(x,row,w-112,BUTTON,Component.literal(h.name()),()->{TravelClient.send(TravelIntent.GO,h.name(),"",state.revision());minecraft.gui.setScreen(null);});
                     button(x+w-106,row,50,BUTTON,"rename",()->{edit=TravelIntent.RENAME;old=h.name();rebuildWidgets();});
                     button(x+w-52,row,52,BUTTON,"delete",()->{edit=TravelIntent.DELETE;old=h.name();confirmDelete();});
                 }else if(index<Math.max(state.limit(),state.homes().size()))buttonText(x,row,w,BUTTON,text("empty",index+1),()->{edit=TravelIntent.SAVE;old="";rebuildWidgets();});
             }
-            if(maxPage>0){button(x,top+panelHeight-60,45,"previous",()->{page=Math.max(0,page-1);rebuildWidgets();});button(x+51,top+panelHeight-60,45,"next",()->{page=Math.min(maxPage,page+1);rebuildWidgets();});}
+            if(maxPage>0){button(x,top+panelHeight-62,45,"previous",()->{page=Math.max(0,page-1);rebuildWidgets();});button(x+51,top+panelHeight-62,45,"next",()->{page=Math.min(maxPage,page+1);rebuildWidgets();});}
         }
         button(x,top+panelHeight-32,w/2-4,"party_title",()->minecraft.gui.setScreen(new PartyScreen()));
         button(x+w/2+4,top+panelHeight-32,w/2-4,"close",()->minecraft.gui.setScreen(null));
@@ -43,8 +46,14 @@ public final class HomesScreen extends TravelScreen {
         if(edit>=0&&edit!=TravelIntent.DELETE&&(event.key()==257||event.key()==335)){confirm();return true;}
         return super.keyPressed(event);
     }
+    /** Overworld, Nether, End (translated), other dimensions by their tidied id. */
+    static String dimension(String id){
+        String path=id.substring(id.indexOf(':')+1);
+        String tidy=path.isEmpty()?id:Character.toUpperCase(path.charAt(0))+path.substring(1).replace('_',' ');
+        return Component.translatableWithFallback("holylois.travel.dim."+path,tidy).getString();
+    }
     private void confirmDelete(){
-        clearWidgets();panel();int x=left+12,w=panelWidth-24;
+        clearWidgets();panel();fit(140);int x=left+12,w=panelWidth-24;
         button(x,top+100,w/2-4,"confirm_delete",()->TravelClient.send(TravelIntent.DELETE,old,"",state.revision()));
         button(x+w/2+4,top+100,w/2-4,"cancel",()->{edit=-1;rebuildWidgets();});
     }
@@ -59,7 +68,7 @@ public final class HomesScreen extends TravelScreen {
             if(index>=unlocked){Ui.box(g,left+12,row,panelWidth-24,BUTTON,Ui.alpha(Ui.CONTROL,0.45f),Ui.alpha(Ui.LINE,0.6f));continue;}
             if(index<state.homes().size()){
                 // The dimension sits at the right end of the home button, muted.
-                String where=font.plainSubstrByWidth(state.homes().get(index).dimension(),70);
+                String where=font.plainSubstrByWidth(dimension(state.homes().get(index).dimension()),80);
                 g.text(font,where,left+12+panelWidth-24-112-6-font.width(where),row+9,Ui.MUTED,false);
             }
         }

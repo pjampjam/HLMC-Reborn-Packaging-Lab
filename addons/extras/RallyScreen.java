@@ -7,7 +7,7 @@ public final class RallyScreen extends TravelScreen {
     private net.minecraft.client.gui.components.Button request;private long received;private PartyState.Rally last;
     public RallyScreen(){super("rally_title");}
     @Override protected void init(){
-        panel();int x=left+12,w=panelWidth-24,y=top+116;
+        panel();fit(206);int x=left+12,w=panelWidth-24,y=top+116;
         request=button(x,y,w,"request_travel",()->{
             var mark=mark();if(mark!=null && TravelClient.send(TravelIntent.JOIN_RALLY,mark.author().toString(),"",0))minecraft.gui.setScreen(null);
         });

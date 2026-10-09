@@ -12,7 +12,7 @@ public final class AccountScreen extends TravelScreen {
     public AccountScreen(AccountNotice state){super(state.kind()==1?"account_rename":"account_password");this.state=state;}
     void update(AccountNotice next){boolean rebuild=waiting||!state.grant().equals(next.grant())||state.kind()!=next.kind()||state.authenticated()!=next.authenticated()||!next.message().isEmpty();state=next;if(rebuild){clearSecrets();waiting=false;rebuildWidgets();}}
     @Override protected void init(){
-        panel();int x=left+12,w=panelWidth-24,y=top+68;
+        panel();fit(state.kind()!=2?154:state.authenticated()?202:250);int x=left+12,w=panelWidth-24,y=top+68;
         value=field(x,y,w,state.kind()==1?"account_new_name":"account_new_password",state.kind()!=1);value.setMaxLength(state.kind()==1?16:100);
         if(state.kind()==2){confirm=field(x,y+48,w,"account_confirm_password",true);if(!state.authenticated())token=field(x,y+96,w,"account_code",true);}
         var save=button(x,top+panelHeight-34,w/2-4,"confirm",this::submit);save.active=!waiting;

@@ -24,7 +24,12 @@ public final class BoomboxPulse {
     private BoomboxPulse() {}
     private record Level(float value, long at) {}
     private static final Map<BlockPos, Level> levels = new ConcurrentHashMap<>();
-    private static final Map<BlockPos, Float> shown = new ConcurrentHashMap<>();
+    private static final Map<BlockPos, Float> shown = new ConcurrentHashMap<>(), average = new ConcurrentHashMap<>();
+    private static final Map<BlockPos, Long> lastBeat = new ConcurrentHashMap<>();
+    private static int beats;
+
+    /** Audio is arriving for this boombox (then notes follow the beat instead of the random ambient notes). */
+    public static boolean live(BlockPos pos) { return levels.containsKey(pos); }
     private static ItemStack cone;
     private static final ItemStackRenderState state = new ItemStackRenderState();
     private static boolean broken;
@@ -57,13 +62,21 @@ public final class BoomboxPulse {
         for (var entry : levels.entrySet()) {
             var pos = entry.getKey();
             var heard = entry.getValue();
-            if (now - heard.at() > 400) { levels.remove(pos); shown.remove(pos); continue; }
+            if (now - heard.at() > 400) { levels.remove(pos); shown.remove(pos); average.remove(pos); lastBeat.remove(pos); continue; }
             var block = level.getBlockState(pos);
             if (!block.is(Boombox.BLOCK) || !block.getValue(BoomboxBlock.PLAYING) || pos.distToCenterSqr(camera) > 48 * 48) continue;
             // Fast attack, slower release, like a speaker cone.
             float last = shown.getOrDefault(pos, 0f), target = heard.value();
             float value = target > last ? last + (target - last) * 0.6f : last + (target - last) * 0.15f;
             shown.put(pos, value);
+            // A note on each beat: loudness jumping well above its recent average, at most about four a second.
+            float avg = average.getOrDefault(pos, target) * 0.95f + target * 0.05f;
+            average.put(pos, avg);
+            if (target > 0.12f && target > avg * 1.6f && now - lastBeat.getOrDefault(pos, 0L) > 240) {
+                lastBeat.put(pos, now);
+                level.addParticle(net.minecraft.core.particles.ParticleTypes.NOTE, pos.getX() + 0.3 + level.getRandom().nextDouble() * 0.4,
+                    pos.getY() + 0.8, pos.getZ() + 0.3 + level.getRandom().nextDouble() * 0.4, (beats++ % 25) / 24.0, 0, 0);
+            }
             Direction facing = block.getValue(BoomboxBlock.FACING);
             int light = LightCoordsUtil.pack(level.getBrightness(LightLayer.BLOCK, pos), level.getBrightness(LightLayer.SKY, pos));
             mc.getItemModelResolver().updateForTopItem(state, cone, ItemDisplayContext.NONE, level, null, 0);

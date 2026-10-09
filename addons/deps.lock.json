@@ -416,6 +416,12 @@
    "size": 120378,
    "side": "both"
   },
+  "notenoughanimations-fabric-1.12.6-mc26.3.jar": {
+   "url": "https://cdn.modrinth.com/data/MPCX6s5C/versions/EhSk2OTD/notenoughanimations-fabric-1.12.6-mc26.3.jar",
+   "sha256": "81539e3bb8d222ae3ed3046677ffe466dd6898ec2b75b78f8eb26cb1a43be0c8",
+   "size": 1863579,
+   "side": "client"
+  },
   "open-parties-and-claims-fabric-26.3-0.32.8.jar": {
    "url": "https://cdn.modrinth.com/data/gF3BGWvG/versions/r4qdHbjN/open-parties-and-claims-fabric-26.3-0.32.8.jar",
    "sha256": "513dc4b77bd6499d97c9ac6b3e7d77e2fe03e794c90ba4e5dbff98cc36069edd",

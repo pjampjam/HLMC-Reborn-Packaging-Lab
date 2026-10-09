@@ -259,7 +259,7 @@ public final class Legends {
         int rgb = FishData.color(key) & 0xFFFFFF;
         var name = stack.getHoverName().copy();
         // item_name, not custom_name: no name tag over item frames and it does not look anvil-renamed.
-        stack.set(DataComponents.ITEM_NAME, Component.literal((shiny ? "✧ " : "") + name.getString()).withStyle(s -> s.withColor(rgb).withItalic(false).withBold(mythic)));
+        stack.set(DataComponents.ITEM_NAME, Component.literal((shiny ? "✧ " : "") + name.getString()).withStyle(s -> FishData.shine(s.withColor(rgb).withItalic(false).withBold(mythic), key)));
         var lines = new ArrayList<Component>();
         lines.add(Component.literal("✦ " + rarity.name() + (shiny ? " Shiny" : "") + " catch" + (mythic ? " ✦" : "")).withStyle(s -> s.withColor(rgb).withItalic(false)));
         var fishTag = new CompoundTag();
@@ -272,12 +272,13 @@ public final class Legends {
             String day = LocalDate.now(RIGA).toString();
             lines.add(Component.literal("Weight: " + LootRules.kg(kilograms)).withStyle(s -> s.withColor(ChatFormatting.WHITE).withItalic(false)));
             lines.addAll(FishTraits.apply(stack, id, key, size, shiny, false));
+            FishTraits.food(stack, kilograms);
             lines.add(Component.literal((angler == null ? "Caught on " : "Caught by " + angler + ", ") + day).withStyle(s -> s.withColor(ChatFormatting.DARK_GRAY).withItalic(true)));
             fishTag.putDouble("kg", kilograms);
             if(angler!=null){
                 var catcher=level.getServer().getPlayerList().getPlayerByName(angler);
                 if(catcher!=null&&PartySupport.ready(catcher)&&net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.canSend(catcher,RareCatchNotice.TYPE)){
-                    net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(catcher,new RareCatchNotice(id,key,kilograms));
+                    net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(catcher,new RareCatchNotice(id,key,kilograms,shiny));
                 }
             }
             fishTag.putString("species", id);
@@ -287,19 +288,16 @@ public final class Legends {
             if (rarity.from() >= 0.9 || shiny) stack.set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, true);
             String fishName = (shiny ? "Shiny " : "") + name.getString();
             if (rarity.name().equals("Legendary") && angler != null)
-                level.getServer().getPlayerList().broadcastSystemMessage(Component.literal("✦ ").withStyle(ChatFormatting.GOLD)
-                    .append(Component.literal(angler).withStyle(ChatFormatting.YELLOW))
+                level.getServer().getPlayerList().broadcastSystemMessage(Component.literal(angler).withStyle(ChatFormatting.YELLOW)
                     .append(Component.literal(" caught a ").withStyle(ChatFormatting.GRAY))
-                    .append(gradient("Legendary " + fishName, 0xFFE24D, 0xFFB52E, false))
+                    .append(gradient("Legendary " + fishName, 0xFFE24D, 0xFFB52E, false, "legendary"))
                     .append(Component.literal(" of " + LootRules.kg(kilograms) + "!").withStyle(ChatFormatting.GRAY)), false);
             if (mythic && angler != null) {
                 var server = level.getServer();
-                server.getPlayerList().broadcastSystemMessage(Component.literal("✦✦✦ ").withStyle(ChatFormatting.RED)
-                    .append(Component.literal(angler).withStyle(ChatFormatting.YELLOW))
+                server.getPlayerList().broadcastSystemMessage(Component.literal(angler).withStyle(ChatFormatting.YELLOW)
                     .append(Component.literal(" pulled up a ").withStyle(ChatFormatting.GRAY))
-                    .append(gradient("MYTHIC " + fishName, 0xFF2E2E, 0xFFB000, true))
-                    .append(Component.literal(" of " + LootRules.kg(kilograms) + "! ").withStyle(ChatFormatting.GRAY))
-                    .append(Component.literal("✦✦✦").withStyle(ChatFormatting.RED)), false);
+                    .append(gradient("MYTHIC " + fishName, 0xFF2E2E, 0xFFB000, true, "mythic"))
+                    .append(Component.literal(" of " + LootRules.kg(kilograms) + "!").withStyle(ChatFormatting.GRAY)), false);
                 var fanfare = BuiltInRegistries.SOUND_EVENT.wrapAsHolder(net.minecraft.sounds.SoundEvents.UI_TOAST_CHALLENGE_COMPLETE);
                 for (var player : server.getPlayerList().getPlayers())
                     player.connection.send(new net.minecraft.network.protocol.game.ClientboundSoundPacket(fanfare, net.minecraft.sounds.SoundSource.MASTER,
@@ -312,8 +310,8 @@ public final class Legends {
         CustomData.set(DataComponents.CUSTOM_DATA, stack, tag);
     }
 
-    /** Chat text that runs from one colour to another letter by letter (Legendary gold shine, Mythic red to gold). */
-    static Component gradient(String text, int from, int to, boolean bold) {
+    /** Chat text from one colour to another letter by letter, in the rarity's shine font (players see it shimmer). */
+    static Component gradient(String text, int from, int to, boolean bold, String rarity) {
         var out = Component.empty();
         int n = Math.max(1, text.length() - 1);
         for (int i = 0; i < text.length(); i++) {
@@ -322,25 +320,61 @@ public final class Legends {
             int g = (int) ((from >> 8 & 255) + ((to >> 8 & 255) - (from >> 8 & 255)) * t);
             int b = (int) ((from & 255) + ((to & 255) - (from & 255)) * t);
             int rgb = r << 16 | g << 8 | b;
-            out.append(Component.literal(String.valueOf(text.charAt(i))).withStyle(s -> s.withColor(rgb).withBold(bold)));
+            out.append(Component.literal(String.valueOf(text.charAt(i))).withStyle(s -> FishData.shine(s.withColor(rgb).withBold(bold), rarity)));
         }
         return out;
+    }
+
+    /** A slice cut from a trophy on the cutting board (FilletMixin). */
+    public static void fillet(ItemStack fish, ItemStack slice) {
+        var tag = FishData.tag(fish);
+        if (tag != null && tag.contains("kg")) filletData(tag, slice, false);
+    }
+
+    /**
+     * Fillet look and effect: name in the rarity colour (Shiny star, shine for Legendary and Mythic), a quarter of the species
+     * effect one level weaker, no held bonus. No weight or catcher, so slices of the same rarity, species and shine stack.
+     */
+    static void filletData(CompoundTag fish, ItemStack slice, boolean cooked) {
+        if (slice.isEmpty()) return;
+        String key = fish.getStringOr("rarity", ""), species = fish.getStringOr("species", "");
+        boolean shiny = fish.getBooleanOr("shiny", false);
+        int rgb = FishData.color(key) & 0xFFFFFF;
+        slice.set(DataComponents.ITEM_NAME, Component.literal((shiny ? "✧ " : "") + slice.getHoverName().getString())
+            .withStyle(s -> FishData.shine(s.withColor(rgb).withItalic(false), key)));
+        var lines = new ArrayList<Component>();
+        String title = key.isEmpty() ? "" : Character.toUpperCase(key.charAt(0)) + key.substring(1);
+        lines.add(Component.literal("✦ " + title + (shiny ? " Shiny" : "") + (cooked ? " cooked" : "") + " fillet").withStyle(s -> s.withColor(rgb).withItalic(false)));
+        lines.addAll(FishTraits.apply(slice, species, key, 0.8, shiny, cooked, 0.25f, false));
+        slice.set(DataComponents.LORE, new ItemLore(lines));
+        if (shiny) slice.set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, true);
+        var data = new CompoundTag();
+        data.putString("rarity", key);
+        data.putString("species", species);
+        if (shiny) data.putBoolean("shiny", true);
+        data.putBoolean("fillet", true);
+        if (cooked) data.putBoolean("cooked", true);
+        var tag = new CompoundTag();
+        tag.put(FISH_KEY, data);
+        CustomData.set(DataComponents.CUSTOM_DATA, slice, tag);
     }
 
     /** A cooked trophy fish keeps its rarity, weight and catch line, with its effects half again as long. */
     public static void cooked(ItemStack raw, ItemStack result) {
         var fish = FishData.tag(raw);
+        if (fish != null && fish.getBooleanOr("fillet", false)) { filletData(fish, result, true); return; }
         if (fish == null || result.isEmpty() || !fish.contains("kg")) return;
         String key = fish.getStringOr("rarity", "");
         boolean shiny = fish.getBooleanOr("shiny", false), mythic = key.equals("mythic");
         int rgb = FishData.color(key) & 0xFFFFFF;
         String name = result.getHoverName().getString();
-        result.set(DataComponents.ITEM_NAME, Component.literal((shiny ? "✧ " : "") + name).withStyle(s -> s.withColor(rgb).withItalic(false).withBold(mythic)));
+        result.set(DataComponents.ITEM_NAME, Component.literal((shiny ? "✧ " : "") + name).withStyle(s -> FishData.shine(s.withColor(rgb).withItalic(false).withBold(mythic), key)));
         var lines = new ArrayList<Component>();
         String title = key.isEmpty() ? "" : Character.toUpperCase(key.charAt(0)) + key.substring(1);
         lines.add(Component.literal("✦ Cooked " + title + (shiny ? " Shiny" : "") + " catch").withStyle(s -> s.withColor(rgb).withItalic(false)));
         lines.add(Component.literal("Weight: " + LootRules.kg(fish.getDoubleOr("kg", 0))).withStyle(s -> s.withColor(ChatFormatting.WHITE).withItalic(false)));
         lines.addAll(FishTraits.apply(result, fish.getStringOr("species", ""), key, FishData.size(fish), shiny, true));
+        FishTraits.food(result, fish.getDoubleOr("kg", 0));
         String by = fish.getStringOr("by", ""), day = fish.getStringOr("day", "");
         lines.add(Component.literal((by.isEmpty() ? "Caught on " : "Caught by " + by + ", ") + day).withStyle(s -> s.withColor(ChatFormatting.DARK_GRAY).withItalic(true)));
         result.set(DataComponents.LORE, new ItemLore(lines));
