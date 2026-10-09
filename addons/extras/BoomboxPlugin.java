@@ -23,8 +23,10 @@ public final class BoomboxPlugin implements VoicechatPlugin {
             var at = event.getPosition();
             BoomboxPulse.heard(at.getX(), at.getY(), at.getZ(), event.getRawAudio());
         });
-        registration.registerEvent(de.maxhenkel.voicechat.api.events.ClientReceiveSoundEvent.EntitySound.class,
-            event -> BoomboxPulse.heardHeld(event.getEntityId(), event.getRawAudio()));
+        // A held boombox streams on its own random channel; a player's voice comes on their own id and must not pump the cones.
+        registration.registerEvent(de.maxhenkel.voicechat.api.events.ClientReceiveSoundEvent.EntitySound.class, event -> {
+            if (!event.getId().equals(event.getEntityId())) BoomboxPulse.heardHeld(event.getEntityId(), event.getRawAudio());
+        });
         registration.registerEvent(VoicechatServerStoppedEvent.class, event -> {
             Boombox.stopAll();
             Boombox.voice = null;

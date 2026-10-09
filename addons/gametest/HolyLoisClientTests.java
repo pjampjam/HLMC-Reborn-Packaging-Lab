@@ -870,6 +870,13 @@ public final class HolyLoisClientTests implements FabricClientGameTest {
         context.runOnClient(client -> client.player.setYRot(client.player.getYRot() - 70));
         context.waitTicks(40);
         context.takeScreenshot("42-lantern-settled");
+        // First person: the lantern hangs from your own hand (FirstPerson body), looking ahead and down.
+        context.runOnClient(client -> { client.options.setCameraType(net.minecraft.client.CameraType.FIRST_PERSON); client.player.setXRot(20); });
+        context.waitTicks(10);
+        context.takeScreenshot("42-lantern-first-person");
+        context.runOnClient(client -> client.player.setXRot(60));
+        context.waitTicks(10);
+        context.takeScreenshot("42-lantern-first-person-down");
         float rest = context.computeOnClient(client -> Math.abs(holylois.boombox.HeldSwing.side(client.player.getId())) + Math.abs(holylois.boombox.HeldSwing.tilt(client.player.getId())));
         check(rest < 3, "the lantern settles when you stand still (" + rest + ")");
         context.runOnClient(client -> client.options.setCameraType(net.minecraft.client.CameraType.FIRST_PERSON));

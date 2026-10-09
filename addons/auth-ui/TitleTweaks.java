@@ -36,7 +36,12 @@ public final class TitleTweaks {
 
     private static void join(TitleScreen title) {
         var mc = net.minecraft.client.Minecraft.getInstance();
-        var server = new ServerData("Holy Lois: Reborn", ADDRESS, ServerData.Type.OTHER);
-        ConnectScreen.startConnecting(title, mc, ServerAddress.parseString(ADDRESS), server, false, null);
+        // The saved server-list entry keeps the player's own choices (like the server resource pack answer).
+        ServerData server = null;
+        var list = new net.minecraft.client.multiplayer.ServerList(mc);
+        list.load();
+        for (int i = 0; i < list.size() && server == null; i++) if (AuthPolicy.holyLoisAddress(list.get(i).ip)) server = list.get(i);
+        if (server == null) server = new ServerData("Holy Lois: Reborn", ADDRESS, ServerData.Type.OTHER);
+        ConnectScreen.startConnecting(title, mc, ServerAddress.parseString(server.ip), server, false, null);
     }
 }
