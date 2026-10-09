@@ -63,6 +63,7 @@ public final class HolyLoisClientTests implements FabricClientGameTest {
             run(failed, "boombox held notes", context, world, HolyLoisClientTests::boomboxHeldNotes);
             run(failed, "lantern swing", context, world, HolyLoisClientTests::lanternSwing);
             run(failed, "holy lootbox", context, world, HolyLoisClientTests::holyLootbox);
+            run(failed, "armor 3d", context, world, HolyLoisClientTests::armor3d);
             run(failed, "r over a fillet", context, world, HolyLoisClientTests::rOverFillet);
             run(failed, "offhand swap spam", context, world, HolyLoisClientTests::offhandSwapSpam);
             run(failed, "structure title", context, world, HolyLoisClientTests::structureTitle);
@@ -894,6 +895,39 @@ public final class HolyLoisClientTests implements FabricClientGameTest {
         server.runCommand("kill @e[type=item]");
         server.runCommand("clear @a");
         context.runOnClient(client -> client.player.setXRot(0));
+    }
+
+    /** 3D Armor (owner round 5): worn armor in 3D on a mannequin (diamond with a trim, dyed leather) and on you in first person. */
+    private static void armor3d(ClientGameTestContext context, TestSingleplayerContext world) {
+        var server = world.getServer();
+        server.runCommand("clear @a");
+        server.runCommand("kill @e[type=mannequin]");
+        var look = context.computeOnClient(client -> client.player.getLookAngle().multiply(1, 0, 1).normalize());
+        var base = context.computeOnClient(client -> client.player.position());
+        var right = new net.minecraft.world.phys.Vec3(-look.z, 0, look.x);
+        float faceCamera = context.computeOnClient(client -> client.player.getYRot() + 180);
+        var a = base.add(look.scale(2.6)).add(right.scale(-0.7));
+        var b = base.add(look.scale(2.6)).add(right.scale(0.7));
+        server.runCommand(String.format(java.util.Locale.ROOT, "summon mannequin %.2f %.2f %.2f {Tags:[\"hlarmor\"],Rotation:[%.1ff,0f],equipment:{head:{id:\"diamond_helmet\",count:1,components:{trim:{material:\"gold\",pattern:\"sentry\"}}},chest:{id:\"diamond_chestplate\",count:1,components:{trim:{material:\"gold\",pattern:\"sentry\"}}},legs:{id:\"diamond_leggings\",count:1},feet:{id:\"diamond_boots\",count:1}}}", a.x, a.y, a.z, faceCamera));
+        server.runCommand(String.format(java.util.Locale.ROOT, "summon mannequin %.2f %.2f %.2f {Tags:[\"hlarmor\"],Rotation:[%.1ff,0f],equipment:{head:{id:\"leather_helmet\",count:1,components:{dyed_color:16766720}},chest:{id:\"leather_chestplate\",count:1,components:{dyed_color:16766720}},legs:{id:\"iron_leggings\",count:1},feet:{id:\"netherite_boots\",count:1}}}", b.x, b.y, b.z, faceCamera - 35));
+        context.runOnClient(client -> { client.options.setCameraType(net.minecraft.client.CameraType.FIRST_PERSON); client.player.setXRot(12); });
+        context.waitTicks(25);
+        context.takeScreenshot("44-armor-3d-mannequins");
+        server.runCommand("kill @e[tag=hlarmor]");
+        server.runCommand("item replace entity @a armor.head with diamond_helmet");
+        server.runCommand("item replace entity @a armor.chest with diamond_chestplate");
+        server.runCommand("item replace entity @a armor.legs with diamond_leggings");
+        server.runCommand("item replace entity @a armor.feet with diamond_boots");
+        context.runOnClient(client -> client.player.setXRot(70));
+        context.waitTicks(15);
+        context.takeScreenshot("44-armor-3d-first-person");
+        context.runOnClient(client -> { client.player.setXRot(0); client.options.setCameraType(net.minecraft.client.CameraType.THIRD_PERSON_FRONT); });
+        context.waitTicks(15);
+        context.takeScreenshot("44-armor-3d-front");
+        boolean loaded = net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("armor_3d");
+        context.runOnClient(client -> { client.options.setCameraType(net.minecraft.client.CameraType.FIRST_PERSON); client.player.setXRot(0); });
+        server.runCommand("clear @a");
+        check(loaded, "3D Armor is loaded");
     }
 
     /** 20 ms of a fake track at 48 kHz: a loud low kick every fourth frame over a quiet bed. */

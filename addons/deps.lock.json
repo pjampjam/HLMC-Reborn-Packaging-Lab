@@ -2,6 +2,12 @@
  "comment": "Compile-only jars for the Holy Lois add-ons: the 1.9.0 mod set (pack + server). Regenerate with the private work/stage-mods-190.py; fetch with python addons/fetch-deps.py.",
  "pack": "1.9.0-next",
  "jars": {
+  "3d-armor-0.9.4.2-mod.jar": {
+   "url": "https://cdn.modrinth.com/data/XhxKIfGG/versions/ap0X7Uod/3d-armor-0.9.4.2-mod.jar",
+   "sha256": "c2f2cf8fd2d7a276e63af47fc178faf44c7966a567342863fb94b9e1e45edfd4",
+   "size": 306454,
+   "side": "client"
+  },
   "AdvancementPlaques-26.3-fabric-1.7.3.jar": {
    "url": "https://cdn.modrinth.com/data/9NM0dXub/versions/CWKBEIsY/AdvancementPlaques-26.3-fabric-1.7.3.jar",
    "sha256": "fe1b6bc1de2ef3c94f3155a47443a74bbe41f562a155c056fd6171850f815382",
