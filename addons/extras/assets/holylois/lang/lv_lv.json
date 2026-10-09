@@ -29,6 +29,8 @@
   "holylois.structure.minecraft.shipwreck": "Kuģa vraks",
   "holylois.structure.minecraft.shipwreck_beached": "Kuģa vraks",
   "holylois.map.tpa": "Lūgt teleportu (/tpa %s)",
+  "holylois.party.blocks": "%s bloki",
+  "holylois.travel.rally_away": "%1$s bloki, atlikušas %2$s",
   "holylois.zone.wilderness": "Savvaļa",
   "holylois.zone.land": "%s zemes",
   "holylois.zone.named": "%1$s (%2$s)",

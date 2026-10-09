@@ -2,7 +2,7 @@ package holylois.boombox.mixins;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import holylois.boombox.FishLook;
+import holylois.boombox.FishData;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
@@ -24,7 +24,7 @@ public abstract class FilletMixin {
         target = "Lvectorwing/farmersdelight/common/crafting/CuttingBoardRecipe;rollResults(Lnet/minecraft/util/RandomSource;I)Ljava/util/List;"))
     private List<ItemStack> holyLoisFillets(CuttingBoardRecipe recipe, RandomSource random, int fortune, Operation<List<ItemStack>> original) {
         List<ItemStack> results = original.call(recipe, random, fortune);
-        int times = FishLook.fillets(getStoredItem());
+        int times = FishData.fillets(getStoredItem());
         if (times <= 1) return results;
         var more = new ArrayList<ItemStack>();
         for (var stack : results) {

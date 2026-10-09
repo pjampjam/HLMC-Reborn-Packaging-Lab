@@ -29,6 +29,8 @@
   "holylois.structure.minecraft.shipwreck": "Затонувший корабль",
   "holylois.structure.minecraft.shipwreck_beached": "Затонувший корабль",
   "holylois.map.tpa": "Попросить телепорт (/tpa %s)",
+  "holylois.party.blocks": "%s бл.",
+  "holylois.travel.rally_away": "%1$s бл., осталось %2$s",
   "holylois.zone.wilderness": "Дикие земли",
   "holylois.zone.land": "Земли %s",
   "holylois.zone.named": "%1$s (%2$s)",

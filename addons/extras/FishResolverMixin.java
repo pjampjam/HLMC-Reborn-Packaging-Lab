@@ -18,6 +18,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class FishResolverMixin {
     @Inject(method = "updateForTopItem", at = @At("TAIL"))
     private void holyLoisFishSize(ItemStackRenderState state, ItemStack stack, ItemDisplayContext context, Level level, ItemOwner owner, int seed, CallbackInfo info) {
-        ((FishScaled) state).holyLois$setFishScale(FishLook.scale(stack, context, owner));
+        float scale = FishLook.scale(stack, context, owner);
+        // On the ground a big fish grows around its middle: lift it so its belly stays on the block (fish sprites start ~0.2 up).
+        ((FishScaled) state).holyLois$setFish(scale, context == ItemDisplayContext.GROUND ? 0.3f * (scale - 1) : 0);
+        int tint = FishLook.tint(stack);
+        if (tint != 0) ((FishScaled) state).holyLois$tint(tint);
     }
 }

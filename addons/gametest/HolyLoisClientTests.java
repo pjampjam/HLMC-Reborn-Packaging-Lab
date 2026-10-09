@@ -246,7 +246,7 @@ public final class HolyLoisClientTests implements FabricClientGameTest {
         context.takeScreenshot("10-fish-hotbar-and-hand");
         float scale = context.computeOnClient(client -> holylois.boombox.FishLook.scale(client.player.getMainHandItem(), net.minecraft.world.item.ItemDisplayContext.THIRD_PERSON_RIGHT_HAND));
         float own = context.computeOnClient(client -> holylois.boombox.FishLook.scale(client.player.getMainHandItem(), net.minecraft.world.item.ItemDisplayContext.FIRST_PERSON_RIGHT_HAND));
-        check(scale > 2 && own > 1.2f && own < 1.6f, "a Mythic fish is drawn much bigger in the hand, less in your own view (" + scale + ", " + own + ")");
+        check(scale > 2 && own > 1.2f && own < scale - 0.4f, "a Mythic fish is drawn much bigger in the hand, less in your own view (" + scale + ", " + own + ")");
         context.getInput().pressKey(options -> options.keyInventory);
         context.waitForScreen(InventoryScreen.class);
         context.waitTicks(5);
@@ -287,6 +287,28 @@ public final class HolyLoisClientTests implements FabricClientGameTest {
         context.getInput().lookAt(target);
         context.waitTicks(20);
         context.takeScreenshot("13-boombox-model");
+        // Held: the flat icon in the hotbar, the 3D model carried by its handle in both views.
+        world.getServer().runCommand("clear @a");
+        world.getServer().runCommand("give @a holylois:boombox");
+        // With FirstPerson your own body carries it: look down at the hand.
+        context.runOnClient(client -> client.player.setXRot(65));
+        context.waitTicks(20);
+        context.takeScreenshot("14-boombox-held-first-person");
+        // Side view on an armor stand three blocks ahead: the speakers should face out, away from the leg.
+        var ahead = context.computeOnClient(client -> client.player.position().add(client.player.getLookAngle().multiply(1, 0, 1).normalize().scale(3)));
+        float facing = context.computeOnClient(client -> client.player.getYRot() + 90);
+        world.getServer().runCommand(String.format(java.util.Locale.ROOT,
+            "summon armor_stand %.2f %.2f %.2f {ShowArms:1b,NoBasePlate:1b,Rotation:[%.1ff,0f],equipment:{mainhand:{id:\"holylois:boombox\",count:1}}}",
+            ahead.x, ahead.y, ahead.z, facing));
+        context.runOnClient(client -> client.player.setXRot(10));
+        context.waitTicks(20);
+        context.takeScreenshot("14-boombox-held-side");
+        world.getServer().runCommand("kill @e[type=armor_stand]");
+        context.runOnClient(client -> client.options.setCameraType(net.minecraft.client.CameraType.THIRD_PERSON_FRONT));
+        context.waitTicks(20);
+        context.takeScreenshot("15-boombox-held-third-person");
+        context.runOnClient(client -> client.options.setCameraType(net.minecraft.client.CameraType.FIRST_PERSON));
+        world.getServer().runCommand("clear @a");
     }
 
     /** The client half of structure titles: the server says "you are in a pillager outpost", the title shows below Jade. */

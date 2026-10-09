@@ -7,6 +7,7 @@
   "speaker": "holylois:block/boombox_speaker",
   "cone": "holylois:block/boombox_cone",
   "handle": "holylois:block/boombox_handle",
+  "grip": "holylois:block/boombox_grip",
   "accent": "holylois:block/boombox_accent",
   "button": "holylois:block/boombox_button"
  },
@@ -36,9 +37,21 @@
      "texture": "#body"
     },
     "up": {
+     "uv": [
+      1,
+      0,
+      15,
+      6
+     ],
      "texture": "#body"
     },
     "down": {
+     "uv": [
+      1,
+      6,
+      15,
+      7
+     ],
      "texture": "#body",
      "cullface": "down"
     }
@@ -60,15 +73,39 @@
      "texture": "#speaker"
     },
     "east": {
+     "uv": [
+      0,
+      0,
+      1,
+      1
+     ],
      "texture": "#speaker"
     },
     "west": {
+     "uv": [
+      0,
+      0,
+      1,
+      1
+     ],
      "texture": "#speaker"
     },
     "up": {
+     "uv": [
+      0,
+      0,
+      1,
+      1
+     ],
      "texture": "#speaker"
     },
     "down": {
+     "uv": [
+      0,
+      0,
+      1,
+      1
+     ],
      "texture": "#speaker"
     }
    }
@@ -89,15 +126,39 @@
      "texture": "#speaker"
     },
     "east": {
+     "uv": [
+      0,
+      0,
+      1,
+      1
+     ],
      "texture": "#speaker"
     },
     "west": {
+     "uv": [
+      0,
+      0,
+      1,
+      1
+     ],
      "texture": "#speaker"
     },
     "up": {
+     "uv": [
+      0,
+      0,
+      1,
+      1
+     ],
      "texture": "#speaker"
     },
     "down": {
+     "uv": [
+      0,
+      0,
+      1,
+      1
+     ],
      "texture": "#speaker"
     }
    }
@@ -118,15 +179,39 @@
      "texture": "#cone"
     },
     "east": {
+     "uv": [
+      0,
+      0,
+      1,
+      1
+     ],
      "texture": "#cone"
     },
     "west": {
+     "uv": [
+      0,
+      0,
+      1,
+      1
+     ],
      "texture": "#cone"
     },
     "up": {
+     "uv": [
+      0,
+      0,
+      1,
+      1
+     ],
      "texture": "#cone"
     },
     "down": {
+     "uv": [
+      0,
+      0,
+      1,
+      1
+     ],
      "texture": "#cone"
     }
    }
@@ -147,15 +232,39 @@
      "texture": "#cone"
     },
     "east": {
+     "uv": [
+      0,
+      0,
+      1,
+      1
+     ],
      "texture": "#cone"
     },
     "west": {
+     "uv": [
+      0,
+      0,
+      1,
+      1
+     ],
      "texture": "#cone"
     },
     "up": {
+     "uv": [
+      0,
+      0,
+      1,
+      1
+     ],
      "texture": "#cone"
     },
     "down": {
+     "uv": [
+      0,
+      0,
+      1,
+      1
+     ],
      "texture": "#cone"
     }
    }
@@ -237,22 +346,22 @@
    ],
    "faces": {
     "north": {
-     "texture": "#handle"
+     "texture": "#grip"
     },
     "south": {
-     "texture": "#handle"
+     "texture": "#grip"
     },
     "east": {
-     "texture": "#handle"
+     "texture": "#grip"
     },
     "west": {
-     "texture": "#handle"
+     "texture": "#grip"
     },
     "up": {
-     "texture": "#handle"
+     "texture": "#grip"
     },
     "down": {
-     "texture": "#handle"
+     "texture": "#grip"
     }
    }
   },

@@ -22,7 +22,13 @@ final class RareCatchHud {
             .then(net.fabricmc.fabric.api.client.command.v2.ClientCommands.literal("off").executes(c->setting(false)))));
         ClientPlayNetworking.registerGlobalReceiver(RareCatchNotice.TYPE,(v,c)->{
             if(!enabled)return;notice=v;arrived=System.currentTimeMillis();shown=0;
-            if(c.client().player!=null)c.client().player.playSound(net.minecraft.sounds.SoundEvents.AMETHYST_BLOCK_CHIME,.25f,1.4f);
+            // A sound per rarity, loud enough to hear over the sea (the Mythic fanfare comes from the server on top).
+            var p=c.client().player;if(p!=null)switch(v.rarity()){
+                case "rare"->p.playSound(net.minecraft.sounds.SoundEvents.AMETHYST_BLOCK_CHIME,1f,1.3f);
+                case "epic"->{p.playSound(net.minecraft.sounds.SoundEvents.AMETHYST_BLOCK_RESONATE,1f,1.2f);p.playSound(net.minecraft.sounds.SoundEvents.AMETHYST_BLOCK_CHIME,1f,1.6f);}
+                case "legendary"->p.playSound(net.minecraft.sounds.SoundEvents.PLAYER_LEVELUP,0.8f,1.1f);
+                default->p.playSound(net.minecraft.sounds.SoundEvents.AMETHYST_BLOCK_CHIME,1f,1f);
+            }
         });
         ClientPlayConnectionEvents.DISCONNECT.register((h,c)->notice=null);
         HudElementRegistry.attachElementAfter(VanillaHudElements.HOTBAR,Identifier.fromNamespaceAndPath("holylois","rare_catch"),(g,t)->{
@@ -33,7 +39,7 @@ final class RareCatchHud {
             var item=BuiltInRegistries.ITEM.getValue(id);if(item==null){notice=null;return;}var stack=new ItemStack(item);
             // Centred just above the action bar line and the health/food rows, so it never covers the hotbar or item names.
             int w=Math.min(200,mc.getWindow().getGuiScaledWidth()-20),h=40,x=(mc.getWindow().getGuiScaledWidth()-w)/2,y=Math.max(mc.getWindow().getGuiScaledHeight()-126,Math.round(mc.getWindow().getGuiScaledHeight()*0.62f));
-            int color=FishLook.color(notice.rarity());if(color==0)color=Ui.GOLD;
+            int color=FishData.color(notice.rarity());if(color==0)color=Ui.GOLD;
             float fade=Math.min(1,Math.min((now-shown)/150f,(5000-(now-shown))/400f));
             boolean mythic=notice.rarity().equals("mythic");
             int border=mythic?Ui.alpha(color,0.55f+0.45f*(float)Math.abs(Math.sin((now-shown)/180.0))):Ui.alpha(color,0.8f);

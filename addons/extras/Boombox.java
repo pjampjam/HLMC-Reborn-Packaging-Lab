@@ -122,6 +122,7 @@ public final class Boombox implements ModInitializer {
         PvpDeath.register();
         DeathLootGone.register();
         StructureZone.register();
+        if (net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("fishofthieves")) ThievesWorldgen.register();
         PackCheck.register();
         ModCheck.register();
         Legends.register();

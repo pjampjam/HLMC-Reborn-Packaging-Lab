@@ -37,6 +37,8 @@ public final class ZoneTitles implements ClientModInitializer {
     private int stay = STAY;
     /** Title colour: the kind of zone (see colorFor). */
     private int titleColor = Ui.GOLD;
+    /** Inside a structure its title wins over biome changes; leaving it shows the biome outside once. */
+    private boolean inStructure, leftStructure;
 
     private boolean broken;
 
@@ -79,7 +81,8 @@ public final class ZoneTitles implements ClientModInitializer {
 
     /** Entered (or left, empty id) a structure; the same one shows again after 5 minutes at the earliest. */
     private void structure(StructureZone zone) {
-        if (zone.structure().isEmpty()) return;
+        if (zone.structure().isEmpty()) { if (inStructure) { inStructure = false; leftStructure = true; } return; }
+        inStructure = true;
         Identifier id = Identifier.tryParse(zone.structure());
         if (id == null) return;
         String key = zone.structure() + "@" + zone.start();
@@ -87,14 +90,17 @@ public final class ZoneTitles implements ClientModInitializer {
         if (now - structureShownAt.getOrDefault(key, 0L) < STRUCTURE_REPEAT_MILLIS) return;
         structureShownAt.put(key, now);
         var claim = currentClaim != null ? currentClaim : new Claim("wild", Component.translatable("holylois.zone.wilderness"), 0xBFBFBF);
-        show(name("holylois.structure", id), claim, now);
+        // Our names first, then the structure mod's own ("structure.dnt.illager_camp"), then a tidied id.
+        String ownKey = "holylois.structure." + id.getNamespace() + "." + id.getPath(), modKey = "structure." + id.getNamespace() + "." + id.getPath();
+        String title = Language.getInstance().has(ownKey) || !Language.getInstance().has(modKey) ? name("holylois.structure", id) : Language.getInstance().getOrDefault(modKey, modKey);
+        show(title, claim, now);
         stay = STAY + 30;
         titleColor = structureColor(id);
     }
 
     private void tick(Minecraft mc) {
         if (age < Integer.MAX_VALUE) age++;
-        if (mc.player == null || mc.level == null) { lastDimension = null; lastBiome = lastClaim = candidateBiome = null; return; }
+        if (mc.player == null || mc.level == null) { lastDimension = null; lastBiome = lastClaim = candidateBiome = null; inStructure = leftStructure = false; return; }
         Identifier dimension = mc.level.dimension().identifier();
         var pos = mc.player.blockPosition();
         String biome = mc.level.getBiome(pos).unwrapKey().map(key -> name("biome", key.identifier())).orElse("");
@@ -115,6 +121,13 @@ public final class ZoneTitles implements ClientModInitializer {
             biomeShownAt.put(biome, now);
             return;
         }
+        if (leftStructure) {
+            leftStructure = false; lastBiome = biome; candidateBiome = null;
+            biomeShownAt.put(biome, now);
+            show(biome, claim, now);
+            return;
+        }
+        if (inStructure) { lastBiome = biome; candidateBiome = null; return; }
         if (biome.equals(lastBiome)) { candidateBiome = null; return; }
         if (!biome.equals(candidateBiome)) { candidateBiome = biome; candidateTicks = 0; return; }
         if (++candidateTicks < BIOME_SETTLE) return;
@@ -167,8 +180,10 @@ public final class ZoneTitles implements ClientModInitializer {
 
     /** Biomes gold; dimensions green, red, lavender; structures by danger: red dungeons, green villages, aqua ruins and the rest. */
     static final int BIOME = Ui.GOLD;
-    private static final java.util.Set<String> DANGER = java.util.Set.of("ancient_city", "trial_chambers", "stronghold", "fortress",
-        "bastion_remnant", "end_city", "monument", "mansion", "pillager_outpost", "mineshaft", "mineshaft_mesa");
+    /** Hostile places by id words (vanilla, YUNG's, Dungeons and Taverns): a watchtower or a ruin is not a dungeon. */
+    private static final java.util.List<String> DANGER = java.util.List.of("ancient_city", "trial_chamber", "stronghold", "fortress",
+        "bastion", "end_city", "monument", "mansion", "mineshaft", "dungeon", "crypt", "catacomb", "tomb", "illager", "pillager",
+        "outpost", "barracks", "hideout", "skeleton", "piglin", "nether_keep", "donjon", "sealing", "witch");
 
     static int dimensionColor(Identifier dimension) {
         return switch (dimension.getPath()) { case "the_nether" -> 0xFFFF6B4A; case "the_end" -> 0xFFD49EFF; default -> 0xFF7ED3A0; };
@@ -178,8 +193,7 @@ public final class ZoneTitles implements ClientModInitializer {
         String path = id.getPath();
         if (path.startsWith("village")) return 0xFF7ED3A0;
         // YUNG's and other dungeon mods: anything that sounds like one.
-        if (DANGER.contains(path) || path.contains("dungeon") || path.contains("fortress") || path.contains("crypt") || path.contains("catacomb")
-            || path.contains("tower") || path.contains("keep") || path.contains("citadel")) return 0xFFFF7A5C;
+        if (DANGER.stream().anyMatch(path::contains)) return 0xFFFF7A5C;
         return 0xFF8DD8FF;
     }
 

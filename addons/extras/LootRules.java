@@ -64,6 +64,22 @@ public final class LootRules {
         public double curve = 2.5;
         /** Share of Legendary catches that turn Mythic (about 1 fish in 5000): far past the species' heaviest weight. */
         public double mythicChance = 1 / 60.0;
+        /** Owner's weight bands in kg (2026-10-09): the place inside a rarity picks the weight inside its band. */
+        public Map<String, double[]> bands = new LinkedHashMap<>(Map.of("rare", new double[]{1, 2.99}, "epic", new double[]{3, 19.99},
+            "legendary", new double[]{20, 40}, "mythic", new double[]{40, 100}));
+        /** Share of trophy catches that come up Shiny (stronger effects, sparkles, always a glint). */
+        public double shinyChance = 1 / 250.0;
+    }
+
+    /** Weight of a trophy: size inside its rarity (Rare 0.75-0.9 of the roll and so on) mapped onto that rarity's kg band. */
+    public static double bandKilograms(FishConfig config, Rarity rarity, double size) {
+        double[] band = config.bands.get(rarity.name().toLowerCase(Locale.ROOT));
+        if (band == null) return 0;
+        double from = rarity.from(), to = 1;
+        if (rarity == MYTHIC) { from = 1.5; to = 2.5; }
+        else for (var next : RARITIES) if (next.from() > rarity.from()) { to = next.from(); break; }
+        double t = Math.clamp((size - from) / (to - from), 0.0, 1.0);
+        return Math.round((band[0] + (band[1] - band[0]) * t) * 100) / 100.0;
     }
 
     public record Rarity(String name, double from, String color, boolean trophy) {}

@@ -18,7 +18,11 @@ abstract class TravelScreen extends Screen {
     Button button(int x,int y,int w,String key,Runnable run){
         return addRenderableWidget(new TravelButton(x,y,w,text(key),b->run.run(),PRIMARY.contains(key)?Ui.Kind.PRIMARY:DANGER.contains(key)?Ui.Kind.DANGER:Ui.Kind.NORMAL));
     }
+    Button button(int x,int y,int w,int h,String key,Runnable run){
+        return addRenderableWidget(new TravelButton(x,y,w,h,text(key),b->run.run(),PRIMARY.contains(key)?Ui.Kind.PRIMARY:DANGER.contains(key)?Ui.Kind.DANGER:Ui.Kind.NORMAL));
+    }
     Button buttonText(int x,int y,int w,Component title,Runnable run){return addRenderableWidget(new TravelButton(x,y,w,title,b->run.run(),Ui.Kind.NORMAL));}
+    Button buttonText(int x,int y,int w,int h,Component title,Runnable run){return addRenderableWidget(new TravelButton(x,y,w,h,title,b->run.run(),Ui.Kind.NORMAL));}
     @Override public boolean isPauseScreen(){return false;}
     @Override public void extractBackground(GuiGraphicsExtractor g,int x,int y,float tick){g.fill(0,0,width,height,Ui.alpha(Ui.CANVAS,0.78f));}
     @Override public void extractRenderState(GuiGraphicsExtractor g,int x,int y,float tick){
@@ -27,7 +31,8 @@ abstract class TravelScreen extends Screen {
     }
     private final class TravelButton extends Button {
         private final Ui.Kind kind;
-        TravelButton(int x,int y,int w,Component label,OnPress press,Ui.Kind kind){super(x,y,w,22,label,press,DEFAULT_NARRATION);this.kind=kind;}
+        TravelButton(int x,int y,int w,Component label,OnPress press,Ui.Kind kind){this(x,y,w,22,label,press,kind);}
+        TravelButton(int x,int y,int w,int h,Component label,OnPress press,Ui.Kind kind){super(x,y,w,h,label,press,DEFAULT_NARRATION);this.kind=kind;}
         @Override protected void extractContents(GuiGraphicsExtractor g,int x,int y,float delta){
             Ui.button(g,font,getX(),getY(),getWidth(),getHeight(),getMessage(),isHovered(),isFocused(),active,kind);
         }

@@ -15,12 +15,18 @@ public final class AccountScreen extends TravelScreen {
         panel();int x=left+12,w=panelWidth-24,y=top+68;
         value=field(x,y,w,state.kind()==1?"account_new_name":"account_new_password",state.kind()!=1);value.setMaxLength(state.kind()==1?16:100);
         if(state.kind()==2){confirm=field(x,y+48,w,"account_confirm_password",true);if(!state.authenticated())token=field(x,y+96,w,"account_code",true);}
-        var save=button(x,top+panelHeight-34,w/2-4,"confirm",()->{
-            if(waiting)return;waiting=true;
-            net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.send(new AccountIntent(state.kind(),state.grant(),value.getValue(),confirm==null?"":confirm.getValue(),token==null?"":token.getValue()));
-            clearSecrets();rebuildWidgets();
-        });save.active=!waiting;
+        var save=button(x,top+panelHeight-34,w/2-4,"confirm",this::submit);save.active=!waiting;
         button(x+w/2+4,top+panelHeight-34,w/2-4,"cancel",()->{clearSecrets();minecraft.gui.setScreen(null);});setInitialFocus(value);
+    }
+    private void submit(){
+        if(waiting)return;waiting=true;
+        net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.send(new AccountIntent(state.kind(),state.grant(),value.getValue(),confirm==null?"":confirm.getValue(),token==null?"":token.getValue()));
+        clearSecrets();rebuildWidgets();
+    }
+    /** Enter sends the form, as on the login screen. */
+    @Override public boolean keyPressed(net.minecraft.client.input.KeyEvent event){
+        if(event.key()==257||event.key()==335){submit();return true;}
+        return super.keyPressed(event);
     }
     private EditBox field(int x,int y,int w,String key,boolean secret){
         var box=addRenderableWidget(new EditBox(font,x,y,w,22,text(key)));box.setMaxLength(secret?100:16);

@@ -87,13 +87,11 @@ public final class PartyHud {
                 if (!member.online()) g.text(mc.font, Component.translatable("holylois.party.offline"), x + 8, y + 10, Ui.alpha(Ui.MUTED, 0.7f), false);
                 else {
                     float health = safe(member.health()), maximum = Math.max(1, safe(member.maximum()));
-                    int barWidth = width - 62;
+                    int barWidth = width - 44;
                     Ui.bar(g, x + 8, y + 11, barWidth, 4, health / maximum, Ui.HEALTH, Ui.alpha(Ui.HEALTH, 0.22f));
                     if (member.absorption() > 0) g.fill(x + 8, y + 11, x + 8 + Math.min(barWidth, Math.round(barWidth * safe(member.absorption()) / maximum)), y + 12, Ui.GOLD);
                     String hp = String.format(Locale.ROOT, "%.0f", health) + (member.absorption() > 0 ? "+" + Math.round(safe(member.absorption())) : "");
                     g.text(mc.font, hp, x + 12 + barWidth, y + 9, member.absorption() > 0 ? Ui.GOLD : Ui.TEXT, false);
-                    String food = String.valueOf(Math.max(0, Math.min(20, member.food())));
-                    g.text(mc.font, food, x + width - 8 - mc.font.width(food), y + 9, Ui.FOOD, false);
                 }
                 y += 24;
             }
@@ -113,8 +111,11 @@ public final class PartyHud {
         double bearing = Math.toDegrees(Math.atan2(-(ping.x() + .5 - mc.player.getX()), ping.z() + .5 - mc.player.getZ()));
         double relative = (bearing - mc.player.getYRot() + 540) % 360 - 180;
         String arrow = new String[]{"↑", "↗", "→", "↘", "↓", "↙", "←", "↖"}[Math.floorMod((int)Math.round(relative / 45), 8)];
-        String line = same ? String.format(Locale.ROOT, "%s %.0f m  %d s", arrow, mc.player.position().distanceTo(new net.minecraft.world.phys.Vec3(ping.x() + .5, ping.y(), ping.z() + .5)), seconds) : Component.translatable("holylois.party.other_dimension").getString();
-        g.text(mc.font, line, x + 8, y + 18, Ui.TEXT, false);
+        // Distance on the left, time left as a clock on the right, so "120 m" never reads as minutes.
+        String line = same ? arrow + " " + Component.translatable("holylois.party.blocks", String.format(Locale.ROOT, "%.0f", mc.player.position().distanceTo(new net.minecraft.world.phys.Vec3(ping.x() + .5, ping.y(), ping.z() + .5)))).getString() : Component.translatable("holylois.party.other_dimension").getString();
+        g.text(mc.font, mc.font.plainSubstrByWidth(line, width - 44), x + 8, y + 18, Ui.TEXT, false);
+        String clock = String.format(Locale.ROOT, "%d:%02d", seconds / 60, seconds % 60);
+        g.text(mc.font, clock, x + width - 8 - mc.font.width(clock), y + 18, Ui.SUCCESS, false);
         if (same) g.text(mc.font, ping.x() + ", " + ping.y() + ", " + ping.z(), x + 8, y + 29, Ui.MUTED, false);
         g.text(mc.font,mc.font.plainSubstrByWidth(Component.translatable("holylois.party.rally_open").getString(),width-16),x+8,y+41,Ui.alpha(Ui.SUCCESS,0.8f),false);
     }

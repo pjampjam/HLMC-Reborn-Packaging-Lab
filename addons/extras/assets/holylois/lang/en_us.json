@@ -29,6 +29,8 @@
   "holylois.structure.minecraft.shipwreck": "Shipwreck",
   "holylois.structure.minecraft.shipwreck_beached": "Shipwreck",
   "holylois.map.tpa": "Ask to teleport (/tpa %s)",
+  "holylois.party.blocks": "%s blocks",
+  "holylois.travel.rally_away": "%1$s blocks away, %2$s left",
   "holylois.zone.wilderness": "Wilderness",
   "holylois.zone.land": "%s's land",
   "holylois.zone.named": "%1$s (%2$s)",

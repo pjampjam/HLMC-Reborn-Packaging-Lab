@@ -15,7 +15,8 @@
     "RuneforgedChestTransferMixin",
     "RuneforgedInventoryClickMixin",
     "ReiTagBuildMixin",
-    "FilletMixin"
+    "FilletMixin",
+    "CookedFishMixin"
   ],
   "client": [
     "LiteminerScrollMixin",

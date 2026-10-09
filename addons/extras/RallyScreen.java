@@ -27,7 +27,8 @@ public final class RallyScreen extends TravelScreen {
         else{
             g.centeredText(font,p.name(),width/2,top+58,Ui.GOLD);
             boolean same=p.dimension().equals(minecraft.player.level().dimension().identifier().toString());
-            String line=same?String.format(Locale.ROOT,"%.0f m   %d s",minecraft.player.position().distanceTo(new net.minecraft.world.phys.Vec3(p.x()+.5,p.y(),p.z()+.5)),Math.max(0,p.seconds()-(int)((System.currentTimeMillis()-received)/1000))):p.dimension();
+            int left=Math.max(0,p.seconds()-(int)((System.currentTimeMillis()-received)/1000));
+            String line=same?text("rally_away",String.format(Locale.ROOT,"%.0f",minecraft.player.position().distanceTo(new net.minecraft.world.phys.Vec3(p.x()+.5,p.y(),p.z()+.5))),String.format(Locale.ROOT,"%d:%02d",left/60,left%60)).getString():p.dimension();
             g.centeredText(font,line,width/2,top+77,Ui.SUCCESS);
             g.centeredText(font,text("request_author"),width/2,top+94,Ui.MUTED);
         }

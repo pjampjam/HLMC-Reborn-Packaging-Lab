@@ -1,6 +1,6 @@
 package holylois.boombox.mixins;
 
-import holylois.boombox.FishLook;
+import holylois.boombox.FishData;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.world.entity.LivingEntity;
@@ -21,8 +21,8 @@ public abstract class FishSlotMixin {
 
     @Inject(method = "item(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/level/Level;Lnet/minecraft/world/item/ItemStack;III)V", at = @At("HEAD"))
     private void holyLoisFishGlow(LivingEntity owner, Level level, ItemStack stack, int x, int y, int seed, CallbackInfo info) {
-        String rarity = FishLook.rarity(stack);
-        int color = rarity.equals("uncommon") ? 0 : FishLook.color(rarity);
+        String rarity = FishData.rarity(stack);
+        int color = rarity.equals("uncommon") ? 0 : FishData.color(rarity);
         if (color == 0) return;
         int rgb = color & 0xFFFFFF;
         fill(x, y, x + 16, y + 16, 0x22000000 | rgb);
@@ -32,9 +32,9 @@ public abstract class FishSlotMixin {
 
     @Inject(method = "itemDecorations(Lnet/minecraft/client/gui/Font;Lnet/minecraft/world/item/ItemStack;IILjava/lang/String;)V", at = @At("TAIL"))
     private void holyLoisFishWeight(Font font, ItemStack stack, int x, int y, String countText, CallbackInfo info) {
-        String label = FishLook.label(stack);
+        String label = FishData.label(stack);
         if (label == null) return;
-        int color = FishLook.color(FishLook.rarity(stack));
+        int color = FishData.color(FishData.rarity(stack));
         var pose = pose();
         pose.pushMatrix();
         pose.translate(x + 0.5f, y + 0.5f);
