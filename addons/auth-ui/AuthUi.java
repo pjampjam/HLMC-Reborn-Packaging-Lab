@@ -17,6 +17,13 @@ public final class AuthUi {
         DANGER = 0xFFFF5555, DANGER_FILL = 0xFFC2362F, HEALTH = 0xFFFF4545, FOOD = 0xFFFFAA00;
 
     /** Same colour with alpha a (0..1). */
+    /** Blends two ARGB colours (t = 0 gives a, 1 gives b). */
+    public static int mix(int a, int b, float t) {
+        int r = 0;
+        for (int shift = 0; shift < 32; shift += 8) r |= Math.round(((a >>> shift) & 255) * (1 - t) + ((b >>> shift) & 255) * t) << shift;
+        return r;
+    }
+
     public static int alpha(int color, float a) { return (Math.round(Math.max(0, Math.min(1, a)) * 255) << 24) | (color & 0xFFFFFF); }
 
     /** A rectangle with 1 px rounded corners; border 0 draws none. */
@@ -43,13 +50,14 @@ public final class AuthUi {
         if (accent != 0) g.fill(x + 1, y + 3, x + 3, y + h - 3, alpha(accent, opacity));
     }
 
-    public enum Kind { NORMAL, PRIMARY, DANGER }
+    public enum Kind { NORMAL, PRIMARY, CONFIRM, DANGER }
 
-    /** Button like the launcher's: control fill, gold for the main action, red text for destructive ones. */
+    /** Button: control fill; gold for a highlight, solid green for yes-actions, solid red for cancel and destructive ones. */
     public static void button(GuiGraphicsExtractor g, Font font, int x, int y, int w, int h, Component label, boolean hover, boolean focus, boolean active, Kind kind) {
-        int fill = kind == Kind.PRIMARY ? (hover ? 0xFFFFFFAA : GOLD) : hover ? CONTROL_HOVER : CONTROL;
-        int border = focus ? GOLD : kind == Kind.PRIMARY ? GOLD : hover ? LINE_STRONG : LINE;
-        int text = kind == Kind.PRIMARY ? ON_GOLD : kind == Kind.DANGER ? DANGER : TEXT;
+        int solid = switch (kind) { case PRIMARY -> GOLD; case CONFIRM -> GREEN; case DANGER -> DANGER; default -> 0; };
+        int fill = solid != 0 ? (hover ? mix(solid, 0xFFFFFFFF, 0.45f) : solid) : hover ? CONTROL_HOVER : CONTROL;
+        int border = focus ? TEXT : solid != 0 ? solid : hover ? LINE_STRONG : LINE;
+        int text = solid != 0 ? ON_GOLD : TEXT;
         if (!active) { fill = CONTROL; border = LINE; text = alpha(MUTED, 0.55f); }
         box(g, x, y, w, h, fill, border);
         String shown = font.plainSubstrByWidth(label.getString(), w - 10);

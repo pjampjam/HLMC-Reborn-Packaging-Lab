@@ -22,12 +22,12 @@ public abstract class RodHandPoseMixin {
         // A fish carried in both arms is turned to lie across the body (FishLayerMixin reads this while the item is drawn).
         boolean carry = holylois.boombox.FishLook.carry;
         holylois.boombox.FishLook.carry = arm == state.mainArm && holylois.boombox.FishData.twoHanded(stack);
-        if (stack.getItem() == holylois.boombox.Boombox.ITEM) holylois.boombox.FishLook.swing(state);
+        if (stack.getItem() == holylois.boombox.Boombox.ITEM) holylois.boombox.HeldSwing.apply(state);
         try {
             if (holylois.boombox.FishLook.carry) {
-                // In body space, not off the forearm: centred between the hands, upright, facing forward.
+                // In body space, not off the forearm: lying flat between the raised fists.
                 pose.pushPose();
-                holylois.boombox.FishLook.carryPose(pose, state);
+                holylois.boombox.FishLook.carryPose(pose, ((net.minecraft.client.renderer.entity.layers.RenderLayer<?, ?>) (Object) this).getParentModel());
                 model.submit(pose, collector, light, net.minecraft.client.renderer.texture.OverlayTexture.NO_OVERLAY, state.outlineColor);
                 pose.popPose();
             } else original.call(state, model, stack, arm, pose, collector, light);

@@ -8,5 +8,7 @@
   "holylois.voice.unavailable": "Voice unavailable: /voicefix or V",
   "holylois.voice.retry": "Requesting a fresh voice connection.",
   "holylois.voice.connected": "Voice is already connected.",
-  "holylois.voice.wait": "Wait until sign-in finishes, then try /voicefix."
+  "holylois.voice.wait": "Wait until sign-in finishes, then try /voicefix.",
+  "holylois.reward.lootbox": "Holy Lootbox",
+  "holylois.reward.week": "Week complete!"
 }

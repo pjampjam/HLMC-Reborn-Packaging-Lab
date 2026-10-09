@@ -8,9 +8,9 @@ import java.util.Set;
 
 /** Shared compact panel in the Holy Lois look (Ui), with vanilla keyboard/escape behaviour. */
 abstract class TravelScreen extends Screen {
-    /** Main actions get the gold button, destructive ones red text (as in the launcher). */
-    private static final Set<String> PRIMARY = Set.of("confirm", "create", "accept", "invite", "request_travel", "rally_set");
-    private static final Set<String> DANGER = Set.of("delete", "disband", "leave", "confirm_delete");
+    /** Yes-actions are green, cancel and destructive ones red, like a traffic light; everything else stays neutral. */
+    private static final Set<String> CONFIRM = Set.of("confirm", "create", "accept", "invite", "request_travel", "rally_set");
+    private static final Set<String> DANGER = Set.of("delete", "disband", "leave", "confirm_delete", "cancel");
     int left,top,panelWidth,panelHeight;
     TravelScreen(String key){super(text(key));}
     static Component text(String key,Object...args){return Component.translatable("holylois.travel."+key,args);}
@@ -18,15 +18,33 @@ abstract class TravelScreen extends Screen {
     /** Shrinks the panel to its content (no empty band at the bottom) and centres it again. */
     void fit(int content){panelHeight=Math.min(content,height-16);top=(height-panelHeight)/2;}
     Button button(int x,int y,int w,String key,Runnable run){
-        return addRenderableWidget(new TravelButton(x,y,w,text(key),b->run.run(),PRIMARY.contains(key)?Ui.Kind.PRIMARY:DANGER.contains(key)?Ui.Kind.DANGER:Ui.Kind.NORMAL));
+        return addRenderableWidget(new TravelButton(x,y,w,text(key),b->run.run(),CONFIRM.contains(key)?Ui.Kind.CONFIRM:DANGER.contains(key)?Ui.Kind.DANGER:Ui.Kind.NORMAL));
     }
     Button button(int x,int y,int w,int h,String key,Runnable run){
-        return addRenderableWidget(new TravelButton(x,y,w,h,text(key),b->run.run(),PRIMARY.contains(key)?Ui.Kind.PRIMARY:DANGER.contains(key)?Ui.Kind.DANGER:Ui.Kind.NORMAL));
+        return addRenderableWidget(new TravelButton(x,y,w,h,text(key),b->run.run(),CONFIRM.contains(key)?Ui.Kind.CONFIRM:DANGER.contains(key)?Ui.Kind.DANGER:Ui.Kind.NORMAL));
     }
     Button buttonText(int x,int y,int w,Component title,Runnable run){return addRenderableWidget(new TravelButton(x,y,w,title,b->run.run(),Ui.Kind.NORMAL));}
     Button buttonText(int x,int y,int w,int h,Component title,Runnable run){return addRenderableWidget(new TravelButton(x,y,w,h,title,b->run.run(),Ui.Kind.NORMAL));}
     /** A list row: label on the left (room on the right for details drawn by the screen). */
     Button rowButton(int x,int y,int w,int h,Component title,Runnable run){var b=new TravelButton(x,y,w,h,title,p->run.run(),Ui.Kind.NORMAL);b.leftLabel=true;return addRenderableWidget(b);}
+    /** Enter in this screen; true when it did something. */
+    boolean enter(){return false;}
+    // With 26.3 text input (IME) on, Windows text services can swallow Enter in a focused box: it then arrives only as a
+    // typed line break or as the key release. Each press acts once.
+    private boolean enterDown;
+    private static boolean isEnter(int key){return key==257||key==335;}
+    @Override public boolean keyPressed(net.minecraft.client.input.KeyEvent event){
+        if(isEnter(event.key())){enterDown=true;if(enter())return true;}
+        return super.keyPressed(event);
+    }
+    @Override public boolean keyReleased(net.minecraft.client.input.KeyEvent event){
+        if(isEnter(event.key())){boolean seen=enterDown;enterDown=false;if(!seen&&enter())return true;}
+        return super.keyReleased(event);
+    }
+    @Override public boolean charTyped(net.minecraft.client.input.CharacterEvent event){
+        if(event.codepoint()==13||event.codepoint()==10){if(!enterDown)enter();return true;}
+        return super.charTyped(event);
+    }
     @Override public boolean isPauseScreen(){return false;}
     @Override public void extractBackground(GuiGraphicsExtractor g,int x,int y,float tick){g.fill(0,0,width,height,Ui.alpha(Ui.CANVAS,0.78f));}
     @Override public void extractRenderState(GuiGraphicsExtractor g,int x,int y,float tick){

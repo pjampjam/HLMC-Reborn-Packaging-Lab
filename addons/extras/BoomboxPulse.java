@@ -24,8 +24,7 @@ public final class BoomboxPulse {
     private BoomboxPulse() {}
     private record Level(float value, long at) {}
     private static final Map<BlockPos, Level> levels = new ConcurrentHashMap<>();
-    private static final Map<BlockPos, Float> shown = new ConcurrentHashMap<>(), average = new ConcurrentHashMap<>();
-    private static final Map<BlockPos, Long> lastBeat = new ConcurrentHashMap<>();
+    private static final Map<BlockPos, Float> shown = new ConcurrentHashMap<>();
     private static int beats;
 
     /** Audio is arriving for this boombox (then notes follow the beat instead of the random ambient notes). */
@@ -34,13 +33,18 @@ public final class BoomboxPulse {
     private static final ItemStackRenderState state = new ItemStackRenderState();
     private static boolean broken;
 
+    /** Beats found on the audio thread (BeatFinder), waiting for the next frame to show a note. */
+    private static final Map<BlockPos, BeatFinder> beatFinders = new ConcurrentHashMap<>();
+    private static final Map<BlockPos, Boolean> pendingBeat = new ConcurrentHashMap<>();
+
     /** Voice chat audio thread: one 20 ms frame of a sound placed at x, y, z. */
     public static void heard(double x, double y, double z, short[] audio) {
         if (audio == null || audio.length == 0) return;
-        double sum = 0;
-        for (short sample : audio) sum += (double) sample * sample;
-        float rms = (float) Math.sqrt(sum / audio.length) / 32768f;
-        levels.put(BlockPos.containing(x, y, z), new Level(Math.min(1, rms * 4), System.currentTimeMillis()));
+        var pos = BlockPos.containing(x, y, z);
+        var finder = beatFinders.computeIfAbsent(pos, p -> new BeatFinder());
+        long now = System.currentTimeMillis();
+        if (finder.frame(audio, now)) pendingBeat.put(pos, true);
+        levels.put(pos, new Level(Math.min(1, finder.rms * 4), now));
     }
 
     static void register() {
@@ -62,18 +66,15 @@ public final class BoomboxPulse {
         for (var entry : levels.entrySet()) {
             var pos = entry.getKey();
             var heard = entry.getValue();
-            if (now - heard.at() > 400) { levels.remove(pos); shown.remove(pos); average.remove(pos); lastBeat.remove(pos); continue; }
+            if (now - heard.at() > 400) { levels.remove(pos); shown.remove(pos); beatFinders.remove(pos); pendingBeat.remove(pos); continue; }
             var block = level.getBlockState(pos);
             if (!block.is(Boombox.BLOCK) || !block.getValue(BoomboxBlock.PLAYING) || pos.distToCenterSqr(camera) > 48 * 48) continue;
             // Fast attack, slower release, like a speaker cone.
             float last = shown.getOrDefault(pos, 0f), target = heard.value();
             float value = target > last ? last + (target - last) * 0.6f : last + (target - last) * 0.15f;
             shown.put(pos, value);
-            // A note on each beat: loudness jumping well above its recent average, at most about four a second.
-            float avg = average.getOrDefault(pos, target) * 0.95f + target * 0.05f;
-            average.put(pos, avg);
-            if (target > 0.12f && target > avg * 1.6f && now - lastBeat.getOrDefault(pos, 0L) > 240) {
-                lastBeat.put(pos, now);
+            // A note on each beat found by the audio thread.
+            if (pendingBeat.remove(pos) != null) {
                 level.addParticle(net.minecraft.core.particles.ParticleTypes.NOTE, pos.getX() + 0.3 + level.getRandom().nextDouble() * 0.4,
                     pos.getY() + 0.8, pos.getZ() + 0.3 + level.getRandom().nextDouble() * 0.4, (beats++ % 25) / 24.0, 0, 0);
             }

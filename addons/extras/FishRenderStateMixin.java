@@ -18,6 +18,8 @@ public abstract class FishRenderStateMixin implements FishScaled {
 
     /** Tints every layer's first tint slot (fish sprites are generated items: their quads use tint 0). */
     @Override public void holyLois$tint(int argb) {
+        // Part of the icon's identity: the GUI caches drawn icons by it, so a red Mythic cod must not stand in for every cod.
+        ((ItemStackRenderState) (Object) this).appendModelIdentityElement(Integer.valueOf(argb));
         for (int i = 0; i < activeLayerCount; i++) {
             var tints = layers[i].tintLayers();
             if (tints.isEmpty()) tints.add(argb);

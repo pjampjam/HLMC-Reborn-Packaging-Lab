@@ -8,5 +8,7 @@
   "holylois.voice.unavailable": "Нет голосовой связи: /voicefix или V",
   "holylois.voice.retry": "Запрашиваем новое голосовое подключение.",
   "holylois.voice.connected": "Голосовая связь уже установлена.",
-  "holylois.voice.wait": "Дождитесь входа и попробуйте /voicefix."
+  "holylois.voice.wait": "Дождитесь входа и попробуйте /voicefix.",
+  "holylois.reward.lootbox": "Holy Lootbox",
+  "holylois.reward.week": "Неделя пройдена!"
 }

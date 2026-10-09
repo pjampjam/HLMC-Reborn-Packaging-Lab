@@ -64,7 +64,10 @@
     "KeptArmsPlayerMixin",
     "KeptArmsLayerMixin",
     "KeptArmsDrawMixin",
-    "KeptArmsPartMixin"
+    "KeptArmsPartMixin",
+    "NeaLanternSmoothMixin",
+    "NeaPitchSmoothMixin",
+    "PackToastMixin"
   ],
   "injectors": {
     "defaultRequire": 0

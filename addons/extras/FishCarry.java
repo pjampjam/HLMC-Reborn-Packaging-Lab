@@ -6,14 +6,16 @@ import net.minecraft.client.renderer.entity.state.HumanoidRenderState;
 
 /**
  * A fish of 10 kg and more is lifted over the head with both arms (owner 2026-10-09): arms straight up and steady (no walk
- * sway), the fish lying flat on the hands above the head, tail on one side and head on the other, centred on the body (the
- * fish is drawn in body space by FishLook.carryPose, so it follows the body). The angles win over Fresh Animations
- * through KeptArms.
+ * sway), the fish lying flat on the fists above the head, tail on one side and head on the other (FishLook.carryPose
+ * places it between the fists as drawn). The angles win over Fresh Animations through KeptArms.
  */
 public final class FishCarry {
     private FishCarry() {}
-    /** Arms up (radians, a little forward of straight up) and tilted towards the middle so the hands meet over the head. */
-    public static float raise = -2.9f, inward = 0.3f;
+    /**
+     * Arms straight up beside the head (radians): no inward tilt, or the fists sink into the head and the first-person camera
+     * clips through them (owner round 4).
+     */
+    public static float raise = -2.95f, inward = 0f;
 
     static boolean carrying(Object state) {
         return state instanceof HumanoidRenderState s && FishData.twoHanded(s.getMainHandItemStack());

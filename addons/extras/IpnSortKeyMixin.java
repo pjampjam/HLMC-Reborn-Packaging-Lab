@@ -23,6 +23,9 @@ public abstract class IpnSortKeyMixin {
         var mc = Minecraft.getInstance();
         var mouse = mc.mouseHandler;
         if (mouse.isLeftPressed() || mouse.isRightPressed() || mouse.isMiddlePressed()) return;
+        // Never from the keyboard with something on the cursor: the sort's clicks then fight the held stack and leave a ghost
+        // copy on the cursor that the server never had (owner round 4).
+        if (!menu.getCarried().isEmpty()) { callback.cancel(); return; }
         if (mc.gui.screen() instanceof ContainerHoverAccessor screen) {
             var slot = screen.holyLoisHoveredSlot();
             if (slot != null && slot.hasItem()) { callback.cancel(); return; }

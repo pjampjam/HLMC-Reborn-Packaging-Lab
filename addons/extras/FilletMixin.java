@@ -42,6 +42,15 @@ public abstract class FilletMixin {
         return more;
     }
 
+    /** Farmer's Delight says "1 remaining..." (one fish on the board): for a trophy, say how many cuts are left instead. */
+    @WrapOperation(method = "lambda$processStoredItemUsingTool$0", at = @At(value = "INVOKE",
+        target = "Lvectorwing/farmersdelight/common/utility/TextUtils;block(Ljava/lang/String;[Ljava/lang/Object;)Lnet/minecraft/network/chat/MutableComponent;"))
+    private net.minecraft.network.chat.MutableComponent holyLoisCutsLeft(String key, Object[] args, Operation<net.minecraft.network.chat.MutableComponent> original) {
+        ItemStack fish = getStoredItem();
+        if (!"cutting_board.remaining_items".equals(key) || FishData.slices(fish) == 0) return original.call(key, args);
+        return net.minecraft.network.chat.Component.translatable("holylois.fish.cuts_left", FishData.cuts(fish) - fish.getDamageValue());
+    }
+
     /** Not the last cut: the fish stays on the board, one cut more damaged, instead of being used up. */
     @WrapOperation(method = "lambda$processStoredItemUsingTool$0", at = @At(value = "INVOKE",
         target = "Lvectorwing/farmersdelight/refabricated/inventory/ItemStackHandler;extractItem(IIZ)Lnet/minecraft/world/item/ItemStack;"))
@@ -51,6 +60,7 @@ public abstract class FilletMixin {
         if (FishData.slices(fish) == 0 || fish.getDamageValue() + 1 >= cuts) return original.call(inventory, slot, amount, simulate);
         fish.set(net.minecraft.core.component.DataComponents.MAX_DAMAGE, cuts);
         fish.setDamageValue(fish.getDamageValue() + 1);
+        holylois.boombox.FishTraits.wear(fish, (cuts - fish.getDamageValue()) / (float) cuts);
         var self = (net.minecraft.world.level.block.entity.BlockEntity) (Object) this;
         self.setChanged();
         if (self.getLevel() != null) self.getLevel().sendBlockUpdated(self.getBlockPos(), self.getBlockState(), self.getBlockState(), 3);

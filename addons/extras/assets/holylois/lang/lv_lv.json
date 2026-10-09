@@ -126,9 +126,16 @@
   "holylois.travel.account_code_invalid": "Kods noraidīts. Pārbaudi termiņu pie administratora.",
   "holylois.travel.account_reminder_link_quick": "Iestati jaunu paroli: %s vai /account password. Kods nav vajadzīgs, administrators tev sāka ātro atiestatīšanu.",
   "holylois.travel.account_failed": "Neizdevās pabeigt. Jautā administratoram.",
+  "holylois.travel.account_combat": "Tu esi cīņā. Mēģini vēlreiz, kad cīņa beigusies.",
   "holylois.relic.held": "Turot rokās:",
   "holylois.travel.dim.overworld": "Virszeme",
   "holylois.travel.dim.the_nether": "Nezers",
   "holylois.travel.dim.the_end": "Ends",
-  "holylois.catch.shiny": "Mirdzoša"
+  "holylois.catch.shiny": "Mirdzoša",
+  "holylois.fish.two_hands": "Pārāk smaga vienai rokai: vajag abas",
+  "holylois.fish.cuts_left": "Atlikuši griezieni: %s",
+  "holylois.loading.download": "Lejupielādē Holy Lois resursus...",
+  "holylois.loading.download_percent": "Lejupielādē Holy Lois resursus: %s%%",
+  "holylois.loading.apply": "Lieto resursus...",
+  "holylois.loading.failed": "Resursu lejupielāde neizdevās: pievienojies vēlreiz"
 }

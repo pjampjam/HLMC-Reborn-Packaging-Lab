@@ -114,6 +114,20 @@ public final class FishTraits {
         stack.set(DataComponents.FOOD, new net.minecraft.world.food.FoodProperties(nutrition, saturation, food.canAlwaysEat()));
     }
 
+    /**
+     * A half-cut fish is a smaller meal (owner round 4): hunger and saturation follow the part still on it, worked out from the
+     * item's own food and the weight each time, so repeated cuts never round it down further than they should.
+     */
+    public static void wear(ItemStack stack, float left) {
+        var base = stack.getItem().components().get(DataComponents.FOOD);
+        double kg = FishData.kilograms(stack);
+        if (base == null || !(kg > 0)) return;
+        double extra = Math.log(1 + kg) / Math.log(2) * 2, share = Math.max(0, Math.min(1, left));
+        int nutrition = (int) Math.max(1, Math.round(Math.min(20, base.nutrition() + extra) * share));
+        float saturation = (float) (Math.min(20, base.saturation() + extra * 0.8) * share);
+        stack.set(DataComponents.FOOD, new net.minecraft.world.food.FoodProperties(nutrition, saturation, base.canAlwaysEat()));
+    }
+
     static String time(int seconds) { return seconds / 60 + ":" + String.format(java.util.Locale.ROOT, "%02d", seconds % 60); }
 
     static String roman(int n) { return switch (n) { case 2 -> "II"; case 3 -> "III"; case 4 -> "IV"; case 5 -> "V"; default -> String.valueOf(n); }; }

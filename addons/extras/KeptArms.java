@@ -44,10 +44,20 @@ public final class KeptArms {
     public static void capture(Object model, Object state) {
         if (!(model instanceof HumanoidModel<?> humanoid) || !(state instanceof HumanoidRenderState s)) return;
         FishCarry.pose(model, state);
+        boomboxArms(humanoid, s);
         if (!wins(s)) { KEPT.remove(state); return; }
         var r = humanoid.rightArm; var l = humanoid.leftArm;
         KEPT.put(state, new float[]{r.xRot, r.yRot, r.zRot, l.xRot, l.yRot, l.zRot});
     }
+
+    /** A carried boombox hangs by the hip (owner round 4): arm down with a small walk swing, a touch out to clear the leg. */
+    private static void boomboxArms(HumanoidModel<?> model, HumanoidRenderState s) {
+        float walk = Math.min(1, s.walkAnimationSpeed), phase = s.walkAnimationPos * 0.6662f;
+        if (s.rightHandItemStack.is(Boombox.ITEM)) arm(model.rightArm, 0.3f * net.minecraft.util.Mth.cos(phase + net.minecraft.util.Mth.PI) * walk, 0.1f);
+        if (s.leftHandItemStack.is(Boombox.ITEM)) arm(model.leftArm, 0.3f * net.minecraft.util.Mth.cos(phase) * walk, -0.1f);
+    }
+
+    private static void arm(ModelPart arm, float x, float z) { arm.xRot = x; arm.yRot = 0; arm.zRot = z; }
 
     /** Put the kept angles on a model now (before held items are placed on the hands). */
     public static void restore(Object model, Object state) {

@@ -24,10 +24,7 @@ public final class AccountScreen extends TravelScreen {
         clearSecrets();rebuildWidgets();
     }
     /** Enter sends the form, as on the login screen. */
-    @Override public boolean keyPressed(net.minecraft.client.input.KeyEvent event){
-        if(event.key()==257||event.key()==335){submit();return true;}
-        return super.keyPressed(event);
-    }
+    @Override boolean enter(){submit();return true;}
     private EditBox field(int x,int y,int w,String key,boolean secret){
         var box=addRenderableWidget(new EditBox(font,x,y,w,22,text(key)));box.setMaxLength(secret?100:16);
         if(secret)box.addFormatter((s,offset)->FormattedCharSequence.forward("*".repeat(s.length()),Style.EMPTY));return box;

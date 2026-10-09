@@ -24,6 +24,12 @@ public final class FishData {
         return fish == null ? "" : fish.getStringOr("rarity", "");
     }
 
+    /** Weight in kg, 0 for a fish that was never weighed. */
+    public static double kilograms(ItemStack stack) {
+        var fish = tag(stack);
+        return fish == null ? 0 : fish.getDoubleOr("kg", 0);
+    }
+
     public static boolean shiny(ItemStack stack) {
         var fish = tag(stack);
         return fish != null && fish.getBooleanOr("shiny", false);

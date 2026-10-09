@@ -156,14 +156,16 @@ public final class AccountRequests {
     private static void open(ServerPlayer p,int kind){
         var grant=pending(p.getUUID(),kind);
         if(grant==null || kind==1&&!PartySupport.ready(p)){p.sendSystemMessage(Component.literal("No available request. Log in or ask an admin."));return;}
-        if(!ServerPlayNetworking.canSend(p,AccountNotice.TYPE)){p.sendSystemMessage(Component.literal("Update your Holy Lois pack to use this private account form."));return;}notice(p,grant,true,"");
+        if(!ServerPlayNetworking.canSend(p,AccountNotice.TYPE)){p.sendSystemMessage(Component.literal("Update your Holy Lois pack to use this private account form."));return;}
+        if(CombatTag.refuseAccountLock(p))return;
+        notice(p,grant,true,"");
     }
     public static synchronized void handle(ServerPlayer p,AccountIntent intent){
         var grant=pending(p.getUUID(),intent.kind());if(grant==null || !grant.id.equals(intent.grant()))return;
         long now=System.currentTimeMillis();if(now<rate.getOrDefault(p.getUUID(),0L)||now<grant.nextAttemptAt)return;rate.put(p.getUUID(),now+1000);
         String error="failed";
         try{
-            if(CombatTag.refuseAccountLock(p)){notice(p,grant,true,"failed");return;}
+            if(CombatTag.refuseAccountLock(p)){notice(p,grant,true,"combat");return;}
             if(intent.kind()==2){grant.nextAttemptAt=now+1000;save();}
             if(intent.kind()==1){
                 if(!PartySupport.ready(p)){notice(p,grant,true,"login_first");return;}

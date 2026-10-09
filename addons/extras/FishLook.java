@@ -13,24 +13,31 @@ public final class FishLook {
     public static float current = 1, lift;
     /** The item being drawn is a fish carried in both arms (set around ItemInHandLayer.submitArmWithItem). */
     public static boolean carry;
-    /** Swing of a carried boombox around its handle, degrees (set around ItemInHandLayer.submitArmWithItem). */
+    /** Swing of a carried boombox around its handle, degrees (HeldSwing, set around ItemInHandLayer.submitArmWithItem). */
     public static float swingX, swingZ;
 
-    /** Forward-back swing with the walk, a little sideways sway, and a faint idle drift. */
-    public static void swing(net.minecraft.client.renderer.entity.state.LivingEntityRenderState state) {
-        float walk = Math.min(1, state.walkAnimationSpeed), phase = state.walkAnimationPos * 0.6662f;
-        swingZ = 16 * (float) Math.sin(phase) * walk + 1.5f * (float) Math.sin(state.ageInTicks * 0.07f);
-        swingX = 5 * (float) Math.cos(phase * 2) * walk;
-    }
     /** The fish sprite runs corner to corner: turned this much around its face it lies level across the body. */
     public static final float CARRY_TURN = -45;
 
-    /** Body (model) space, y down: lying flat on the raised hands above the head, centred on the body. */
-    public static float carryHeight = -0.68f;
-    public static void carryPose(com.mojang.blaze3d.vertex.PoseStack pose, Object state) {
-        pose.translate(0, carryHeight, -0.05f);
+    /**
+     * Body (model) space, y down: lying flat on the raised fists, between them. The fists are found from the arm parts as
+     * they will be drawn (Fresh Animations' breathing, walk bob and jumps move the shoulders), so the fish rides along.
+     */
+    public static float carryRest = -0.06f;
+    public static void carryPose(com.mojang.blaze3d.vertex.PoseStack pose, Object model) {
+        if (model instanceof net.minecraft.client.model.HumanoidModel<?> humanoid) {
+            var right = fist(humanoid.rightArm, -1); var left = fist(humanoid.leftArm, 1);
+            pose.translate((right.x + left.x) / 2, (right.y + left.y) / 2 + carryRest, (right.z + left.z) / 2);
+        } else pose.translate(0, -0.6f, 0);
         pose.rotateDegrees(com.mojang.math.Axis.ZP, 180);
         pose.rotateDegrees(com.mojang.math.Axis.XP, 90);
+    }
+
+    /** The end of an arm (its fist, 10 px down the arm and 1 px out) in model space, like ModelPart.translateAndRotate. */
+    static org.joml.Vector3f fist(net.minecraft.client.model.geom.ModelPart arm, int side) {
+        return new org.joml.Matrix4f().translation(arm.x / 16, arm.y / 16, arm.z / 16)
+            .rotate(new org.joml.Quaternionf().rotationZYX(arm.zRot, arm.yRot, arm.xRot)).scale(arm.xScale, arm.yScale, arm.zScale)
+            .transformPosition(new org.joml.Vector3f(side / 16f, 10 / 16f, 0));
     }
 
     /** 1 for anything but a weighed fish; inventory icons stay their normal size. */
@@ -69,6 +76,29 @@ public final class FishLook {
         return 0xFF000000 | r << 16 | g << 8 | b;
     }
 
+    /**
+     * While a heavy fish is carried in both arms, the off-hand slot shows a dimmed copy of it: the hand is taken (FishHands keeps
+     * it empty on the server), drawn where vanilla puts the off-hand slot.
+     */
+    static void registerOffhandGhost() {
+        net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry.attachElementAfter(
+            net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements.HOTBAR,
+            net.minecraft.resources.Identifier.fromNamespaceAndPath("holylois", "offhand_ghost"), (g, delta) -> {
+                var mc = net.minecraft.client.Minecraft.getInstance();
+                var player = mc.player;
+                if (player == null || player.isSpectator() || mc.gui.hud.isHidden() || !player.getOffhandItem().isEmpty()) return;
+                var fish = player.getMainHandItem();
+                if (!FishData.twoHanded(fish)) return;
+                int cx = g.guiWidth() / 2, h = g.guiHeight();
+                boolean left = player.getMainArm() == net.minecraft.world.entity.HumanoidArm.RIGHT;
+                int sx = left ? cx - 91 - 29 : cx + 91, ix = left ? cx - 91 - 26 : cx + 91 + 10;
+                g.blitSprite(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED,
+                    net.minecraft.resources.Identifier.withDefaultNamespace(left ? "hud/hotbar_offhand_left" : "hud/hotbar_offhand_right"), sx, h - 23, 29, 24);
+                g.item(fish, ix, h - 19);
+                g.fill(ix, h - 19, ix + 16, h - 3, 0x99101012);
+            });
+    }
+
     /** Epic and better fish lying on the ground give off a few sparks in their rarity colour (client only, nearby items). */
     static void register() {
         net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents.END_CLIENT_TICK.register(mc -> {
@@ -79,9 +109,12 @@ public final class FishLook {
                 // Shiny fish throw white sparks on top of the rarity sparks: lying on the ground or held in a hand.
                 if (entity instanceof net.minecraft.world.entity.LivingEntity holder && FishData.shiny(holder.getMainHandItem()) && random.nextInt(2) == 0
                         && !(holder == mc.player && mc.options.getCameraType().isFirstPerson())) {
-                    double side = holder.getMainArm() == net.minecraft.world.entity.HumanoidArm.RIGHT ? -0.35 : 0.35, yaw = Math.toRadians(holder.yBodyRot);
-                    mc.level.addParticle(net.minecraft.core.particles.ParticleTypes.END_ROD, holder.getX() + Math.cos(yaw) * side + (random.nextDouble() - 0.5) * 0.5,
-                        holder.getY() + 0.8 + random.nextDouble() * 0.6, holder.getZ() + Math.sin(yaw) * side + (random.nextDouble() - 0.5) * 0.5, 0, 0.03, 0);
+                    // A heavy fish is carried over the head: the sparks come from there, along its length.
+                    boolean overhead = FishData.twoHanded(holder.getMainHandItem());
+                    double side = overhead ? (random.nextDouble() - 0.5) * 1.4 : holder.getMainArm() == net.minecraft.world.entity.HumanoidArm.RIGHT ? -0.35 : 0.35;
+                    double yaw = Math.toRadians(holder.yBodyRot), height = overhead ? 2.05 + random.nextDouble() * 0.3 : 0.8 + random.nextDouble() * 0.6;
+                    mc.level.addParticle(net.minecraft.core.particles.ParticleTypes.END_ROD, holder.getX() + Math.cos(yaw) * side + (random.nextDouble() - 0.5) * (overhead ? 0.2 : 0.5),
+                        holder.getY() + height, holder.getZ() + Math.sin(yaw) * side + (random.nextDouble() - 0.5) * (overhead ? 0.2 : 0.5), 0, 0.03, 0);
                 }
                 if (!(entity instanceof net.minecraft.world.entity.item.ItemEntity item)) continue;
                 if (FishData.shiny(item.getItem()) && random.nextInt(2) == 0)

@@ -45,7 +45,7 @@ public final class HolyLoisAuthScreen extends Screen {
             password = addRenderableWidget(new PasswordBox(x, y + 86, "Password"));
             if (state.mode() == 2) confirm = addRenderableWidget(new PasswordBox(x, y + 130, "Confirm password"));
             submit = addRenderableWidget(new ActionButton(x, y + (state.mode() == 2 ? 162 : 124), 236,
-                state.mode() == 2 ? "Create account" : "Log in", AuthUi.Kind.PRIMARY, b -> submit()));
+                state.mode() == 2 ? "Create account" : "Log in", AuthUi.Kind.CONFIRM, b -> submit()));
             setInitialFocus(password);
         }
     }
@@ -60,6 +60,10 @@ public final class HolyLoisAuthScreen extends Screen {
         @Override public void extractWidgetRenderState(GuiGraphicsExtractor g, int mx, int my, float delta) {
             AuthUi.box(g, getX() - 8, getY() - 8, 236, 24, AuthUi.CANVAS, isFocused() ? AuthUi.GOLD : isHovered() ? AuthUi.LINE_STRONG : AuthUi.LINE);
             super.extractWidgetRenderState(g, mx, my, delta);
+        }
+        @Override public boolean keyPressed(KeyEvent event) {
+            if (enter(event.key())) { enterDown = true; submit(); return true; }
+            return super.keyPressed(event);
         }
         @Override public void updateWidgetNarration(NarrationElementOutput output) {
             output.add(NarratedElementType.TITLE, label + ", " + getValue().length() + " characters");
@@ -100,8 +104,20 @@ public final class HolyLoisAuthScreen extends Screen {
             var next = new HolyLoisAuthScreen(state); next.quitting = !quitting;
             minecraft.gui.setScreen(next); return true;
         }
-        if (!quitting && state.mode() != 3 && (event.key() == 257 || event.key() == 335)) { submit(); return true; }
+        if (enter(event.key())) { enterDown = true; submit(); return true; }
         return super.keyPressed(event);
+    }
+    // With 26.3 text input (IME) on, Windows text services can swallow Enter in a focused box: it then arrives only as a
+    // typed line break or as the key release. Every path submits once; `waiting` blocks a second send.
+    private boolean enterDown;
+    private boolean enter(int key) { return !quitting && state.mode() != 3 && (key == 257 || key == 335); }
+    @Override public boolean keyReleased(KeyEvent event) {
+        if (enter(event.key())) { if (!enterDown) submit(); enterDown = false; return true; }
+        return super.keyReleased(event);
+    }
+    @Override public boolean charTyped(net.minecraft.client.input.CharacterEvent event) {
+        if (enter(257) && (event.codepoint() == '\r' || event.codepoint() == '\n')) { if (!enterDown) submit(); return true; }
+        return super.charTyped(event);
     }
     @Override public boolean shouldCloseOnEsc() { return false; }
     @Override public boolean isPauseScreen() { return false; }

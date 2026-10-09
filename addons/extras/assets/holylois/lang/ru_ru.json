@@ -126,9 +126,16 @@
   "holylois.travel.account_code_invalid": "Код отклонён. Уточни его срок у админа.",
   "holylois.travel.account_reminder_link_quick": "Задай новый пароль: %s или /account password. Код не нужен, админ запустил быстрый сброс для тебя.",
   "holylois.travel.account_failed": "Не удалось завершить. Обратись к админу.",
+  "holylois.travel.account_combat": "Ты в бою. Попробуй снова, когда бой закончится.",
   "holylois.relic.held": "В руках:",
   "holylois.travel.dim.overworld": "Верхний мир",
   "holylois.travel.dim.the_nether": "Незер",
   "holylois.travel.dim.the_end": "Энд",
-  "holylois.catch.shiny": "Сияющая"
+  "holylois.catch.shiny": "Сияющая",
+  "holylois.fish.two_hands": "Слишком тяжёлая для одной руки: нужны обе",
+  "holylois.fish.cuts_left": "Осталось разрезов: %s",
+  "holylois.loading.download": "Загрузка ресурсов Holy Lois...",
+  "holylois.loading.download_percent": "Загрузка ресурсов Holy Lois: %s%%",
+  "holylois.loading.apply": "Применение ресурсов...",
+  "holylois.loading.failed": "Не удалось загрузить ресурсы: зайди снова"
 }

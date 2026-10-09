@@ -38,11 +38,9 @@ public final class PartyScreen extends TravelScreen {
     }
     public PartyScreen(){super("party_title");}
     /** Enter in the name box invites (in a party) or accepts an invite (not in one). */
-    @Override public boolean keyPressed(net.minecraft.client.input.KeyEvent event){
-        if(name!=null&&name.isFocused()&&!name.getValue().isBlank()&&(event.key()==257||event.key()==335)){
-            TravelClient.send(wasMember?TravelIntent.INVITE:TravelIntent.ACCEPT,name.getValue(),"",0);return true;
-        }
-        return super.keyPressed(event);
+    @Override boolean enter(){
+        if(name==null||!name.isFocused()||name.getValue().isBlank())return false;
+        TravelClient.send(wasMember?TravelIntent.INVITE:TravelIntent.ACCEPT,name.getValue(),"",0);return true;
     }
     @Override public void tick(){if(wasMember!=!PartyHud.current().members().isEmpty()){confirmLeave=false;confirmDestroy=false;rebuildWidgets();}}
     @Override public void extractRenderState(GuiGraphicsExtractor g,int x,int y,float tick){

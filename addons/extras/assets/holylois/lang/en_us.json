@@ -126,9 +126,16 @@
   "holylois.travel.account_code_invalid": "Code rejected. Ask the admin if it has expired.",
   "holylois.travel.account_reminder_link_quick": "Set a new password: %s or /account password. No code needed, the admin started a quick reset for you.",
   "holylois.travel.account_failed": "This could not finish. Ask the admin for help.",
+  "holylois.travel.account_combat": "You are in combat. Try again when the fight is over.",
   "holylois.relic.held": "While held:",
   "holylois.travel.dim.overworld": "Overworld",
   "holylois.travel.dim.the_nether": "Nether",
   "holylois.travel.dim.the_end": "End",
-  "holylois.catch.shiny": "Shiny"
+  "holylois.catch.shiny": "Shiny",
+  "holylois.fish.two_hands": "Too heavy for one hand: this fish needs both",
+  "holylois.fish.cuts_left": "%s cuts left",
+  "holylois.loading.download": "Downloading Holy Lois resources...",
+  "holylois.loading.download_percent": "Downloading Holy Lois resources: %s%%",
+  "holylois.loading.apply": "Applying resources...",
+  "holylois.loading.failed": "Resource download failed: rejoin to try again"
 }

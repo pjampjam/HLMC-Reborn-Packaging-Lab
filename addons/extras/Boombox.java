@@ -128,6 +128,7 @@ public final class Boombox implements ModInitializer {
         Legends.register();
         PartySupport.register();
         RelicPowers.register();
+        FishHands.register();
         PayloadTypeRegistry.serverboundPlay().register(BoomboxVolume.TYPE, BoomboxVolume.CODEC);
         ServerPlayNetworking.registerGlobalReceiver(BoomboxVolume.TYPE, (payload, context) -> changeVolume(context.player(), payload));
         loadConfig();

@@ -42,10 +42,7 @@ public final class HomesScreen extends TravelScreen {
     }
     private void confirm(){TravelClient.send(edit,edit==TravelIntent.SAVE?input.getValue():old,edit==TravelIntent.RENAME?input.getValue():"",state.revision());}
     /** Enter confirms a name, as in every other form. */
-    @Override public boolean keyPressed(net.minecraft.client.input.KeyEvent event){
-        if(edit>=0&&edit!=TravelIntent.DELETE&&(event.key()==257||event.key()==335)){confirm();return true;}
-        return super.keyPressed(event);
-    }
+    @Override boolean enter(){if(edit<0||edit==TravelIntent.DELETE)return false;confirm();return true;}
     /** Overworld, Nether, End (translated), other dimensions by their tidied id. */
     static String dimension(String id){
         String path=id.substring(id.indexOf(':')+1);
