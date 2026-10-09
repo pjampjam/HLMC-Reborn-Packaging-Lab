@@ -52,6 +52,7 @@ public final class KeptArms {
 
     /** A carried boombox hangs by the hip (owner round 4): arm down with a small walk swing, a touch out to clear the leg. */
     private static void boomboxArms(HumanoidModel<?> model, HumanoidRenderState s) {
+        if (s.swingAnimation > 0) return;
         float walk = Math.min(1, s.walkAnimationSpeed), phase = s.walkAnimationPos * 0.6662f;
         if (s.rightHandItemStack.is(Boombox.ITEM)) arm(model.rightArm, 0.3f * net.minecraft.util.Mth.cos(phase + net.minecraft.util.Mth.PI) * walk, 0.1f);
         if (s.leftHandItemStack.is(Boombox.ITEM)) arm(model.leftArm, 0.3f * net.minecraft.util.Mth.cos(phase) * walk, -0.1f);

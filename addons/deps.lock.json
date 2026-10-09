@@ -476,10 +476,10 @@
    "size": 117764,
    "side": "client"
   },
-  "runeforged-fabric-26.3-0.2.3.jar": {
-   "url": "https://cdn.modrinth.com/data/Co8e7VJI/versions/XVjILglK/runeforged-fabric-26.3-0.2.3.jar",
-   "sha256": "cc251d29d8bd3116f5bc5a78fbf86813d22b1a61aec28d070b03bb35a7a1eac8",
-   "size": 1769195,
+  "runeforged-fabric-26.3-0.2.4.jar": {
+   "url": "https://cdn.modrinth.com/data/Co8e7VJI/versions/r4nr7lFy/runeforged-fabric-26.3-0.2.4.jar",
+   "sha256": "93ca541e373e591d70e2dace90a1ce4944f36e71ce5b8eaeb826bf01a999eca5",
+   "size": 1769157,
    "side": "both"
   },
   "Searchables-fabric-26.3-1.0.2.jar": {

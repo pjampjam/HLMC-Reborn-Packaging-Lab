@@ -31,18 +31,20 @@ abstract class TravelScreen extends Screen {
     boolean enter(){return false;}
     // With 26.3 text input (IME) on, Windows text services can swallow Enter in a focused box: it then arrives only as a
     // typed line break or as the key release. Each press acts once.
-    private boolean enterDown;
+    // Shared by every screen: a reply that swaps the screen between press and release must not act twice.
+    private static long lastEnterPress;
+    private static boolean pressSeen(){return System.currentTimeMillis()-lastEnterPress<1500;}
     private static boolean isEnter(int key){return key==257||key==335;}
     @Override public boolean keyPressed(net.minecraft.client.input.KeyEvent event){
-        if(isEnter(event.key())){enterDown=true;if(enter())return true;}
+        if(isEnter(event.key())){lastEnterPress=System.currentTimeMillis();if(enter())return true;}
         return super.keyPressed(event);
     }
     @Override public boolean keyReleased(net.minecraft.client.input.KeyEvent event){
-        if(isEnter(event.key())){boolean seen=enterDown;enterDown=false;if(!seen&&enter())return true;}
+        if(isEnter(event.key())&&!pressSeen()&&enter())return true;
         return super.keyReleased(event);
     }
     @Override public boolean charTyped(net.minecraft.client.input.CharacterEvent event){
-        if(event.codepoint()==13||event.codepoint()==10){if(!enterDown)enter();return true;}
+        if(event.codepoint()==13||event.codepoint()==10){if(!pressSeen())enter();return true;}
         return super.charTyped(event);
     }
     @Override public boolean isPauseScreen(){return false;}

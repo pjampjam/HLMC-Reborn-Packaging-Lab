@@ -23,7 +23,7 @@ public final class PackLoadingBar {
 
     // Download thread, through PackToastMixin.
     public static void downloadStart(OptionalLong size) { total = size.isPresent() ? size.getAsLong() : -1; done = 0; set(Phase.DOWNLOADING); }
-    public static void downloaded(long bytes) { done = bytes; }
+    public static void downloaded(long bytes) { done = bytes; changedAt = System.currentTimeMillis(); }
     public static void finished(boolean ok) { set(ok ? Phase.APPLYING : Phase.FAILED); }
     private static void set(Phase next) { phase = next; changedAt = System.currentTimeMillis(); }
 
@@ -42,6 +42,8 @@ public final class PackLoadingBar {
         // Applying ends when the reload overlay is gone; a failure shows for a few seconds.
         if (shown == Phase.APPLYING && !reloading && since > 1500) { phase = Phase.IDLE; return; }
         if (shown == Phase.FAILED && since > 6000) { phase = Phase.IDLE; return; }
+        // A download that stopped reporting (disconnected half-way) goes away by itself.
+        if (shown == Phase.DOWNLOADING && since > 20000) { phase = Phase.IDLE; return; }
         if (shown == Phase.IDLE) return;
         int w = g.guiWidth(), h = g.guiHeight(), y = (int) (h * 0.8325), half = (int) (Math.min(w * 0.75, h) * 0.5);
         int white = 0xFFFFFFFF;
