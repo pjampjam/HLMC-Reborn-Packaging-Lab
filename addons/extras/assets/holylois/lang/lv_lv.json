@@ -137,5 +137,6 @@
   "holylois.loading.download": "Lejupielādē Holy Lois resursus...",
   "holylois.loading.download_percent": "Lejupielādē Holy Lois resursus: %s%%",
   "holylois.loading.apply": "Lieto resursus...",
-  "holylois.loading.failed": "Resursu lejupielāde neizdevās: pievienojies vēlreiz"
+  "holylois.loading.failed": "Resursu lejupielāde neizdevās: pievienojies vēlreiz",
+  "item.holylois.holy_lootbox": "Holy Lootbox"
 }

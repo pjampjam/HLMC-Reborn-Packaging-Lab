@@ -172,9 +172,9 @@ textures = {"particle": "holylois:block/boombox_body", **{k: f"holylois:block/bo
         "down": {"uv": SIDE_UV, "texture": "#cone"}}}]}, indent=1) + "\n")
 
 # Held: carried by the handle like a case, three quarters of the placed size, speakers facing out.
-# The handle bar sits 3.5 px above the model centre, so the model drops by that much (times the scale) into the fist.
+# Fitted on close-ups (owner round 5): the fist grips the middle of the handle bar, the bar a little up inside the fist.
 CARRY = 0.75
-third = {"rotation": [90, -90, 0], "translation": [0, 0, round(-3.5 * CARRY, 2)], "scale": [CARRY] * 3}
+third = {"rotation": [90, -90, 0], "translation": [0, -1.8, -1.12], "scale": [CARRY] * 3}
 first = {"rotation": [0, 135, 0], "translation": [0, -3, 0], "scale": [0.5] * 3}
 display = {
     "thirdperson_righthand": third, "thirdperson_lefthand": third,

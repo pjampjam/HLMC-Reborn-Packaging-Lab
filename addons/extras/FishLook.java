@@ -23,7 +23,7 @@ public final class FishLook {
      * Body (model) space, y down: lying flat on the raised fists, between them. The fists are found from the arm parts as
      * they will be drawn (Fresh Animations' breathing, walk bob and jumps move the shoulders), so the fish rides along.
      */
-    public static float carryRest = -0.06f;
+    public static float carryRest = -0.19f;
     public static void carryPose(com.mojang.blaze3d.vertex.PoseStack pose, Object model) {
         if (model instanceof net.minecraft.client.model.HumanoidModel<?> humanoid) {
             var right = fist(humanoid.rightArm, -1); var left = fist(humanoid.leftArm, 1);

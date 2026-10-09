@@ -108,6 +108,7 @@ public final class Boombox implements ModInitializer {
             .component(DataComponents.LORE, new ItemLore(List.of(
                 Component.translatable("item.holylois.boombox.tip1").withStyle(s -> s.withColor(ChatFormatting.GRAY).withItalic(false)),
                 Component.translatable("item.holylois.boombox.tip2").withStyle(s -> s.withColor(ChatFormatting.GRAY).withItalic(false)))))));
+        HolyLootbox.register();
         CreativeModeTabEvents.modifyOutputEvent(ResourceKey.create(Registries.CREATIVE_MODE_TAB, Identifier.withDefaultNamespace("tools_and_utilities")))
             .register(output -> output.accept(ITEM));
         PayloadTypeRegistry.clientboundPlay().register(BoomboxNear.TYPE, BoomboxNear.CODEC);

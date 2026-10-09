@@ -30,6 +30,13 @@ public abstract class RodHandPoseMixin {
                 holylois.boombox.FishLook.carryPose(pose, ((net.minecraft.client.renderer.entity.layers.RenderLayer<?, ?>) (Object) this).getParentModel());
                 model.submit(pose, collector, light, net.minecraft.client.renderer.texture.OverlayTexture.NO_OVERLAY, state.outlineColor);
                 pose.popPose();
+            } else if (stack.getItem() == holylois.boombox.Boombox.ITEM) {
+                holylois.boombox.BoomboxPulse.capture = true;
+                original.call(state, model, stack, arm, pose, collector, light);
+                holylois.boombox.BoomboxPulse.capture = false;
+                // The captured pose already swings; the cones must not swing a second time.
+                holylois.boombox.FishLook.swingX = 0; holylois.boombox.FishLook.swingZ = 0;
+                holylois.boombox.BoomboxPulse.submitHeld(state, pose, collector, light);
             } else original.call(state, model, stack, arm, pose, collector, light);
         }
         finally { RenderedRodTip.end(previous); holylois.boombox.FishLook.carry = carry; holylois.boombox.FishLook.swingX = 0; holylois.boombox.FishLook.swingZ = 0; }

@@ -23,6 +23,8 @@ public final class BoomboxPlugin implements VoicechatPlugin {
             var at = event.getPosition();
             BoomboxPulse.heard(at.getX(), at.getY(), at.getZ(), event.getRawAudio());
         });
+        registration.registerEvent(de.maxhenkel.voicechat.api.events.ClientReceiveSoundEvent.EntitySound.class,
+            event -> BoomboxPulse.heardHeld(event.getEntityId(), event.getRawAudio()));
         registration.registerEvent(VoicechatServerStoppedEvent.class, event -> {
             Boombox.stopAll();
             Boombox.voice = null;

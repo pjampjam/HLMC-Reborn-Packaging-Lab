@@ -29,23 +29,10 @@ abstract class TravelScreen extends Screen {
     Button rowButton(int x,int y,int w,int h,Component title,Runnable run){var b=new TravelButton(x,y,w,h,title,p->run.run(),Ui.Kind.NORMAL);b.leftLabel=true;return addRenderableWidget(b);}
     /** Enter in this screen; true when it did something. */
     boolean enter(){return false;}
-    // With 26.3 text input (IME) on, Windows text services can swallow Enter in a focused box: it then arrives only as a
-    // typed line break or as the key release. Each press acts once.
-    // Shared by every screen: a reply that swaps the screen between press and release must not act twice.
-    private static long lastEnterPress;
-    private static boolean pressSeen(){return System.currentTimeMillis()-lastEnterPress<1500;}
-    private static boolean isEnter(int key){return key==257||key==335;}
+    // 26.3 input uses SDL scancodes (Enter 40, keypad Enter 88): ask the event, never compare old GLFW numbers.
     @Override public boolean keyPressed(net.minecraft.client.input.KeyEvent event){
-        if(isEnter(event.key())){lastEnterPress=System.currentTimeMillis();if(enter())return true;}
+        if(event.isConfirmation()&&enter())return true;
         return super.keyPressed(event);
-    }
-    @Override public boolean keyReleased(net.minecraft.client.input.KeyEvent event){
-        if(isEnter(event.key())&&!pressSeen()&&enter())return true;
-        return super.keyReleased(event);
-    }
-    @Override public boolean charTyped(net.minecraft.client.input.CharacterEvent event){
-        if(event.codepoint()==13||event.codepoint()==10){if(!pressSeen())enter();return true;}
-        return super.charTyped(event);
     }
     @Override public boolean isPauseScreen(){return false;}
     @Override public void extractBackground(GuiGraphicsExtractor g,int x,int y,float tick){g.fill(0,0,width,height,Ui.alpha(Ui.CANVAS,0.78f));}

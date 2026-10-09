@@ -1,5 +1,7 @@
 package holylois.gametest;
 
+import net.minecraft.world.inventory.Slot;
+
 import holylois.boombox.DeathLootGone;
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
@@ -58,7 +60,11 @@ public final class HolyLoisClientTests implements FabricClientGameTest {
             run(failed, "trophy fish look", context, world, HolyLoisClientTests::trophyFishLook);
             run(failed, "boombox model", context, world, HolyLoisClientTests::boomboxModel);
             run(failed, "boombox hand closeup", context, world, HolyLoisClientTests::boomboxHand);
+            run(failed, "boombox held notes", context, world, HolyLoisClientTests::boomboxHeldNotes);
+            run(failed, "lantern swing", context, world, HolyLoisClientTests::lanternSwing);
+            run(failed, "holy lootbox", context, world, HolyLoisClientTests::holyLootbox);
             run(failed, "r over a fillet", context, world, HolyLoisClientTests::rOverFillet);
+            run(failed, "offhand swap spam", context, world, HolyLoisClientTests::offhandSwapSpam);
             run(failed, "structure title", context, world, HolyLoisClientTests::structureTitle);
             run(failed, "panorama capture", context, world, HolyLoisClientTests::panoramaCapture);
         } catch (Throwable setup) {
@@ -307,12 +313,19 @@ public final class HolyLoisClientTests implements FabricClientGameTest {
         context.runOnClient(client -> {
             try {
                 var field = Class.forName("holylois.auth.RewardHud").getDeclaredField("queue"); field.setAccessible(true);
-                ((java.util.Deque<Object>) field.get(null)).addLast(new holylois.auth.RewardNotice("mcwholidays:yellow_present", 1, 7, 0, 0));
+                ((java.util.Deque<Object>) field.get(null)).addLast(new holylois.auth.RewardNotice("holylois:holy_lootbox", 1, 7, 0, 0));
             } catch (ReflectiveOperationException error) { throw new RuntimeException(error); }
         });
         context.waitTicks(150);
         context.takeScreenshot("22-daily-card-day7");
-        context.waitTicks(170);
+        // Half way through the fade-out: the lootbox shrinks with the card instead of popping away.
+        context.waitTicks(93);
+        context.takeScreenshot("22-daily-card-fading-out-1");
+        context.waitTicks(4);
+        context.takeScreenshot("22-daily-card-fading-out-2");
+        context.waitTicks(4);
+        context.takeScreenshot("22-daily-card-fading-out-3");
+        context.waitTicks(69);
         var homes = new holylois.boombox.HomeState(true, 3, 1, List.of(new holylois.boombox.HomeState.Home("Base", "minecraft:overworld")));
         context.runOnClient(client -> client.gui.setScreen(new holylois.boombox.HomesScreen(homes)));
         context.waitTicks(5);
@@ -528,7 +541,7 @@ public final class HolyLoisClientTests implements FabricClientGameTest {
             context.waitTicks(2);
             String typed = context.computeOnClient(client -> passwordOf(client.gui.screen()));
             String focus = context.computeOnClient(client -> String.valueOf(client.gui.screen().getFocused()));
-            context.getInput().pressKey(257);
+            context.getInput().pressKey(com.mojang.blaze3d.platform.InputConstants.KEY_RETURN);
             context.waitTicks(3);
             boolean same = context.computeOnClient(client -> client.gui.screen() == screen);
             String notice = String.valueOf(field(screen, "notice"));
@@ -537,6 +550,14 @@ public final class HolyLoisClientTests implements FabricClientGameTest {
             check(typed.length() == 9, "the password box takes typed text (" + typed.length() + ")");
             check(same && notice.startsWith("Checking"), "Enter in a focused box sent form " + mode + " (notice: " + notice + ")");
         }
+        // Esc opens the leave prompt (26.3 scancode 41, not GLFW 256).
+        context.runOnClient(client -> client.gui.setScreen(new holylois.auth.HolyLoisAuthScreen(new holylois.auth.AuthStatus(1, 6))));
+        context.waitTicks(3);
+        context.getInput().pressKey(com.mojang.blaze3d.platform.InputConstants.KEY_ESCAPE);
+        context.waitTicks(2);
+        boolean quitting = context.computeOnClient(client -> client.gui.screen() instanceof holylois.auth.HolyLoisAuthScreen s && (boolean) field(s, "quitting"));
+        context.runOnClient(client -> client.gui.setScreen(null));
+        check(quitting, "Esc on the login form opens the leave prompt");
     }
 
     private static void clickField(ClientGameTestContext context, Object screen, String name) {
@@ -548,8 +569,9 @@ public final class HolyLoisClientTests implements FabricClientGameTest {
     }
 
     private static Object field(Object owner, String name) {
-        for (Class<?> type = owner.getClass(); type != null; type = type.getSuperclass()) {
-            try { var f = type.getDeclaredField(name); f.setAccessible(true); return f.get(owner); }
+        // A Class reads a static field.
+        for (Class<?> type = owner instanceof Class<?> c ? c : owner.getClass(); type != null; type = type.getSuperclass()) {
+            try { var f = type.getDeclaredField(name); f.setAccessible(true); return f.get(owner instanceof Class<?> ? null : owner); }
             catch (NoSuchFieldException next) { continue; }
             catch (ReflectiveOperationException error) { throw new IllegalStateException(error); }
         }
@@ -663,7 +685,7 @@ public final class HolyLoisClientTests implements FabricClientGameTest {
         context.getInput().setCursorPos(pos[0], pos[1]);
         context.waitTicks(3);
         String hovered = context.computeOnClient(client -> String.valueOf(((holylois.boombox.mixins.ContainerHoverAccessor) client.gui.screen()).holyLoisHoveredSlot()));
-        context.getInput().pressKey(82);
+        context.getInput().pressKey(com.mojang.blaze3d.platform.InputConstants.KEY_R);
         context.waitTicks(10);
         context.takeScreenshot("35-r-over-fillet");
         String screenAfter = context.computeOnClient(client -> String.valueOf(client.gui.screen()));
@@ -682,7 +704,7 @@ public final class HolyLoisClientTests implements FabricClientGameTest {
         });
         context.getInput().setCursorPos(empty[0], empty[1]);
         context.waitTicks(3);
-        context.getInput().pressKey(82);
+        context.getInput().pressKey(com.mojang.blaze3d.platform.InputConstants.KEY_R);
         context.waitTicks(20);
         String clientSorted = context.computeOnClient(client -> inventoryState(client.player.containerMenu.getCarried(), client.player.getInventory()));
         String serverSorted = server.computeOnServer(s -> { var p = s.getPlayerList().getPlayers().getFirst(); return inventoryState(p.containerMenu.getCarried(), p.getInventory()); });
@@ -692,6 +714,81 @@ public final class HolyLoisClientTests implements FabricClientGameTest {
         context.waitTicks(5);
         check(clientState.equals(serverState), "client and server agree after R over a fillet");
         check(serverState.contains("20=5 farmersdelight:cod_slice") && serverState.startsWith("cursor=empty"), "R over a fillet moved nothing (" + serverState + ")");
+    }
+
+    /**
+     * Owner round 5 dupe: torch in the off hand, a heavy fish in the inventory, spam F over the fish. The fish must never reach
+     * the off hand, there is always exactly one fish, and the client and the server agree after every press.
+     */
+    private static void offhandSwapSpam(ClientGameTestContext context, TestSingleplayerContext world) throws Exception {
+        swapSpam(context, world, false);
+        swapSpam(context, world, true);
+        world.getServer().runCommand("gamemode survival @a");
+    }
+
+    private static void swapSpam(ClientGameTestContext context, TestSingleplayerContext world, boolean creative) throws Exception {
+        var server = world.getServer();
+        server.runCommand("gamemode " + (creative ? "creative" : "survival") + " @a");
+        server.runCommand("clear @a");
+        server.runCommand("execute as @p run legends give legendary");
+        context.waitTicks(5);
+        server.runOnServer(s -> {
+            var player = s.getPlayerList().getPlayers().getFirst();
+            int from = -1;
+            for (int i = 0; i < 36; i++) if (holylois.boombox.FishData.twoHanded(player.getInventory().getItem(i))) from = i;
+            player.getInventory().setItem(20, player.getInventory().removeItemNoUpdate(from));
+            player.getInventory().setSelectedSlot(4);
+            player.setItemSlot(net.minecraft.world.entity.EquipmentSlot.OFFHAND, new ItemStack(net.minecraft.world.item.Items.TORCH, 3));
+        });
+        context.waitTicks(5);
+        context.getInput().pressKey(options -> options.keyInventory);
+        context.waitTicks(5);
+        if (creative) context.runOnClient(client -> {
+            var screen = client.gui.screen();
+            for (var tab : BuiltInRegistries.CREATIVE_MODE_TAB)
+                if (tab.getType() == net.minecraft.world.item.CreativeModeTab.Type.INVENTORY) {
+                    var select = screen.getClass().getDeclaredMethod("selectTab", net.minecraft.world.item.CreativeModeTab.class);
+                    select.setAccessible(true); select.invoke(screen, tab);
+                }
+        });
+        context.waitTicks(3);
+        var pos = context.computeOnClient(client -> {
+            var screen = (net.minecraft.client.gui.screens.inventory.AbstractContainerScreen<?>) client.gui.screen();
+            Slot target = null;
+            for (var slot : screen.getMenu().slots)
+                if (slot.container instanceof net.minecraft.world.entity.player.Inventory && slot.getContainerSlot() == 20) target = slot;
+            int left = (int) field(screen, "leftPos"), top = (int) field(screen, "topPos");
+            double scale = client.getWindow().getGuiScale();
+            return new double[] {(left + target.x + 8) * scale, (top + target.y + 8) * scale};
+        });
+        context.getInput().setCursorPos(pos[0], pos[1]);
+        context.waitTicks(2);
+        for (int press = 0; press < 20; press++) {
+            context.getInput().pressKey(options -> options.keySwapOffhand);
+            context.waitTicks(press % 3 == 0 ? 1 : 3);
+        }
+        context.waitTicks(10);
+        String clientState = context.computeOnClient(client -> handsState(client.player));
+        String serverState = server.computeOnServer(s -> handsState(s.getPlayerList().getPlayers().getFirst()));
+        String mode = creative ? "creative" : "survival";
+        log("F spam over a heavy fish (" + mode + "): client " + clientState + " | server " + serverState);
+        context.runOnClient(client -> client.gui.setScreen(null));
+        context.waitTicks(3);
+        check(serverState.contains("fish=1 ") && serverState.contains("offhandFish=false"), mode + ": exactly one fish, never in the off hand (" + serverState + ")");
+        check(serverState.contains("torches=3"), mode + ": the torch stack is untouched (" + serverState + ")");
+        check(clientState.equals(serverState), mode + ": client and server agree after F spam");
+    }
+
+    private static String handsState(net.minecraft.world.entity.player.Player player) {
+        int fish = 0, torches = 0;
+        var all = new java.util.ArrayList<ItemStack>();
+        for (int i = 0; i < player.getInventory().getContainerSize(); i++) all.add(player.getInventory().getItem(i));
+        all.add(player.containerMenu.getCarried());
+        for (var stack : all) {
+            if (holylois.boombox.FishData.twoHanded(stack)) fish += stack.getCount();
+            if (stack.is(net.minecraft.world.item.Items.TORCH)) torches += stack.getCount();
+        }
+        return "fish=" + fish + " torches=" + torches + " offhandFish=" + holylois.boombox.FishData.twoHanded(player.getOffhandItem());
     }
 
     private static String inventoryState(ItemStack carried, net.minecraft.world.entity.player.Inventory inventory) {
@@ -708,19 +805,116 @@ public final class HolyLoisClientTests implements FabricClientGameTest {
         var server = world.getServer();
         server.runCommand("clear @a");
         server.runCommand("kill @e[type=mannequin]");
-        context.runOnClient(client -> { client.options.setCameraType(net.minecraft.client.CameraType.FIRST_PERSON); client.player.setXRot(38); });
+        // Zoomed in on the fist (narrow field of view, no HUD) so a pixel of offset shows.
+        int fov = context.computeOnClient(client -> client.options.fov().get());
+        context.runOnClient(client -> { client.options.setCameraType(net.minecraft.client.CameraType.FIRST_PERSON); client.player.setXRot(0);
+            client.options.fov().set(40); if (!client.gui.hud.isHidden()) client.gui.hud.toggle(); });
         var look = context.computeOnClient(client -> client.player.getLookAngle().multiply(1, 0, 1).normalize());
-        var spot = context.computeOnClient(client -> client.player.position()).add(look.scale(1.5));
+        var spot = context.computeOnClient(client -> client.player.position()).add(look.scale(1.3)).add(0, 0.95, 0);
         float faceCamera = context.computeOnClient(client -> client.player.getYRot() + 180);
-        String[] names = {"front", "side", "back"};
-        float[] turns = {0, 90, 180};
-        for (int i = 0; i < 3; i++) {
-            server.runCommand(String.format(java.util.Locale.ROOT, "summon mannequin %.2f %.2f %.2f {Tags:[\"hlhand\"],Rotation:[%.1ff,0f],equipment:{mainhand:{id:\"holylois:boombox\",count:1}}}", spot.x, spot.y, spot.z, faceCamera + turns[i]));
+        String[] names = {"front", "side", "back", "inside"};
+        float[] turns = {0, 90, 180, 270};
+        for (int i = 0; i < 4; i++) {
+            server.runCommand(String.format(java.util.Locale.ROOT, "summon mannequin %.2f %.2f %.2f {NoGravity:1b,Tags:[\"hlhand\"],Rotation:[%.1ff,0f],equipment:{mainhand:{id:\"holylois:boombox\",count:1}}}", spot.x, spot.y, spot.z, faceCamera + turns[i]));
             context.waitTicks(25);
             context.takeScreenshot("17-boombox-hand-" + names[i]);
+            if (i == 3) {
+                // Music reaching a held boombox (voice chat entity sound): the cones push out like on the placed one.
+                java.util.UUID holder = context.computeOnClient(client -> { for (var e : client.level.entitiesForRendering())
+                    if (e.getClass().getSimpleName().contains("Mannequin")) return e.getUUID(); return null; });
+                for (int t = 0; t <= 64; t++) { int frame = t; context.runOnClient(client -> holylois.boombox.BoomboxPulse.heardHeld(holder, music(frame))); context.waitTicks(1); }
+                context.takeScreenshot("17-boombox-hand-playing");
+                float pushed = context.computeOnClient(client -> ((java.util.Map<?, Float>) field(holylois.boombox.BoomboxPulse.class, "heldShown")).getOrDefault(holder, 0f));
+                log("held boombox cones pushed out by " + pushed);
+                check(pushed > 0.1f, "the held boombox cones move with the music (" + pushed + ")");
+            }
             server.runCommand("tp @e[tag=hlhand] ~ -300 ~");
             server.runCommand("kill @e[tag=hlhand]");
         }
+        context.runOnClient(client -> { client.options.fov().set(fov); if (client.gui.hud.isHidden()) client.gui.hud.toggle(); });
+    }
+
+    /** A lantern in hand swings on the boombox pendulum (HeldSwing through Not Enough Animations' 3D lantern). */
+    private static void lanternSwing(ClientGameTestContext context, TestSingleplayerContext world) throws Exception {
+        var server = world.getServer();
+        server.runCommand("clear @a");
+        server.runCommand("item replace entity @a weapon.mainhand with lantern");
+        context.runOnClient(client -> { client.options.setCameraType(net.minecraft.client.CameraType.THIRD_PERSON_FRONT); client.player.setXRot(10); });
+        context.waitTicks(20);
+        context.takeScreenshot("42-lantern-still");
+        context.getInput().holdKey(options -> options.keyUp);
+        context.waitTicks(10);
+        context.takeScreenshot("42-lantern-walk");
+        context.getInput().releaseKey(options -> options.keyUp);
+        context.waitTicks(3);
+        float tilt = context.computeOnClient(client -> holylois.boombox.HeldSwing.tilt(client.player.getId()));
+        context.takeScreenshot("42-lantern-stop");
+        context.runOnClient(client -> client.player.setYRot(client.player.getYRot() + 70));
+        context.waitTicks(4);
+        float side = context.computeOnClient(client -> holylois.boombox.HeldSwing.side(client.player.getId()));
+        context.takeScreenshot("42-lantern-turn");
+        log("lantern swing: stop tilt " + tilt + ", turn side " + side);
+        check(Math.abs(tilt) > 2 && Math.abs(side) > 2, "a held lantern swings when you stop and turn (" + tilt + ", " + side + ")");
+        boolean merged = java.util.Arrays.stream(Class.forName("dev.tr7zw.notenoughanimations.logic.HeldItemHandler").getDeclaredMethods())
+            .anyMatch(m -> m.getName().contains("holyLoisSmoothSwing"));
+        check(merged, "the lantern swing is ours inside Not Enough Animations");
+        context.runOnClient(client -> client.player.setYRot(client.player.getYRot() - 70));
+        context.waitTicks(40);
+        context.takeScreenshot("42-lantern-settled");
+        float rest = context.computeOnClient(client -> Math.abs(holylois.boombox.HeldSwing.side(client.player.getId())) + Math.abs(holylois.boombox.HeldSwing.tilt(client.player.getId())));
+        check(rest < 3, "the lantern settles when you stand still (" + rest + ")");
+        context.runOnClient(client -> client.options.setCameraType(net.minecraft.client.CameraType.FIRST_PERSON));
+        server.runCommand("clear @a");
+    }
+
+    /** The Holy Lootbox: the website's gold block with the engraved logo, in the hotbar, in hand (F5) and on the ground. */
+    private static void holyLootbox(ClientGameTestContext context, TestSingleplayerContext world) {
+        var server = world.getServer();
+        server.runCommand("clear @a");
+        server.runCommand("item replace entity @a weapon.mainhand with holylois:holy_lootbox");
+        context.runOnClient(client -> { client.options.setCameraType(net.minecraft.client.CameraType.THIRD_PERSON_FRONT); client.player.setXRot(15); });
+        context.waitTicks(20);
+        context.takeScreenshot("43-lootbox-held");
+        context.runOnClient(client -> { client.options.setCameraType(net.minecraft.client.CameraType.FIRST_PERSON); client.player.setXRot(30); });
+        context.waitTicks(10);
+        context.takeScreenshot("43-lootbox-first-person");
+        var ahead = context.computeOnClient(client -> client.player.position().add(client.player.getLookAngle().multiply(1, 0, 1).normalize().scale(1.6)));
+        server.runCommand(String.format(java.util.Locale.ROOT, "summon item %.2f %.2f %.2f {Item:{id:\"holylois:holy_lootbox\",count:1},PickupDelay:32767}", ahead.x, ahead.y, ahead.z));
+        context.runOnClient(client -> client.player.setXRot(50));
+        context.waitTicks(30);
+        context.takeScreenshot("43-lootbox-ground");
+        server.runCommand("kill @e[type=item]");
+        server.runCommand("clear @a");
+        context.runOnClient(client -> client.player.setXRot(0));
+    }
+
+    /** 20 ms of a fake track at 48 kHz: a loud low kick every fourth frame over a quiet bed. */
+    private static short[] music(int frame) {
+        short[] audio = new short[960];
+        for (int i = 0; i < audio.length; i++)
+            audio[i] = (short) ((frame % 4 == 0 ? 20000 : 600) * Math.sin(2 * Math.PI * 55 * i / 48000.0));
+        return audio;
+    }
+
+    /** Held boombox playing, seen from the front (F5): notes pop at the carrying hand on the beat. */
+    private static void boomboxHeldNotes(ClientGameTestContext context, TestSingleplayerContext world) {
+        var server = world.getServer();
+        server.runCommand("clear @a");
+        server.runCommand("item replace entity @a weapon.mainhand with holylois:boombox");
+        context.runOnClient(client -> { client.options.setCameraType(net.minecraft.client.CameraType.THIRD_PERSON_FRONT); client.player.setXRot(10); });
+        context.waitTicks(10);
+        java.util.UUID me = context.computeOnClient(client -> client.player.getUUID());
+        for (int t = 0; t <= 80; t++) {
+            int frame = t;
+            context.runOnClient(client -> holylois.boombox.BoomboxPulse.heardHeld(me, music(frame)));
+            context.waitTicks(1);
+        }
+        context.takeScreenshot("17-boombox-held-notes");
+        int notes = context.computeOnClient(client -> (int) field(holylois.boombox.BoomboxPulse.class, "beats"));
+        log("held boombox notes: " + notes);
+        check(notes > 3, "a held boombox pops notes on the beat (" + notes + ")");
+        context.runOnClient(client -> client.options.setCameraType(net.minecraft.client.CameraType.FIRST_PERSON));
+        server.runCommand("clear @a");
     }
 
     /** The client half of structure titles: the server says "you are in a pillager outpost", the title shows below Jade. */

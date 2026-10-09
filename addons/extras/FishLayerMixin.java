@@ -23,6 +23,7 @@ public abstract class FishLayerMixin {
             pose.rotate(com.mojang.math.Axis.XP.rotationDegrees(FishLook.swingX));
             pose.translate(-0.5f, -0.72f, -0.5f);
         }
+        if (holylois.boombox.BoomboxPulse.capture) { holylois.boombox.BoomboxPulse.capture = false; holylois.boombox.BoomboxPulse.capture(pose); }
         float scale = FishLook.current;
         if (scale == 1) return;
         pose.translate(0.5f, 0.5f + FishLook.lift, 0.5f);

@@ -137,5 +137,6 @@
   "holylois.loading.download": "Downloading Holy Lois resources...",
   "holylois.loading.download_percent": "Downloading Holy Lois resources: %s%%",
   "holylois.loading.apply": "Applying resources...",
-  "holylois.loading.failed": "Resource download failed: rejoin to try again"
+  "holylois.loading.failed": "Resource download failed: rejoin to try again",
+  "item.holylois.holy_lootbox": "Holy Lootbox"
 }

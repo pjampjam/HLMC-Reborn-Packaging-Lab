@@ -47,6 +47,8 @@ final class RewardHud {
     private static void draw(GuiGraphicsExtractor g, Minecraft mc, float time) {
         float fade = Math.min(1, time / 8f) * Math.min(1, (DURATION - time) / 20f);
         if (fade <= 0.05f) return;
+        // Items cannot take alpha: they grow in and shrink out with the card instead (owner round 5: they popped out).
+        float itemFade = fade * fade * (3 - 2 * fade);
         var font = mc.font;
         int width = Math.min(220, g.guiWidth() - 12), height = 80, x = (g.guiWidth() - width) / 2, cx = g.guiWidth() / 2;
         int y = g.guiHeight() - 74 - height + Math.round((1 - Math.min(1, time / 8f)) * 6);
@@ -66,7 +68,7 @@ final class RewardHud {
                 if (today && time > 10) { float pop = Math.min(1, (time - 10) / 6f); grow = 1 + 0.5f * (1 - pop) * (1 - pop); }
                 g.pose().pushMatrix();
                 g.pose().translate(scx, mid + bob);
-                g.pose().scale(grow, grow);
+                g.pose().scale(grow * itemFade, grow * itemFade);
                 g.item(new ItemStack(lootboxItem()), -8, -8);
                 g.pose().popMatrix();
                 continue;
@@ -95,8 +97,8 @@ final class RewardHud {
             var item = new ItemStack(BuiltInRegistries.ITEM.getValue(id));
             String name = font.plainSubstrByWidth(day == 7 ? lootbox : current.count() + " " + item.getHoverName().getString(), width - 40);
             int group = 20 + font.width(name), gx = cx - group / 2;
-            if (time > 16 && fade > 0.5f) {
-                float pop = Math.min(1, (time - 16) / 5f), scale = 0.4f + 0.6f * pop + 0.25f * (float) Math.sin(pop * Math.PI);
+            if (time > 16) {
+                float pop = Math.min(1, (time - 16) / 5f), scale = (0.4f + 0.6f * pop + 0.25f * (float) Math.sin(pop * Math.PI)) * itemFade;
                 g.pose().pushMatrix();
                 g.pose().translate(gx + 8, lineY + 4);
                 g.pose().scale(scale, scale);
@@ -115,6 +117,8 @@ final class RewardHud {
     }
 
     private static Item lootboxItem() {
+        var lootbox = Identifier.fromNamespaceAndPath("holylois", "holy_lootbox");
+        if (BuiltInRegistries.ITEM.containsKey(lootbox)) return BuiltInRegistries.ITEM.getValue(lootbox);
         var present = Identifier.fromNamespaceAndPath("mcwholidays", "yellow_present");
         return BuiltInRegistries.ITEM.containsKey(present) ? BuiltInRegistries.ITEM.getValue(present) : Items.CHEST;
     }

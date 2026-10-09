@@ -137,5 +137,6 @@
   "holylois.loading.download": "Загрузка ресурсов Holy Lois...",
   "holylois.loading.download_percent": "Загрузка ресурсов Holy Lois: %s%%",
   "holylois.loading.apply": "Применение ресурсов...",
-  "holylois.loading.failed": "Не удалось загрузить ресурсы: зайди снова"
+  "holylois.loading.failed": "Не удалось загрузить ресурсы: зайди снова",
+  "item.holylois.holy_lootbox": "Holy Lootbox"
 }

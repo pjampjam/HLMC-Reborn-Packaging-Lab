@@ -62,7 +62,7 @@ public final class HolyLoisAuthScreen extends Screen {
             super.extractWidgetRenderState(g, mx, my, delta);
         }
         @Override public boolean keyPressed(KeyEvent event) {
-            if (enter(event.key())) { lastEnterPress = System.currentTimeMillis(); submit(); return true; }
+            if (enter(event)) { submit(); return true; }
             return super.keyPressed(event);
         }
         @Override public void updateWidgetNarration(NarrationElementOutput output) {
@@ -99,29 +99,16 @@ public final class HolyLoisAuthScreen extends Screen {
         }
     }
     @Override public boolean keyPressed(KeyEvent event) {
-        if (event.key() == 256) {
+        if (event.isEscape()) {
             clearPasswords();
             var next = new HolyLoisAuthScreen(state); next.quitting = !quitting;
             minecraft.gui.setScreen(next); return true;
         }
-        if (enter(event.key())) { lastEnterPress = System.currentTimeMillis(); submit(); return true; }
+        if (enter(event)) { submit(); return true; }
         return super.keyPressed(event);
     }
-    // With 26.3 text input (IME) on, Windows text services can swallow Enter in a focused box: it then arrives only as a
-    // typed line break or as the key release. Every path submits once; `waiting` blocks a second send.
-    // Shared by every auth screen: when the server swaps the screen between press and release, the release must not
-    // submit the new, empty form.
-    private static long lastEnterPress;
-    private static boolean pressSeen() { return System.currentTimeMillis() - lastEnterPress < 1500; }
-    private boolean enter(int key) { return !quitting && state.mode() != 3 && (key == 257 || key == 335); }
-    @Override public boolean keyReleased(KeyEvent event) {
-        if (enter(event.key())) { if (!pressSeen()) submit(); return true; }
-        return super.keyReleased(event);
-    }
-    @Override public boolean charTyped(net.minecraft.client.input.CharacterEvent event) {
-        if (enter(257) && (event.codepoint() == '\r' || event.codepoint() == '\n')) { if (!pressSeen()) submit(); return true; }
-        return super.charTyped(event);
-    }
+    // 26.3 input uses SDL scancodes (Enter 40, keypad Enter 88, Esc 41): ask the event, never compare old GLFW numbers.
+    private boolean enter(KeyEvent event) { return !quitting && state.mode() != 3 && event.isConfirmation(); }
     @Override public boolean shouldCloseOnEsc() { return false; }
     @Override public boolean isPauseScreen() { return false; }
     @Override public boolean isInGameUi() { return false; }

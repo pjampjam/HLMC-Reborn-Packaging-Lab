@@ -11,7 +11,7 @@ import java.util.HashSet;
 import java.util.Map;
 
 /**
- * A carried boombox hangs from its handle and swings like a pendulum (owner round 4): it lags behind when you start, stop or
+ * A carried boombox (and a lantern, round 5) hangs from its handle and swings like a pendulum (owner round 4): it lags behind when you start, stop or
  * turn, sways a little with your steps and settles when you stand. Mostly side to side; simulated per tick, drawn between ticks.
  */
 public final class HeldSwing {
@@ -28,8 +28,10 @@ public final class HeldSwing {
 
     static void register() { ClientTickEvents.END_CLIENT_TICK.register(HeldSwing::tick); }
 
-    static boolean holds(Player player) {
-        return player.getMainHandItem().is(Boombox.ITEM) || player.getOffhandItem().is(Boombox.ITEM);
+    static boolean holds(Player player) { return swings(player.getMainHandItem()) || swings(player.getOffhandItem()); }
+    /** A boombox, or a lantern (drawn by Not Enough Animations, swung by us: NeaLanternSmoothMixin). */
+    private static boolean swings(net.minecraft.world.item.ItemStack stack) {
+        return stack.is(Boombox.ITEM) || net.minecraft.world.level.block.Block.byItem(stack.getItem()) instanceof net.minecraft.world.level.block.LanternBlock;
     }
 
     private static void tick(Minecraft mc) {
@@ -61,6 +63,11 @@ public final class HeldSwing {
     /** Current swing of a player's boombox, degrees (tests). */
     public static float side(int id) { var p = SWINGS.get(id); return p == null ? 0 : p.side; }
     public static float tilt(int id) { var p = SWINGS.get(id); return p == null ? 0 : p.tilt; }
+
+    /** The swing right now (interpolated between ticks), degrees. */
+    public static float sideNow(int id) { var p = SWINGS.get(id); return p == null ? 0 : Mth.lerp(partial(), p.lastSide, p.side); }
+    public static float tiltNow(int id) { var p = SWINGS.get(id); return p == null ? 0 : Mth.lerp(partial(), p.lastTilt, p.tilt); }
+    private static float partial() { return Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(false); }
 
     /** Sets FishLook.swingZ/swingX (degrees) for the boombox about to be drawn in this entity's hand. */
     public static void apply(LivingEntityRenderState state) {

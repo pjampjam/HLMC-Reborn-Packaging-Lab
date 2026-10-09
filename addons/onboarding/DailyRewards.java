@@ -46,6 +46,7 @@ public final class DailyRewards {
     static final ZoneId RIGA = ZoneId.of("Europe/Riga");
     static final String LOOTBOX_KEY = "holylois_lootbox";
     private static final Identifier PRESENT = Identifier.fromNamespaceAndPath("mcwholidays", "yellow_present");
+    private static final Identifier LOOTBOX = Identifier.fromNamespaceAndPath("holylois", "holy_lootbox");
 
     public static final class Entry { public String last = ""; public int streak, best, lootboxes; }
     public static final class State { public int version = 1; public Map<String, Entry> players = new HashMap<>(); }
@@ -179,7 +180,9 @@ public final class DailyRewards {
     }
 
     static ItemStack lootbox(int tier, String owner) {
-        var item = BuiltInRegistries.ITEM.containsKey(PRESENT) ? BuiltInRegistries.ITEM.getValue(PRESENT) : Items.CHEST;
+        // The gold Holy Lootbox from Holy Lois Extras; a present (or a chest) when that mod is missing.
+        var item = BuiltInRegistries.ITEM.containsKey(LOOTBOX) ? BuiltInRegistries.ITEM.getValue(LOOTBOX)
+            : BuiltInRegistries.ITEM.containsKey(PRESENT) ? BuiltInRegistries.ITEM.getValue(PRESENT) : Items.CHEST;
         var stack = new ItemStack(item, 1);
         stack.set(DataComponents.CUSTOM_NAME, Component.literal("Holy Lootbox").withStyle(s -> s.withColor(ChatFormatting.GOLD).withBold(true).withItalic(false)));
         stack.set(DataComponents.LORE, new ItemLore(List.of(
@@ -283,6 +286,9 @@ public final class DailyRewards {
                 i % 2 == 0 ? FireworkExplosion.Shape.STAR : FireworkExplosion.Shape.BURST, IntList.of(colors), IntList.of(0xFFFFFF), true, true))));
             ServerEvents.launch(level, player.getX() + (i - 1) * 1.5, player.getY() + 1, player.getZ() + (i % 2) * 1.5, rocket);
         }
+        // The box bursts open: gold sparks and a few white glints, like clicking the gold block on the website.
+        level.sendParticles(net.minecraft.core.particles.ParticleTypes.WAX_ON, player.getX(), player.getY() + 1.1, player.getZ(), 36, 0.35, 0.35, 0.35, 0.9);
+        level.sendParticles(net.minecraft.core.particles.ParticleTypes.END_ROD, player.getX(), player.getY() + 1.1, player.getZ(), 10, 0.2, 0.2, 0.2, 0.08);
         level.playSound(null, player.blockPosition(), SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 0.7f, 1.2f);
         title(player, Component.literal("✦ Holy Lootbox ✦").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD), Component.literal("Tier " + tier).withStyle(ChatFormatting.YELLOW));
     }
