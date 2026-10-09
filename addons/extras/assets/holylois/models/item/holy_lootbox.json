@@ -1,0 +1,12 @@
+{
+ "parent": "minecraft:block/cube",
+ "textures": {
+  "particle": "holylois:block/holy_lootbox_side",
+  "north": "holylois:block/holy_lootbox_side",
+  "south": "holylois:block/holy_lootbox_side",
+  "east": "holylois:block/holy_lootbox_side",
+  "west": "holylois:block/holy_lootbox_side",
+  "up": "holylois:block/holy_lootbox_top",
+  "down": "holylois:block/holy_lootbox_top"
+ }
+}

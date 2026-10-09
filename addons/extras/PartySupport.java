@@ -97,7 +97,7 @@ public final class PartySupport {
             var p = server.getPlayerList().getPlayer(m.getUUID());
             boolean online = p != null && ready(p);
             return new PartyState.Member(m.getUUID(), display(m.getUsername()), online, online && p.level() == viewer.level(),
-                online ? p.getHealth() : 0, online ? p.getMaxHealth() : 20, online ? p.getAbsorptionAmount() : 0, online ? p.getFoodData().getFoodLevel() : 0);
+                online ? p.getHealth() : 0, online ? p.getMaxHealth() : 20, online ? p.getAbsorptionAmount() : 0, online ? p.getFoodData().getFoodLevel() : 0,group.getOwner().getUUID().equals(m.getUUID()));
         }).toList();
         var mark = marks.get(group.getId());
         // Leaving/kicking the sender revokes the mark immediately. A new party never inherits it.

@@ -21,7 +21,6 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.entity.projectile.FireworkRocketEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.CustomData;
@@ -47,6 +46,7 @@ public final class DailyRewards {
     static final ZoneId RIGA = ZoneId.of("Europe/Riga");
     static final String LOOTBOX_KEY = "holylois_lootbox";
     private static final Identifier PRESENT = Identifier.fromNamespaceAndPath("mcwholidays", "yellow_present");
+    private static final Identifier LOOTBOX = Identifier.fromNamespaceAndPath("holylois", "holy_lootbox");
 
     public static final class Entry { public String last = ""; public int streak, best, lootboxes; }
     public static final class State { public int version = 1; public Map<String, Entry> players = new HashMap<>(); }
@@ -142,6 +142,19 @@ public final class DailyRewards {
         save();
         return streak;
     }
+    /** /dailytest DAY (operators): shows the reward card for that day of the week. Nothing is given or saved. */
+    static void registerTest(com.mojang.brigadier.CommandDispatcher<net.minecraft.commands.CommandSourceStack> dispatcher) {
+        dispatcher.register(net.minecraft.commands.Commands.literal("dailytest")
+            .requires(source -> source.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER))
+            .then(net.minecraft.commands.Commands.argument("day", com.mojang.brigadier.arguments.IntegerArgumentType.integer(1, 7)).executes(context -> {
+                var player = context.getSource().getPlayerOrException();
+                int day = com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(context, "day");
+                String item = day == 7 ? BuiltInRegistries.ITEM.getKey(lootbox(1, player.getGameProfile().name()).getItem()).toString() : DAYS.get(day - 1).getFirst().item();
+                int count = day == 7 ? 1 : DAYS.get(day - 1).getFirst().count();
+                notify(player, item, count, day, day % 2 == 0 ? 100 : 0, 0);
+                return 1;
+            })));
+    }
     private static void notify(ServerPlayer player, String item, int count, int streak, long coins, long waiting) {
         if (net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.canSend(player, holylois.auth.RewardNotice.TYPE))
             net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(player, new holylois.auth.RewardNotice(item, count, streak, coins, Math.max(0, waiting)));
@@ -167,12 +180,15 @@ public final class DailyRewards {
     }
 
     static ItemStack lootbox(int tier, String owner) {
-        var item = BuiltInRegistries.ITEM.containsKey(PRESENT) ? BuiltInRegistries.ITEM.getValue(PRESENT) : Items.CHEST;
+        // The gold Holy Lootbox from Holy Lois Extras; a present (or a chest) when that mod is missing.
+        var item = BuiltInRegistries.ITEM.containsKey(LOOTBOX) ? BuiltInRegistries.ITEM.getValue(LOOTBOX)
+            : BuiltInRegistries.ITEM.containsKey(PRESENT) ? BuiltInRegistries.ITEM.getValue(PRESENT) : Items.CHEST;
         var stack = new ItemStack(item, 1);
         stack.set(DataComponents.CUSTOM_NAME, Component.literal("Holy Lootbox").withStyle(s -> s.withColor(ChatFormatting.GOLD).withBold(true).withItalic(false)));
+        // Translated on the player's client (Holy Lois Extras); the key shown is the player's own Use binding.
         stack.set(DataComponents.LORE, new ItemLore(List.of(
-            Component.literal("Tier " + tier + " - a gift for " + owner).withStyle(s -> s.withColor(ChatFormatting.YELLOW).withItalic(false)),
-            Component.literal("Right-click to open").withStyle(s -> s.withColor(ChatFormatting.GRAY).withItalic(false)))));
+            Component.translatable("item.holylois.holy_lootbox.tier", tier, owner).withStyle(s -> s.withColor(ChatFormatting.YELLOW).withItalic(false)),
+            Component.translatable("item.holylois.holy_lootbox.open", Component.keybind("key.use")).withStyle(s -> s.withColor(ChatFormatting.GRAY).withItalic(false)))));
         var tag = new CompoundTag();
         tag.putInt(LOOTBOX_KEY, tier);
         CustomData.set(DataComponents.CUSTOM_DATA, stack, tag);
@@ -181,7 +197,10 @@ public final class DailyRewards {
 
     static int lootboxTier(ItemStack stack) {
         var data = stack.get(DataComponents.CUSTOM_DATA);
-        return data == null ? 0 : data.copyTag().getIntOr(LOOTBOX_KEY, 0);
+        int tier = data == null ? 0 : data.copyTag().getIntOr(LOOTBOX_KEY, 0);
+        // A Holy Lootbox without a tier (given by an admin or from creative) still opens, as tier 1.
+        if (tier <= 0 && BuiltInRegistries.ITEM.getKey(stack.getItem()).equals(LOOTBOX)) return 1;
+        return tier;
     }
 
     /** Opens a lootbox held by the player: -1 when the stack is not a lootbox, 1 with a named special item, else 0. */
@@ -269,8 +288,11 @@ public final class DailyRewards {
             var rocket = new ItemStack(Items.FIREWORK_ROCKET);
             rocket.set(DataComponents.FIREWORKS, new Fireworks(1, List.of(new FireworkExplosion(
                 i % 2 == 0 ? FireworkExplosion.Shape.STAR : FireworkExplosion.Shape.BURST, IntList.of(colors), IntList.of(0xFFFFFF), true, true))));
-            level.addFreshEntity(new FireworkRocketEntity(level, player.getX() + (i - 1) * 1.5, player.getY() + 1, player.getZ() + (i % 2) * 1.5, rocket));
+            ServerEvents.launch(level, player.getX() + (i - 1) * 1.5, player.getY() + 1, player.getZ() + (i % 2) * 1.5, rocket);
         }
+        // The box bursts open: gold sparks and a few white glints, like clicking the gold block on the website.
+        level.sendParticles(net.minecraft.core.particles.ParticleTypes.WAX_ON, player.getX(), player.getY() + 1.1, player.getZ(), 36, 0.35, 0.35, 0.35, 0.9);
+        level.sendParticles(net.minecraft.core.particles.ParticleTypes.END_ROD, player.getX(), player.getY() + 1.1, player.getZ(), 10, 0.2, 0.2, 0.2, 0.08);
         level.playSound(null, player.blockPosition(), SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 0.7f, 1.2f);
         title(player, Component.literal("✦ Holy Lootbox ✦").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD), Component.literal("Tier " + tier).withStyle(ChatFormatting.YELLOW));
     }

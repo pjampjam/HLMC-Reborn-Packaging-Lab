@@ -47,6 +47,9 @@ final class Afk {
         if (dirty && server.getTickCount() % 1200 == 0) save();
     }
 
+    /** Is the player AFK right now? False when Essential Commands is missing. */
+    static boolean afkNow(ServerPlayer player) { return available() && Bridge.isAfk(player); }
+
     static synchronized long seconds(UUID id) { return state.seconds.getOrDefault(id.toString(), 0L); }
 
     /** Vanilla play_time ticks minus AFK time, never below zero. */

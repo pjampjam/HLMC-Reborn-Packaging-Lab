@@ -13,9 +13,17 @@
     "HomeShortcutMixin",
     "HomeNameMixin",
     "PortalReturnMixin",
+    "SavedSkinLoginMixin",
+    "HomeStorageAccess",
+    "ChunkyStartupMixin",
+    "HomePermissionMixin",
+    "HomeMessageMixin",
     "AccountAliasLoginMixin",
     "AccountAliasRecordMixin",
-    "AuthFloatingMixin"
+    "AuthFloatingMixin",
+    "CelebrationFireworkMixin",
+    "AdminCommandsMixin",
+    "AudioUrlMixin"
   ],
   "injectors": {
     "defaultRequire": 1

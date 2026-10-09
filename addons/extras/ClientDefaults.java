@@ -30,6 +30,26 @@ public final class ClientDefaults implements PreLaunchEntrypoint {
                 if (done.add("rei-scrolling")) text = text.replace("\"scrollingEntryListWidget\": false", "\"scrollingEntryListWidget\": true");
                 if (!text.equals(before)) Files.writeString(rei, text, StandardCharsets.UTF_8);
             }
+            // Alt-tab keeps the game running instead of opening the pause menu (F3+P turns pausing back on). Only once options.txt
+            // exists: creating it here would stop YOSBR from copying the shipped defaults for a new player.
+            var options = loader.getGameDir().resolve("options.txt");
+            if (!done.contains("no-pause-on-alt-tab") && Files.exists(options)) {
+                String text = Files.readString(options, StandardCharsets.UTF_8);
+                String next = text.contains("pauseOnLostFocus:") ? text.replace("pauseOnLostFocus:true", "pauseOnLostFocus:false")
+                    : text + (text.endsWith(System.lineSeparator()) || text.endsWith("\n") ? "" : System.lineSeparator()) + "pauseOnLostFocus:false" + System.lineSeparator();
+                if (!next.equals(text)) Files.writeString(options, next, StandardCharsets.UTF_8);
+                done.add("no-pause-on-alt-tab");
+            }
+            // Ji AFK Cinematic starts with the server: when Essential Commands marks you AFK (15 min) or a few seconds after a
+            // cast, not after 30 s of standing still. Only while the file still has the mod's own 30 s / 10 s.
+            var cinematic = loader.getConfigDir().resolve("ji-afk-cinematic.json");
+            if (!done.contains("afk-cinematic-timing") && Files.exists(cinematic)) {
+                String text = Files.readString(cinematic, StandardCharsets.UTF_8);
+                String next = text.replace("\"afkThresholdSeconds\": 30,", "\"afkThresholdSeconds\": 900,")
+                    .replace("\"fishingCinematicThresholdSeconds\": 10,", "\"fishingCinematicThresholdSeconds\": 5,");
+                if (!next.equals(text)) Files.writeString(cinematic, next, StandardCharsets.UTF_8);
+                done.add("afk-cinematic-timing");
+            }
             Files.write(marker, done);
         } catch (Exception error) {
             org.slf4j.LoggerFactory.getLogger("HolyLoisExtras").warn("Could not apply Holy Lois client defaults", error);

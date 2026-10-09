@@ -52,8 +52,10 @@ public final class CombatTag {
     static boolean blocksCommand(String command) {
         String root = command.strip();
         if (root.startsWith("/")) root = root.substring(1);
-        root = root.split("\\s+", 2)[0].toLowerCase(Locale.ROOT);
+        var parts = root.split("\\s+", 2);
+        root = parts[0].toLowerCase(Locale.ROOT);
         if (root.contains(":")) root = root.substring(root.indexOf(':') + 1);
+        if (root.equals("homes") && parts.length == 1) return false;
         return BLOCKED.contains(root);
     }
 

@@ -29,6 +29,12 @@ if subprocess.run([java, '-cp', str(classes) + ':' + cp, 'holylois.boombox.Boomb
 # Legends and fish weights: the rules, plus the config files that will go live (copied next to this script by the kit).
 configs = [str(w / name) for name in ['holylois-legends.json', 'holylois-fish.json'] if (w / name).exists()]
 if subprocess.run([java, '-cp', str(classes) + ':' + cp, 'holylois.boombox.LegendsTest', *configs]).returncode: raise SystemExit('LegendsTest failed')
+# Every other *Test.java is a plain main-method test; all must pass and none ship in the jar.
+tests = sorted(p.stem for p in sources if p.stem.endswith('Test'))
+for test in tests:
+    if test in ('BoomboxTest', 'LegendsTest'): continue
+    if subprocess.run([java, '-cp', str(classes) + ':' + cp, 'holylois.boombox.' + test]).returncode: raise SystemExit(test + ' failed')
+print('tests passed:', ', '.join(tests))
 # Fabric only loads nested jars that carry their own fabric.mod.json, so JLayer gets a small wrapper.
 wrapped = io.BytesIO()
 with zipfile.ZipFile(jl) as src, zipfile.ZipFile(wrapped, 'w', zipfile.ZIP_DEFLATED) as dst:
@@ -45,8 +51,8 @@ with zipfile.ZipFile(out, 'w', zipfile.ZIP_DEFLATED) as z:
         for p in sorted((w / folder).rglob('*')):
             if p.is_file(): z.write(p, p.relative_to(w).as_posix())
     for p in sorted(classes.rglob('*.class')):
-        if not re.match(r'(Boombox|Legends)Test\b', p.name): z.write(p, p.relative_to(classes).as_posix())
+        if p.name.split('.')[0].split('$')[0] not in tests: z.write(p, p.relative_to(classes).as_posix())
     for p in sources:
-        if p.name not in ('BoomboxTest.java', 'LegendsTest.java'): z.write(p, 'src/' + p.name)
+        if p.stem not in tests: z.write(p, 'src/' + p.name)
     z.write(w / 'README.md', 'README.md')
 print(json.dumps({'jar': str(out), 'sha256': hashlib.sha256(out.read_bytes()).hexdigest(), 'size': out.stat().st_size}))

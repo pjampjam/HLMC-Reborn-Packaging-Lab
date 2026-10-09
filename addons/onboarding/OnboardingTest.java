@@ -68,7 +68,9 @@ public final class OnboardingTest {
         check(Redeem.code("test-secret","2026-10-05").equals("HL-QZB2-QA3Q")&&Redeem.code("test-secret","2026-10-06").equals("HL-7AB3-Z0G0"),"Daily code matches the website's HMAC function");
         check(Redeem.normalize("hl-qzb2 qa3q").equals(Redeem.normalize("HL-QZB2-QA3Q"))&&Redeem.normalize("HL-0O1I").equals(Redeem.normalize("HL-001L")),"Typed codes ignore case, spaces, dashes and look-alikes");
         var noon=java.time.LocalDateTime.of(2026,10,6,12,0); var early=java.time.LocalDateTime.of(2026,10,6,0,30);
-        check(Redeem.matches("test-secret","HL-7AB3-Z0G0",noon)&&!Redeem.matches("test-secret","HL-QZB2-QA3Q",noon)&&Redeem.matches("test-secret","HL-QZB2-QA3Q",early)&&!Redeem.matches("test-secret","HL-0000-0000",noon),"Today's code works, yesterday's only until 01:00 UTC");
+        check(Redeem.matches("test-secret","HL-7AB3-Z0G0",noon)&&!Redeem.matches("test-secret","HL-QZB2-QA3Q",noon)&&Redeem.matches("test-secret","HL-QZB2-QA3Q",early)&&!Redeem.matches("test-secret","HL-0000-0000",noon),"Today's code works, yesterday's only until 01:00 Riga time");
+        check(Redeem.eligibility(3599,9999).contains("2 hours")&&Redeem.eligibility(7200,1199).contains("1 min more today")&&Redeem.eligibility(7200,1200)==null&&Redeem.eligibility(50000,0).contains("20 min more today"),"Codes need 2 h active play and 20 active minutes that day");
+        check(Redeem.duration(4500).equals("1h 15m")&&Redeem.duration(30).equals("1 min"),"Redeem waits read as hours and minutes");
         var player=java.util.UUID.fromString("00000000-0000-0000-0000-000000000042");
         check(Redeem.roll("test-secret",player,"2026-10-05").equals(Redeem.roll("test-secret",player,"2026-10-05")),"The prize cannot be rerolled");
         var counts=new java.util.HashMap<String,Integer>();
@@ -77,7 +79,26 @@ public final class OnboardingTest {
         check(Afk.effective(72000,600)==60000&&Afk.effective(100,600)==0,"AFK seconds come off the played time and never below zero");
         check(!Quiet.allow("pjampjam left the game","multiplayer.player.left")&&!Quiet.allow("pjampjam has made the advancement [X]","chat.type.advancement.task")&&!Quiet.allow("pjampjam is now AFK.","")
             &&Quiet.allow("pjampjam fell from a high place","death.fell.accident.generic")&&Quiet.allow("Elza left the game","multiplayer.player.left")&&Quiet.allow("pjampjams cat left","")==true,"Quiet names hide joins, leaves, AFK and advancements but not deaths or other players");
+        var loot=new DeathLoot.Tracker();var owner=java.util.UUID.randomUUID();var a=java.util.UUID.randomUUID();var b=java.util.UUID.randomUUID();var c=java.util.UUID.randomUUID();
+        loot.track(owner,"minecraft:overworld",10,64,10,1000,java.util.List.of(a,b));loot.track(owner,"minecraft:overworld",500,64,500,2000,java.util.List.of());
+        check(loot.state.active.size()==1,"A death without drops is not tracked");
+        loot.merged(a,c);loot.removed(a);loot.removed(b);
+        check(loot.state.gone.isEmpty()&&loot.state.active.size()==1,"Death loot merged into another stack keeps the marker");
+        loot.removed(c);
+        check(loot.state.gone.size()==1&&loot.state.active.isEmpty()&&loot.byItem.isEmpty(),"The marker goes once every drop is gone");
+        var d=java.util.UUID.randomUUID();var e=java.util.UUID.randomUUID();
+        loot.track(owner,"minecraft:overworld",10,64,10,3000,java.util.List.of(d));loot.track(owner,"minecraft:overworld",11,64,10,4000,java.util.List.of(e));loot.removed(d);
+        check(loot.state.gone.size()==1,"A second death at the same spot with loot left keeps the marker");
+        loot.state.active.get(0).time=0;loot.prune(DeathLoot.KEEP_ACTIVE_MS+1);
+        check(loot.state.active.isEmpty()&&loot.byItem.isEmpty(),"Deaths in chunks nobody visits are forgotten after 30 days");
+        check(!AudioUrlGuard.isPublic(ip("127.0.0.1"))&&!AudioUrlGuard.isPublic(ip("10.0.0.5"))&&!AudioUrlGuard.isPublic(ip("169.254.169.254"))&&!AudioUrlGuard.isPublic(ip("100.64.1.1"))&&!AudioUrlGuard.isPublic(ip("192.168.1.1"))&&!AudioUrlGuard.isPublic(ip("0.0.0.0")),"Audio links never reach local, private or cloud metadata IPv4 addresses");
+        check(!AudioUrlGuard.isPublic(ip("::1"))&&!AudioUrlGuard.isPublic(ip("fd12::1"))&&!AudioUrlGuard.isPublic(ip("fe80::1"))&&!AudioUrlGuard.isPublic(ip("::ffff:10.0.0.1"))&&AudioUrlGuard.isPublic(ip("1.1.1.1"))&&AudioUrlGuard.isPublic(ip("2606:4700::1111")),"IPv6 private and mapped addresses are blocked, public ones pass");
+        check(rejects("http://example.com/a.mp3")&&rejects("file:///etc/passwd")&&rejects("https://user:pw@example.com/a.mp3")&&!rejects("https://example.com/a.mp3"),"Only plain https links are accepted");
+        check(AudioUrlGuard.waitMs(null,5000)==0&&AudioUrlGuard.waitMs(1000L,6000)==15000&&AudioUrlGuard.waitMs(1000L,30000)==0,"One audio link per player every 20 seconds");
+        check(Seen.lastSeen("Bob",0,3*86_400_000L+5000).startsWith("Bob was last on 3 days ago")&&Seen.lastSeen("Bob",0,90*60_000L).contains("1h 30m ago"),"/seen says how long ago a player was on");
         System.out.println("Passed " + checked + " onboarding, AFK ledger, secret code and quiet name, greeting, name day, bot wall, leaderboard, discovery, death, daily reward, chair, holiday, donate, land, rtp, support and combat checks");
     }
+    private static java.net.InetAddress ip(String text) {try{return java.net.InetAddress.getByName(text);}catch(Exception e){throw new AssertionError(e);}}
+    private static boolean rejects(String url) {try{AudioUrlGuard.parse(url);return false;}catch(IllegalArgumentException e){return true;}}
     private static void check(boolean value,String message) {checked++;if(!value)throw new AssertionError(message);}
 }

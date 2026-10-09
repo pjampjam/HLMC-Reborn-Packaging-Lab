@@ -1,6 +1,7 @@
 package holylois.mixins;
 
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -23,5 +24,12 @@ public abstract class DeathLootMixin {
         // 6000 is vanilla's expiry, so -30000 adds 30 minutes.
         if (item.addTag(holylois.DeathLoot.GRACE_TAG)) age = Math.min(age, -30000);
         if (target != null && age > -30000 + holylois.DeathLoot.OWNER_ONLY_TICKS) target = null;
+    }
+
+    /** Stacks merging: the surviving entity keeps carrying the death loot for the minimap marker cleanup. */
+    @Inject(method="merge(Lnet/minecraft/world/entity/item/ItemEntity;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/entity/item/ItemEntity;Lnet/minecraft/world/item/ItemStack;)V",
+        at=@At("HEAD"), remap=false)
+    private static void holyLoisDeathLootMerge(ItemEntity target, ItemStack targetStack, ItemEntity source, ItemStack sourceStack, CallbackInfo callback) {
+        holylois.DeathLoot.merged(source, target);
     }
 }

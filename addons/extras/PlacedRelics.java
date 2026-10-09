@@ -35,6 +35,15 @@ public final class PlacedRelics extends SavedData {
     private PlacedRelics() {}
     private PlacedRelics(List<Entry> entries) { entries.forEach(e -> items.put(e.position(), e.stack())); }
     private static PlacedRelics get(ServerLevel level) { return level.getDataStorage().computeIfAbsent(TYPE); }
+    static List<BlockPos> lanternsNear(ServerLevel level,net.minecraft.world.phys.Vec3 centre,double radius){
+        var result=new java.util.ArrayList<BlockPos>();
+        for(var e:get(level).items.entrySet()){
+            var pos=BlockPos.of(e.getKey());if(net.minecraft.world.phys.Vec3.atCenterOf(pos).distanceToSqr(centre)>radius*radius||!level.hasChunkAt(pos))continue;
+            if(!RelicPowers.id(e.getValue()).equals("loiss_lantern")||!level.getBlockState(pos).is(net.minecraft.world.level.block.Blocks.LANTERN))continue;
+            result.add(pos);if(result.size()==16)break;
+        }
+        return List.copyOf(result);
+    }
 
     public static void remember(ServerLevel level, BlockPos pos, ItemStack stack) {
         if (!(stack.getItem() instanceof BlockItem block) || !level.getBlockState(pos).is(block.getBlock())) return;

@@ -8,13 +8,14 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import java.util.Map;
 
-/** REI 26.3.823 uses shared mutable tag caches. Early loot tags can build in parallel. */
+/**
+ * REI's TagLoader hook (823 and 824) walks shared static tag maps. Farmer's Delight builds early loot tags on parallel
+ * loot workers, so two builds at once crash startup ("Failed to load datapacks"). Any REI version gets the lock.
+ */
 @Mixin(TagLoader.class)
 public abstract class ReiTagBuildMixin {
     @Unique private static final Object holyLoisTagBuildLock = new Object();
-    @Unique private static final boolean holyLoisNeedsTagLock = FabricLoader.getInstance()
-        .getModContainer("roughlyenoughitems")
-        .map(mod -> mod.getMetadata().getVersion().getFriendlyString().equals("26.3.823")).orElse(false);
+    @Unique private static final boolean holyLoisNeedsTagLock = FabricLoader.getInstance().isModLoaded("roughlyenoughitems");
 
     @WrapMethod(method = "build")
     private Map<?, ?> holyLoisSerialTagBuild(Map<?, ?> entries, Operation<Map<?, ?>> original) {

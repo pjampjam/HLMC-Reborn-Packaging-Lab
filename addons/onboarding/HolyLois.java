@@ -57,6 +57,9 @@ public final class HolyLois implements ModInitializer {
     }
     @Override public void onInitialize() {
         SkinStats.register();
+        BlueMapSkins.register();
+        PartyAliases.register();
+        TravelMenus.register();
         PayloadTypeRegistry.clientboundPlay().register(AuthStatus.TYPE, AuthStatus.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(holylois.auth.RewardNotice.TYPE, holylois.auth.RewardNotice.CODEC);
         AccountRequests.register();
@@ -68,11 +71,13 @@ public final class HolyLois implements ModInitializer {
             claims.register(dispatcher);
             redeem.register(dispatcher);
             rtp.register(dispatcher);
-            HomeAlias.register(dispatcher);
+            Seen.register(dispatcher);
+            DailyRewards.registerTest(dispatcher);
             dispatcher.register(net.minecraft.commands.Commands.literal("structures").executes(context -> Discoveries.here(context.getSource().getPlayerOrException())));
         });
         ServerLifecycleEvents.SERVER_STARTED.register(this::load);
-        ServerLifecycleEvents.SERVER_STOPPING.register(server -> Afk.save());
+        ServerLifecycleEvents.SERVER_STOPPING.register(server -> { Afk.save(); DeathLoot.save(); });
+        net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents.ENTITY_UNLOAD.register((entity, level) -> safely("death loot", () -> DeathLoot.unloaded(entity)));
         net.fabricmc.fabric.api.event.player.UseItemCallback.EVENT.register((player, level, hand) ->
             player instanceof net.minecraft.server.level.ServerPlayer sp && openLootbox(sp, sp.getItemInHand(hand))
                 ? net.minecraft.world.InteractionResult.SUCCESS : net.minecraft.world.InteractionResult.PASS);
@@ -134,6 +139,10 @@ public final class HolyLois implements ModInitializer {
         claims.load(server);
         Afk.load(server.getWorldPath(LevelResource.ROOT));
         redeem.load(server);
+        DeathLoot.load(server);
+        AudioUrlGuard.load(server.getWorldPath(LevelResource.ROOT));
+        AdminCommands.lock(server.getCommands().getDispatcher()); // spark registers after the tree is built
+        CommandAudit.run(server);
         try {
             if (Files.exists(stateFile)) {
                 state = JSON.fromJson(Files.readString(stateFile),State.class);
@@ -186,6 +195,8 @@ public final class HolyLois implements ModInitializer {
         if (server.getTickCount()%2400 == 0) Leaderboards.refreshAsync();
         safely("events", () -> events.tick(server));
         safely("afk", () -> Afk.tick(server));
+        safely("redeem", () -> redeem.tick(server));
+        safely("death loot", () -> DeathLoot.tick(server));
         safely("rtp", () -> rtp.tick(server, rtpRadius));
         safely("combat", () -> CombatTag.tick(server));
         if (server.getTickCount()%6000 == 0) for (var player : server.getPlayerList().getPlayers()) safely("claims", () -> claims.refresh(player));
