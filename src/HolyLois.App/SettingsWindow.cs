@@ -16,7 +16,7 @@ public sealed class SettingsWindow : ThemedWindow
 {
     public SettingsWindow(ClientContext context)
     {
-        Title = "Holy Lois: Reborn - Settings"; Width = 610; Height = 780; ResizeMode = ResizeMode.NoResize;
+        Title = "Holy Lois: Reborn - Settings"; Width = 610; Height = 720; ResizeMode = ResizeMode.NoResize;
         WindowStartupLocation = WindowStartupLocation.CenterOwner; Background = (Brush)Application.Current.Resources["SurfaceRaised"]; FontFamily = new FontFamily("Segoe UI");
         var panel = new StackPanel { Margin = new Thickness(28,22,28,24) };
         var root = panel;
@@ -59,7 +59,7 @@ public sealed class SettingsWindow : ThemedWindow
 
         Group("GroupHelp");
         Text(Localize.Text("ReportsInfo"),12);
-        var reportStatus = new TextBlock { TextWrapping = TextWrapping.Wrap, Foreground = (Brush)Application.Current.Resources["Muted"], Margin = new Thickness(0,8,0,0) };
+        var reportStatus = Status();
         if (context.LastStart is { } last)
             reportStatus.Text = string.Format(Localize.Text("LastStart"), last.Started.ToLocalTime().ToString("g"), last.Mode == "fast start" ? Localize.Text("FastStart") : last.Mode)
                 + (last.Error is not null ? "  -  " + Localize.Text("LastStartFailed") : last.ExitCode is int code && code != 0 ? "  -  " + string.Format(Localize.Text("LastStartCrashed"), code) : "");
@@ -76,7 +76,7 @@ public sealed class SettingsWindow : ThemedWindow
         panel.Children.Add(reportRow); panel.Children.Add(reportStatus);
         Text(Localize.Text("ShaderHint"),12);
         var graphicsRow = new WrapPanel();
-        var graphicsStatus = new TextBlock { TextWrapping = TextWrapping.Wrap, Foreground = (Brush)Application.Current.Resources["Muted"], Margin = new Thickness(0,8,0,0) };
+        var graphicsStatus = Status();
         void GraphicsButton(string label, Func<string?> run)
         {
             var button = new Button { Content = label, Margin = new Thickness(0,8,8,0), FontSize = 13, Padding = new Thickness(14,8,14,8) };
@@ -110,10 +110,10 @@ public sealed class SettingsWindow : ThemedWindow
 
         // Rare maintenance, folded so it never competes with the everyday choices.
         var advanced = new StackPanel();
-        panel.Children.Add(new Expander { Header = Localize.Text("GroupAdvanced"), Content = advanced, Margin = new Thickness(0,24,0,0), FontSize = 14 });
+        panel.Children.Add(new Expander { Header = Localize.Text("GroupAdvanced"), Content = advanced, Margin = new Thickness(0,18,0,0), FontSize = 14 });
         panel = advanced;
         Action(Localize.Text("OpenAppFolder"), () => Process.Start(new ProcessStartInfo("explorer.exe") { UseShellExecute = true, ArgumentList = { LauncherStartup.InstallRoot } }));
-        var cleanupStatus = new TextBlock { TextWrapping = TextWrapping.Wrap, Foreground = (Brush)Application.Current.Resources["Muted"], Margin = new Thickness(0,8,0,0) };
+        var cleanupStatus = Status();
         Action(Localize.Text("CleanDownloads"), () => { _ = CleanDownloads(); }, !context.IsIsolated);
         panel.Children.Add(cleanupStatus);
         async Task CleanDownloads()
@@ -154,8 +154,15 @@ public sealed class SettingsWindow : ThemedWindow
 
         void Group(string key)
         {
-            panel.Children.Add(new Border { BorderBrush = (Brush)Application.Current.Resources["Line"], BorderThickness = new Thickness(0,1,0,0), Margin = new Thickness(0,22,0,0) });
-            panel.Children.Add(new TextBlock { Text = Localize.Text(key).ToUpperInvariant(), FontSize = 12, FontWeight = FontWeights.SemiBold, Foreground = (Brush)Application.Current.Resources["Muted"], Margin = new Thickness(0,14,0,0) });
+            panel.Children.Add(new Border { BorderBrush = (Brush)Application.Current.Resources["Line"], BorderThickness = new Thickness(0,1,0,0), Margin = new Thickness(0,18,0,0) });
+            panel.Children.Add(new TextBlock { Text = Localize.Text(key).ToUpperInvariant(), FontSize = 12, FontWeight = FontWeights.SemiBold, Foreground = (Brush)Application.Current.Resources["Muted"], Margin = new Thickness(0,12,0,0) });
+        }
+        // Result lines stay collapsed until an action writes to them, so empty ones leave no gaps.
+        static TextBlock Status()
+        {
+            var status = new TextBlock { TextWrapping = TextWrapping.Wrap, Foreground = (Brush)Application.Current.Resources["Muted"], Margin = new Thickness(0,8,0,0), Visibility = Visibility.Collapsed };
+            System.ComponentModel.DependencyPropertyDescriptor.FromProperty(TextBlock.TextProperty, typeof(TextBlock)).AddValueChanged(status, (_, _) => status.Visibility = string.IsNullOrEmpty(status.Text) ? Visibility.Collapsed : Visibility.Visible);
+            return status;
         }
         void Text(string text, int size = 13, bool strong = false, bool gold = true) => panel.Children.Add(new TextBlock { Text = text, TextWrapping = TextWrapping.Wrap, FontSize = size, FontWeight = strong ? FontWeights.SemiBold : FontWeights.Normal, Foreground = (Brush)Application.Current.Resources[strong ? gold ? "Gold" : "Text" : "Muted"], Margin = new Thickness(0,strong ? 12 : 6,0,0) });
         void Choice(string title, string info, bool fast, bool selected)

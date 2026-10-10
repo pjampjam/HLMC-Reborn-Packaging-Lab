@@ -36,6 +36,9 @@ public partial class MainWindow : ThemedWindow
             { context.UsePlayerName(known); StatusText.Text = string.Format(T("FastStartIntro"), known); }
         }
         catch (Exception ex) when (ex is IOException or InvalidDataException or UnauthorizedAccessException) { }
+        NewsPicture.Background = new ImageBrush(LauncherArt.Pick("cow", !context.IsIsolated)) { Stretch = Stretch.UniformToFill, AlignmentX = AlignmentX.Center };
+        // Short windows get a smaller logo so the server block never crowds the action feedback.
+        SizeChanged += (_, _) => Logo.Width = Logo.Height = ActualHeight < 740 ? 112 : 140;
         Refresh();
         Loaded += async (_, _) => { await LauncherDiscovery.WarmAsync(); if (IsClosed || Dispatcher.HasShutdownStarted) return; Refresh(); if (!context.IsIsolated) { await Task.Run(context.CleanInstalledDownloads); if (IsClosed || Dispatcher.HasShutdownStarted) return; await CheckUpdates(); if (!IsClosed) updateTimer.Start(); await PingServer(); if (!IsClosed) statusTimer.Start(); } };
         updateTimer.Tick += async (_, _) => await CheckUpdates(); statusTimer.Tick += async (_, _) => await PingServer();
@@ -79,7 +82,7 @@ public partial class MainWindow : ThemedWindow
         var named = context.Settings.Launcher != "official"; var fast = context.UsesFastStart;
         var player = context.PlayerName;
         AppVersion.Text = T("App") + " " + AppUpdates.RunningVersion.ToString(3);
-        WebsiteButton.Visibility = WebsiteUrl.Length > 0 ? Visibility.Visible : Visibility.Collapsed; LinkGrid.Columns = WebsiteUrl.Length > 0 ? 2 : 1; DiscordButton.Margin = new Thickness(0, 0, WebsiteUrl.Length > 0 ? 4 : 0, 0);
+        WebsiteButton.Visibility = WebsiteUrl.Length > 0 ? Visibility.Visible : Visibility.Collapsed; LinkGrid.Columns = WebsiteUrl.Length > 0 ? 2 : 1; DiscordButton.Margin = new Thickness(0, 0, WebsiteUrl.Length > 0 ? 3 : 0, 0);
         var megabytes = context.Manifest.Files.Sum(f => f.Size) / 1048576;
         HeaderTitle.Text = named && player is not null ? string.Format(T("WelcomeBack"), player) : T("PlayTitle");
         ReleaseLabel.Text = $"Minecraft 26.3  -  {T("Version")} {context.Manifest.Version}  -  {context.Manifest.Files.Count(f => f.Path.StartsWith("mods/"))} {T("Mods")}  -  {megabytes:N0} MB";
@@ -94,25 +97,13 @@ public partial class MainWindow : ThemedWindow
         PrimaryLabel.Text = T(step switch { Step.Install => "BigInstall", Step.Update => "BigUpdate", Step.Repair => "BigRepair", _ => "Play" });
         PrimarySub.Text = step is Step.Install or Step.Update ? $"{T("Version")} {context.Manifest.Version}  -  {megabytes:N0} MB"
             : step == Step.Repair ? T("RepairSub") : fast ? T("FastStart") : sk ? "SKlauncher" : "Minecraft Launcher";
-        PrimaryHint.Text = busy ? T("WorkingHint") : T(step switch
+        PrimaryHint.Text = busy ? T("WorkingHint") : step == Step.Install ? string.Format(T("StateInstall"), megabytes) : T(step switch
         {
-            Step.Install => "PlayInstallHint", Step.Update => "UpdateHint", Step.Repair => "RepairHint",
+            Step.Update => "UpdateHint", Step.Repair => "RepairHint",
             Step.Play => fast ? "PlayFastHint" : "PlayReadyHint",
             _ => fast ? "PlayNameHint" : "PlayMissingLauncher",
         });
 
-        // Readiness card: a title and one plain sentence per state, so "ready" never sits next to "install first".
-        PackStatus.Text = T(step switch { Step.Install => "NoPack", Step.Update => "NewPackTitle", Step.Repair => "NeedsRepair", Step.Play => "Ready", _ => "AlmostReady" });
-        StateHint.Text = step switch
-        {
-            Step.Install => string.Format(T("StateInstall"), megabytes),
-            Step.Update => T("UpdateReadyHint"),
-            Step.Repair => T("StateRepair"),
-            Step.Play => T("StateReady"),
-            _ => T(fast ? "PlayNameHint" : "PlayMissingLauncher"),
-        };
-        PackStatus.Foreground = (Brush)FindResource(step is Step.Play or Step.Blocked ? "Text" : "Gold");
-        StatusCard.BorderBrush = (Brush)FindResource(step is Step.Install or Step.Update or Step.Repair ? "Gold" : "Line");
         VerifyButton.Visibility = step is Step.Play or Step.Blocked ? Visibility.Visible : Visibility.Collapsed;
         StatusText.Visibility = string.IsNullOrEmpty(StatusText.Text) ? Visibility.Collapsed : Visibility.Visible;
 
@@ -136,10 +127,13 @@ public partial class MainWindow : ThemedWindow
             : T(sk ? context.CanPlay ? "SkLinked" : context.RecoveredDeletedInstance ? "SkMissing" : "SkFirst" : context.Settings.JoinServer ? "OfficialHintJoin" : "OfficialHint");
         var detected = fast ? null : context.DetectLauncher();
         LauncherPanel.Visibility = fast ? Visibility.Collapsed : Visibility.Visible;
+        // The hint lines up with the account text only when nothing full-width sits between them.
+        LauncherHint.Margin = new Thickness(LauncherPanel.Visibility == Visibility.Visible || NameEntry.Visibility == Visibility.Visible ? 0 : 62, 8, 0, 0);
         LauncherActions.Visibility = !fast && detected is null ? Visibility.Visible : Visibility.Collapsed;
         DetectionPanel.BorderBrush = detected is null ? (Brush)FindResource("Line") : (Brush)FindResource("Success");
         DetectionHint.Text = !LauncherDiscovery.Ready ? T("Detecting") : detected is null ? T("NotDetected") : !sk && detected.StartsWith("shell:") ? T("DetectedStore") : T("Detected") + ": " + (sk ? "SKlauncher" : "Minecraft Launcher");
         RefreshHead(named ? player : null);
+        QuickKeys.Child = Quick("QuickKeysTitle", "QuickKeysBody"); QuickCommands.Child = Quick("QuickCommandsTitle", "QuickCommandsBody"); QuickLand.Child = Quick("QuickLandTitle", "QuickLandBody");
         RefreshNews(step == Step.Update);
         // One card per release: gold version, summary, then one bullet per change so long notes stay readable.
         HistoryPanel.Children.Clear();
@@ -188,6 +182,24 @@ public partial class MainWindow : ThemedWindow
         NewsHighlights.Children.Clear();
         foreach (var line in latest.Added.Concat(latest.Updated).Take(3)) NewsHighlights.Children.Add(Bullet(line));
     }
+    /// <summary>A quick-reference card: a title, then "KEY|what it does" lines with the key in a gold badge.</summary>
+    private StackPanel Quick(string title, string body)
+    {
+        var card = new StackPanel();
+        card.Children.Add(new TextBlock { Text = T(title), FontSize = 13, FontWeight = FontWeights.SemiBold, Margin = new Thickness(0, 0, 0, 6) });
+        foreach (var line in T(body).Split((char)10))
+        {
+            var parts = line.Split('|', 2);
+            var row = new Grid { Margin = new Thickness(0, 4, 0, 0) };
+            row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto }); row.ColumnDefinitions.Add(new ColumnDefinition());
+            var badge = new Border { Background = (Brush)FindResource("GoldSoft"), CornerRadius = new CornerRadius(4), Padding = new Thickness(6, 1, 6, 1), Margin = new Thickness(0, 0, 8, 0), VerticalAlignment = VerticalAlignment.Top,
+                Child = new TextBlock { Text = parts[0], FontFamily = new FontFamily("Consolas"), FontSize = 12, Foreground = (Brush)FindResource("Gold") } };
+            var text = new TextBlock { Text = parts.Length > 1 ? parts[1] : "", FontSize = 12, Foreground = (Brush)FindResource("Muted"), TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center };
+            Grid.SetColumn(text, 1); row.Children.Add(badge); row.Children.Add(text); card.Children.Add(row);
+        }
+        return card;
+    }
+    private void Guide_Click(object sender, RoutedEventArgs e) => ClientContext.OpenUrl("https://holylois.com/guide");
     private void AllChanges_Click(object sender, RoutedEventArgs e) { HistoryExpander.IsExpanded = true; HistoryExpander.BringIntoView(); }
     private void Mode_Click(object sender, RoutedEventArgs e) { choosing = !choosing; Refresh(); }
     private async void Primary_Click(object sender, RoutedEventArgs e)
@@ -273,6 +285,7 @@ public partial class MainWindow : ThemedWindow
         CheckUpdatesButton.IsEnabled = !busy && !checking; PrimaryAction.IsEnabled = !busy && !starting && CurrentStep() != Step.Blocked; NameSaveButton.IsEnabled = !busy;
         CancelButton.Visibility = busy ? Visibility.Visible : Visibility.Collapsed;
         StatusText.Visibility = Visibility.Visible;
+        PrimaryHint.Visibility = busy ? Visibility.Collapsed : Visibility.Visible;
     }
     private void Cancel_Click(object sender, RoutedEventArgs e) => cancellation?.Cancel();
     private async Task PlayAsync()

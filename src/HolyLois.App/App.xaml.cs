@@ -72,7 +72,7 @@ public partial class App : Application
             if (args.Contains("--verify-setup-scroll")) {
                 if(data is null || !context.IsIsolated)throw new ArgumentException("Setup verification requires an isolated folder.");
                 context.SelectLauncher("name");
-                foreach(var language in new[]{"en","ru","lv"})foreach(int height in new[]{780,600}){
+                foreach(var language in new[]{"en","ru","lv"})foreach(int height in new[]{720,600}){
                     context.SetLanguage(language);var setup=new SetupWindow(context,data){Height=height};setup.EnsureChrome();setup.Show();setup.GoTo(1);setup.UpdateLayout();
                     var box=(System.Windows.Controls.TextBox)setup.FindName("SetupNameBox");box.Text="Notch";box.Focus();
                     var scroll=(System.Windows.Controls.ScrollViewer)setup.FindName("SetupScroll");
@@ -88,12 +88,12 @@ public partial class App : Application
                     if(nextPoint.Y+next.ActualHeight>height)throw new IOException("Finish button is outside the window.");
                     Render(setup,data,$"setup-finish-{language}-{height}.png",780,height);setup.Close();
                 }
-                File.WriteAllText(Path.Combine(data,"setup-scroll-result.txt"),"EN/RU/LV setup steps at 780px and 600px: name wheel scroll works on the play step, both shortcut choices and the Finish button stay reachable on the last step.");Shutdown(0);return;
+                File.WriteAllText(Path.Combine(data,"setup-scroll-result.txt"),"EN/RU/LV setup steps at 720px and 600px: name wheel scroll works on the play step, both shortcut choices and the Finish button stay reachable on the last step.");Shutdown(0);return;
             }
             if (args.Contains("--verify-ui-polish")) {
                 if (data is null || !context.IsIsolated) throw new ArgumentException("UI polish verification requires an isolated folder.");
                 var setup = new SetupWindow(context, data); setup.EnsureChrome();setup.Show();setup.UpdateLayout();
-                var content = (FrameworkElement)setup.Content; content.Measure(new Size(780,780)); content.Arrange(new Rect(0,0,780,780)); content.UpdateLayout();
+                var content = (FrameworkElement)setup.Content; content.Measure(new Size(780,720)); content.Arrange(new Rect(0,0,780,720)); content.UpdateLayout();
                 IEnumerable<System.Windows.Controls.Border> Pictures(DependencyObject parent) {
                     for (var n=0;n<VisualTreeHelper.GetChildrenCount(parent);n++) {
                         var child=VisualTreeHelper.GetChild(parent,n);
@@ -101,7 +101,7 @@ public partial class App : Application
                         foreach (var nested in Pictures(child)) yield return nested;
                     }
                 }
-                setup.GoTo(1); content.Measure(new Size(780,780)); content.Arrange(new Rect(0,0,780,780)); content.UpdateLayout();
+                setup.GoTo(1); content.Measure(new Size(780,720)); content.Arrange(new Rect(0,0,780,720)); content.UpdateLayout();
                 var pictures = Pictures(content).Where(p => p.IsVisible).ToArray();
                 var nameFrame = (System.Windows.Controls.Border)setup.FindName("NamePicture");
                 var accountFrame = (System.Windows.Controls.Border)setup.FindName("OfficialPicture");
@@ -213,7 +213,7 @@ public partial class App : Application
             }
             if (args.Contains("--render-setup-preview")) {
                 if (data is null) throw new ArgumentException("Rendering requires an isolated folder.");
-                foreach (var language in new[] { "en", "ru", "lv" }) for (var step = 0; step < 3; step++) { context.SetLanguage(language); if (step == 1) context.SelectLauncher("name"); var setup = new SetupWindow(context, data); setup.GoTo(step); Render(setup,data,$"setup-{language}-{step + 1}.png",780,780); }
+                foreach (var language in new[] { "en", "ru", "lv" }) for (var step = 0; step < 3; step++) { context.SetLanguage(language); if (step == 1) context.SelectLauncher("name"); var setup = new SetupWindow(context, data); setup.GoTo(step); Render(setup,data,$"setup-{language}-{step + 1}.png",780,720); }
                 Shutdown(0); return;
             }
             if (args.Contains("--verify-recovery")) {

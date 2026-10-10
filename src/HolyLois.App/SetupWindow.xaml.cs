@@ -58,7 +58,28 @@ public partial class SetupWindow : ThemedWindow
         OfficialCard.Background = sk ? plain : tint; SkCard.Background = sk ? tint : plain;
         SetupNamePanel.Visibility = sk ? Visibility.Visible : Visibility.Collapsed;
         if (sk && SetupNameBox.Text.Length == 0) SetupNameBox.Text = context.SuggestedPlayerName() ?? "";
-        FinishText.Text = string.Format(Localize.Text(sk ? "SetupFinishName" : "SetupFinishAccount"), context.Manifest.Files.Sum(f => f.Size) / 1048576);
+        var megabytes = context.Manifest.Files.Sum(f => f.Size) / 1048576;
+        Facts.Children.Clear();
+        foreach (var (column, title, text) in new[] { (0, string.Format(Localize.Text("FactSizeTitle"), megabytes), "FactSizeText"), (2, Localize.Text("FactUpdatesTitle"), "FactUpdatesText"), (4, Localize.Text("FactKeepTitle"), "FactKeepText") })
+        {
+            var fact = new StackPanel();
+            fact.Children.Add(new TextBlock { Text = title, FontSize = 14, FontWeight = FontWeights.SemiBold, Foreground = (Brush)FindResource("Gold") });
+            fact.Children.Add(new TextBlock { Text = Localize.Text(text), FontSize = 12, Foreground = (Brush)FindResource("Muted"), TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 3, 0, 0) });
+            var card = new Border { Child = fact, Background = (Brush)FindResource("SurfaceRaised"), BorderBrush = (Brush)FindResource("Line"), BorderThickness = new Thickness(1), CornerRadius = (CornerRadius)FindResource("Radius"), Padding = new Thickness(12, 10, 12, 10) };
+            Grid.SetColumn(card, column); Facts.Children.Add(card);
+        }
+        // What happens next, numbered: the three things that really follow, for the chosen way to play.
+        NextSteps.Children.Clear();
+        var steps = new[] { string.Format(Localize.Text("Next1"), megabytes), Localize.Text(sk ? "Next2Name" : "Next2Account"), Localize.Text(sk ? "Next3Name" : "Next3Account") };
+        for (var n = 0; n < steps.Length; n++)
+        {
+            var row = new Grid { Margin = new Thickness(0, 8, 0, 0) };
+            row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(32) }); row.ColumnDefinitions.Add(new ColumnDefinition());
+            row.Children.Add(new Border { Width = 22, Height = 22, CornerRadius = new CornerRadius(11), Background = (Brush)FindResource("GoldSoft"), HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Top,
+                Child = new TextBlock { Text = (n + 1).ToString(), FontSize = 12, FontWeight = FontWeights.SemiBold, Foreground = (Brush)FindResource("Gold"), HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center } });
+            var text = new TextBlock { Text = steps[n], FontSize = 13, TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center };
+            Grid.SetColumn(text, 1); row.Children.Add(text); NextSteps.Children.Add(row);
+        }
     }
     private void Official_Click(object sender, RoutedEventArgs e) { launcher = "official"; Refresh(); }
     // A reset setup of a SKlauncher player keeps that folder; new players get a plain player name.
