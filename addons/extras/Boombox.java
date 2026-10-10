@@ -47,7 +47,8 @@ import java.util.*;
 
 /**
  * Holy Lois boombox: plays internet radio to everyone nearby through Simple Voice Chat.
- * Held (main hand or offhand): right-click in the air plays or switches the station, sneak + right-click turns it off,
+ * Held (main hand or offhand): right-click in the air plays or switches the station, sneak + right-click turns it off
+ * (only the main hand places it on a block),
  * and the sound follows the player. It stops at once when it leaves the player's inventory and after two seconds
  * when it is no longer held. Placed: right-click plays or switches, sneak + empty hand turns it off; it streams while
  * someone is within earshot and resumes after a restart.
@@ -141,6 +142,10 @@ public final class Boombox implements ModInitializer {
             toggle(serverPlayer, stack);
             return InteractionResult.SUCCESS;
         });
+        // A boombox carried in the off hand is never set down by a right-click on a block (owner 2026-10-10): only the main hand
+        // places it. Registered on both sides so the client does not show a placement the server refuses.
+        net.fabricmc.fabric.api.event.player.UseBlockCallback.EVENT.register((player, level, hand, hit) ->
+            hand == net.minecraft.world.InteractionHand.OFF_HAND && player.getItemInHand(hand).is(ITEM) ? InteractionResult.FAIL : InteractionResult.PASS);
         ServerLifecycleEvents.SERVER_STARTED.register(Boombox::loadPlaced);
         ServerTickEvents.END_SERVER_TICK.register(Boombox::tick);
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> { stop(handler.player.getUUID()); sentNear.remove(handler.player.getUUID()); });

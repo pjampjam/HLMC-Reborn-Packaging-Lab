@@ -64,6 +64,7 @@ public final class HolyLoisClientTests implements FabricClientGameTest {
             run(failed, "lantern swing", context, world, HolyLoisClientTests::lanternSwing);
             run(failed, "holy lootbox", context, world, HolyLoisClientTests::holyLootbox);
             run(failed, "invisible frame keeps its frame", context, world, HolyLoisClientTests::invisibleFrameDrops);
+            run(failed, "offhand boombox is not placed", context, world, HolyLoisClientTests::offhandBoomboxStays);
             run(failed, "armor 3d", context, world, HolyLoisClientTests::armor3d);
             run(failed, "r over a fillet", context, world, HolyLoisClientTests::rOverFillet);
             run(failed, "offhand swap spam", context, world, HolyLoisClientTests::offhandSwapSpam);
@@ -180,6 +181,23 @@ public final class HolyLoisClientTests implements FabricClientGameTest {
         double later = lookBackMovement(context, chest, base, 80, "later");
         log("chest lid movement on screen after looking back: turned away right after closing " + quick + ", long after " + later);
         check(quick < 2.0 && later < 2.0, "lid does not visibly move after looking back (" + quick + ", " + later + ")");
+        // Owner 2026-10-10: open the chest, get teleported far away with it open, come back: the lid must be shut.
+        var player = context.computeOnClient(client -> client.player.getName().getString());
+        context.getInput().lookAt(chest);
+        context.waitTicks(5);
+        context.getInput().pressKey(options -> options.keyUse);
+        context.waitForScreen(ContainerScreen.class);
+        context.waitTicks(20);
+        world.getServer().runCommand("tp " + player + " " + (base.getX() + 100) + " " + base.getY() + " " + base.getZ());
+        context.waitTicks(80);
+        world.getServer().runCommand("tp " + player + " " + base.getX() + " " + base.getY() + " " + base.getZ());
+        context.waitTicks(60);
+        context.getInput().lookAt(chest);
+        context.waitTicks(40);
+        float afterTeleport = context.computeOnClient(client -> lid(client, chest));
+        context.takeScreenshot("09b-chest-after-teleport-back");
+        log("chest lid after a teleport with the chest open: " + afterTeleport);
+        check(afterTeleport == 0f, "the lid is shut when you come back after teleporting away with the chest open (" + afterTeleport + ")");
     }
 
     /** Opens and closes the chest, turns away after delay ticks, turns back; returns screen change at the chest between look-back and settled. */
@@ -736,6 +754,58 @@ public final class HolyLoisClientTests implements FabricClientGameTest {
         context.waitTicks(5);
         check(clientState.equals(serverState), "client and server agree after R over a fillet");
         check(serverState.contains("20=5 farmersdelight:cod_slice") && serverState.startsWith("cursor=empty"), "R over a fillet moved nothing (" + serverState + ")");
+        // Owner 2026-10-10 (again): R on the empty slot the sort is about to fill must sort only, never show that item's recipe.
+        for (boolean chest : new boolean[] {false, true}) rSortFillsHoveredSlot(context, world, chest);
+    }
+
+    private static void rSortFillsHoveredSlot(ClientGameTestContext context, TestSingleplayerContext world, boolean chest) throws Exception {
+        var server = world.getServer();
+        server.runCommand("clear @a");
+        BlockPos base = context.computeOnClient(client -> client.player.blockPosition());
+        BlockPos box = base.offset(0, 0, 3);
+        if (chest) {
+            server.runCommand("setblock " + box.getX() + " " + box.getY() + " " + box.getZ() + " chest{Items:[{Slot:20b,id:\"minecraft:stone\",count:7},{Slot:24b,id:\"minecraft:dirt\",count:3}]}");
+            context.waitTicks(10);
+            context.getInput().lookAt(box);
+            context.waitTicks(5);
+            context.getInput().pressKey(options -> options.keyUse);
+            context.waitForScreen(ContainerScreen.class);
+        } else {
+            server.runOnServer(s -> {
+                var player = s.getPlayerList().getPlayers().getFirst();
+                player.getInventory().setItem(30, new ItemStack(net.minecraft.world.item.Items.STONE, 7));
+                player.getInventory().setItem(34, new ItemStack(net.minecraft.world.item.Items.DIRT, 3));
+            });
+            context.waitTicks(5);
+            context.getInput().pressKey(options -> options.keyInventory);
+            context.waitForScreen(InventoryScreen.class);
+        }
+        context.waitTicks(5);
+        // The first slot of the sorted area: empty now, the first sorted stack lands right under the cursor.
+        int index = chest ? 0 : 9;
+        var at = context.computeOnClient(client -> {
+            var screen = (net.minecraft.client.gui.screens.inventory.AbstractContainerScreen<?>) client.gui.screen();
+            var slot = screen.getMenu().getSlot(index);
+            int left = (int) field(screen, "leftPos"), top = (int) field(screen, "topPos");
+            double scale = client.getWindow().getGuiScale();
+            return new double[] {(left + slot.x + 8) * scale, (top + slot.y + 8) * scale};
+        });
+        context.getInput().setCursorPos(at[0], at[1]);
+        context.waitTicks(3);
+        // A natural press: held for about half a second, like a finger, not an instant tap.
+        context.getInput().holdKey(com.mojang.blaze3d.platform.InputConstants.KEY_R);
+        context.waitTicks(12);
+        context.getInput().releaseKey(com.mojang.blaze3d.platform.InputConstants.KEY_R);
+        context.waitTicks(30);
+        String screen = context.computeOnClient(client -> client.gui.screen() == null ? "none" : client.gui.screen().getClass().getName());
+        boolean filled = context.computeOnClient(client -> client.player.containerMenu.getSlot(index).hasItem());
+        context.takeScreenshot("35b-r-sort-" + (chest ? "chest" : "inventory"));
+        log("R sort into the hovered slot (" + (chest ? "chest" : "inventory") + "): slot filled " + filled + ", screen " + screen);
+        check(filled && (chest ? screen.endsWith("ContainerScreen") : screen.endsWith("InventoryScreen")),
+            "R on an empty slot sorts into it without opening a recipe (" + (chest ? "chest" : "inventory") + ": filled " + filled + ", " + screen + ")");
+        context.runOnClient(client -> client.gui.setScreen(null));
+        context.waitTicks(5);
+        if (chest) server.runCommand("setblock " + box.getX() + " " + box.getY() + " " + box.getZ() + " air");
     }
 
     /**
@@ -954,6 +1024,23 @@ public final class HolyLoisClientTests implements FabricClientGameTest {
         context.runOnClient(client -> { client.options.setCameraType(net.minecraft.client.CameraType.FIRST_PERSON); client.player.setXRot(0); });
         server.runCommand("clear @a");
         check(loaded, "3D Armor is loaded");
+    }
+
+    /** A boombox carried in the off hand stays in the hand when you right-click a block; only the main hand places it. */
+    private static void offhandBoomboxStays(ClientGameTestContext context, TestSingleplayerContext world) {
+        var server = world.getServer();
+        server.runCommand("clear @a");
+        server.runCommand("item replace entity @a weapon.offhand with holylois:boombox");
+        BlockPos base = context.computeOnClient(client -> client.player.blockPosition());
+        BlockPos ground = base.offset(2, -1, 0);
+        context.getInput().lookAt(ground);
+        context.waitTicks(5);
+        context.getInput().pressKey(options -> options.keyUse);
+        context.waitTicks(10);
+        boolean placed = server.computeOnServer(s -> s.overworld().getBlockState(ground.above()).is(holylois.boombox.Boombox.BLOCK));
+        boolean kept = context.computeOnClient(client -> client.player.getOffhandItem().is(holylois.boombox.Boombox.ITEM));
+        check(!placed && kept, "an off-hand boombox is not set down by a right-click on a block (placed " + placed + ", still held " + kept + ")");
+        server.runCommand("clear @a");
     }
 
     /** Punching dungeon loot out of an invisible item frame drops the item but never the frame; a normal frame still drops itself. */
