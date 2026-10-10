@@ -80,7 +80,9 @@
     "KeptArmsPartMixin",
     "NeaLanternSmoothMixin",
     "NeaPitchSmoothMixin",
-    "PackToastMixin"
+    "PackToastMixin",
+    "CinematicMusicQuietMixin",
+    "BoomboxQuietsMusicMixin"
   ],
   "injectors": {
     "defaultRequire": 0

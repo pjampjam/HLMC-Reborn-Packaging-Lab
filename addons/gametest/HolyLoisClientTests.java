@@ -67,6 +67,7 @@ public final class HolyLoisClientTests implements FabricClientGameTest {
             run(failed, "offhand boombox is not placed", context, world, HolyLoisClientTests::offhandBoomboxStays);
             run(failed, "death loot goes back to its slots", context, world, HolyLoisClientTests::deathLootBackToSlots);
             run(failed, "music in your ears during the cinematic", context, world, HolyLoisClientTests::musicInEarsDuringCinematic);
+            run(failed, "fishing cinematic angles and quiet soundtrack", context, world, HolyLoisClientTests::fishingCinematicAngles);
             run(failed, "armor 3d", context, world, HolyLoisClientTests::armor3d);
             run(failed, "r over a fillet", context, world, HolyLoisClientTests::rOverFillet);
             run(failed, "offhand swap spam", context, world, HolyLoisClientTests::offhandSwapSpam);
@@ -1046,6 +1047,85 @@ public final class HolyLoisClientTests implements FabricClientGameTest {
     }
 
     /** Punching dungeon loot out of an invisible item frame drops the item but never the frame; a normal frame still drops itself. */
+    /** Calls a static method of Ji AFK Cinematic by name (tests drive the mod directly instead of waiting for its timers). */
+    private static Object ji(String type, String method, Object... args) {
+        try {
+            for (var m : Class.forName("com.ji.afkcinematic." + type).getDeclaredMethods())
+                if (m.getName().equals(method) && m.getParameterCount() == args.length) { m.setAccessible(true); return m.invoke(null, args); }
+            throw new NoSuchMethodException(method);
+        } catch (ReflectiveOperationException error) { throw new IllegalStateException(error); }
+    }
+
+    /**
+     * Fishing cinematic (owner 2026-10-10): while waiting for a bite every shot is a new angle on you and the bobber, never one shot on
+     * a loop; after reeling in that framing stays 3 s. With boombox music nearby neither Ji's soundtrack nor Minecraft's music plays.
+     */
+    private static void fishingCinematicAngles(ClientGameTestContext context, TestSingleplayerContext world) {
+        var server = world.getServer();
+        server.runCommand("clear @a");
+        server.runCommand("fill 150 -61 151 160 -61 164 water");
+        server.runCommand("tp @a 155 -60 150 0 30");
+        server.runCommand("item replace entity @a weapon.mainhand with fishing_rod");
+        world.getConnection().waitForChunksRender();
+        context.waitTicks(10);
+        context.runOnClient(client -> client.gameMode.useItem(client.player, InteractionHand.MAIN_HAND));
+        context.waitFor(client -> client.player.fishing != null, 200);
+        context.waitTicks(40);
+        log("bobber: " + context.computeOnClient(client -> client.player.fishing == null ? "gone" : client.player.fishing.blockPosition().toShortString()
+            + " water " + client.player.fishing.isInWater() + " held " + client.player.getMainHandItem()));
+        context.runOnClient(client -> ji("cinematic.CinematicManager", "startCinematic", true));
+        context.waitTicks(30);
+        var angles = new java.util.ArrayList<String>();
+        var spots = new java.util.ArrayList<net.minecraft.world.phys.Vec3>();
+        for (int shot = 0; shot < 4; shot++) {
+            angles.add(context.computeOnClient(client -> holylois.boombox.CinematicTweaks.fishingAngle()));
+            spots.add(context.computeOnClient(client -> client.gameRenderer.mainCamera().position()));
+            context.runOnClient(client -> ji("cinematic.CinematicManager", "advanceShot"));
+            context.waitTicks(20);
+        }
+        boolean waiting = context.computeOnClient(client -> holylois.boombox.CinematicTweaks.fishingWait);
+        double toHook = context.computeOnClient(client -> client.gameRenderer.mainCamera().position().distanceTo(client.player.fishing.position()));
+        double toPlayer = context.computeOnClient(client -> client.gameRenderer.mainCamera().position().distanceTo(client.player.position()));
+        double moved = spots.get(0).distanceTo(spots.get(1)) + spots.get(1).distanceTo(spots.get(2));
+        log("fishing cinematic: waiting " + waiting + ", angles " + angles + ", camera moved " + moved + ", to hook " + toHook + ", to player " + toPlayer);
+        check(waiting, "waiting for a bite uses the fishing framing");
+        check(new java.util.HashSet<>(angles).size() >= 3, "every shot while waiting is a new angle (" + angles + ")");
+        check(moved > 1 && toHook < 16 && toPlayer < 16, "the camera frames you and the bobber from changing spots (" + moved + ", " + toHook + ", " + toPlayer + ")");
+        // Reel in: the framing stays 3 s, then the normal shots continue.
+        context.runOnClient(client -> client.gameMode.useItem(client.player, InteractionHand.MAIN_HAND));
+        context.waitTicks(20);
+        boolean held = context.computeOnClient(client -> holylois.boombox.CinematicTweaks.fishingWait);
+        context.waitTicks(60);
+        boolean released = context.computeOnClient(client -> !holylois.boombox.CinematicTweaks.fishingWait);
+        log("after reeling in: framing held at 1 s " + held + ", released at 4 s " + released);
+        check(held && released, "after reeling in the fishing framing stays about 3 s (" + held + ", " + released + ")");
+        context.runOnClient(client -> ji("cinematic.CinematicManager", "forceDeactivate"));
+        // The fishing cinematic above had no boombox, so its soundtrack plays; let it fade out first.
+        context.waitFor(client -> !(boolean) field(classOf("com.ji.afkcinematic.music.CinematicMusicManager"), "isOurMusicPlaying"), 400);
+        // Soundtrack: Ji's own music must not start while boombox music reaches you; Minecraft's music stays off too.
+        java.util.UUID me = context.computeOnClient(client -> client.player.getUUID());
+        context.runOnClient(client -> holylois.boombox.BoomboxPulse.heardHeld(me, music(0)));
+        log("music diagnostics: nearby " + context.computeOnClient(client -> holylois.boombox.BoomboxPulse.musicNearby()) + ", hooks woven "
+            + java.util.Arrays.stream(classOf("com.ji.afkcinematic.music.CinematicMusicManager").getDeclaredMethods()).filter(m -> m.getName().contains("holyLois")).count());
+        context.runOnClient(client -> ji("cinematic.CinematicManager", "toggleImmediate"));
+        boolean ours = false, vanilla = false;
+        for (int t = 0; t < 60; t++) {
+            int frame = t;
+            context.runOnClient(client -> holylois.boombox.BoomboxPulse.heardHeld(me, music(frame)));
+            context.waitTicks(1);
+            ours |= context.computeOnClient(client -> (boolean) field(classOf("com.ji.afkcinematic.music.CinematicMusicManager"), "isOurMusicPlaying"));
+            vanilla |= context.computeOnClient(client -> field(client.getMusicManager(), "currentMusic") != null);
+        }
+        context.runOnClient(client -> ji("cinematic.CinematicManager", "forceDeactivate"));
+        log("cinematic with boombox music: Ji soundtrack " + ours + ", Minecraft music " + vanilla);
+        check(!ours && !vanilla, "with boombox music the cinematic adds no other music (" + ours + ", " + vanilla + ")");
+        server.runCommand("clear @a");
+    }
+
+    private static Class<?> classOf(String name) {
+        try { return Class.forName(name); } catch (ClassNotFoundException error) { throw new IllegalStateException(error); }
+    }
+
     /** Boombox music sits in your ears only while the cinematic camera runs, fading in and out over two seconds (owner 2026-10-10). */
     private static void musicInEarsDuringCinematic(ClientGameTestContext context, TestSingleplayerContext world) {
         var far = new net.minecraft.world.phys.Vec3(0, 0, 0);
