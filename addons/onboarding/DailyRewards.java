@@ -188,7 +188,7 @@ public final class DailyRewards {
         // Translated on the player's client (Holy Lois Extras); the key shown is the player's own Use binding.
         stack.set(DataComponents.LORE, new ItemLore(List.of(
             Component.translatable("item.holylois.holy_lootbox.tier", tier, owner).withStyle(s -> s.withColor(ChatFormatting.YELLOW).withItalic(false)),
-            Component.translatable("item.holylois.holy_lootbox.open", Component.keybind("key.use")).withStyle(s -> s.withColor(ChatFormatting.GRAY).withItalic(false)))));
+            Component.translatable("item.holylois.holy_lootbox.open", Component.keybind("key.use").withStyle(ChatFormatting.YELLOW)).withStyle(s -> s.withColor(ChatFormatting.GRAY).withItalic(false)))));
         var tag = new CompoundTag();
         tag.putInt(LOOTBOX_KEY, tier);
         CustomData.set(DataComponents.CUSTOM_DATA, stack, tag);

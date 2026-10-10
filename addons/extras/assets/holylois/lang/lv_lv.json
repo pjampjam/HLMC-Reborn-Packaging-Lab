@@ -139,7 +139,7 @@
   "holylois.loading.apply": "Lieto resursus...",
   "holylois.loading.failed": "Resursu lejupielāde neizdevās: pievienojies vēlreiz",
   "item.holylois.holy_lootbox": "Holy Lootbox",
-  "item.holylois.holy_lootbox.inside": "Iekšā ir kaut kas labs",
-  "item.holylois.holy_lootbox.open": "Turi rokā un nospied %s, lai atvērtu",
-  "item.holylois.holy_lootbox.tier": "%s. līmenis - dāvana spēlētājam %s"
+  "item.holylois.holy_lootbox.inside": "Holy Lois dienas dāvana",
+  "item.holylois.holy_lootbox.open": "%s, lai atvērtu",
+  "item.holylois.holy_lootbox.tier": "%s. līmeņa dāvana spēlētājam %s"
 }

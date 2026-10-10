@@ -54,7 +54,7 @@ public final class Ui {
 
     public enum Kind { NORMAL, PRIMARY, CONFIRM, DANGER }
 
-    /** Button: control fill; gold for a highlight, success green for yes-actions, danger red for cancel and destructive ones. */
+    /** Button: control fill; gold for a highlight, success green for yes-actions, danger red only for destructive ones (Cancel stays neutral). */
     public static void button(GuiGraphicsExtractor g, Font font, int x, int y, int w, int h, Component label, boolean hover, boolean focus, boolean active, Kind kind) {
         int solid = switch (kind) { case PRIMARY -> GOLD; case CONFIRM -> CONFIRM_BUTTON; case DANGER -> DANGER_BUTTON; default -> 0; };
         int fill = solid != 0 ? (hover ? mix(solid, 0xFFFFFFFF, kind == Kind.PRIMARY ? 0.45f : 0.15f) : solid) : hover ? CONTROL_HOVER : CONTROL;

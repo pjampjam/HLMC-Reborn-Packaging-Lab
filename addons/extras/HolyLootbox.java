@@ -30,9 +30,9 @@ public final class HolyLootbox {
                 openHint())))));
     }
 
-    /** "Press <your Use key> with it in your hand to open": the player's own binding, not a mod default. */
+    /** "<your Use key> to open", the key highlighted: the player's own binding, not a mod default. */
     public static Component openHint() {
-        return Component.translatable("item.holylois.holy_lootbox.open", Component.keybind("key.use"))
+        return Component.translatable("item.holylois.holy_lootbox.open", Component.keybind("key.use").withStyle(ChatFormatting.YELLOW))
             .withStyle(s -> s.withColor(ChatFormatting.GRAY).withItalic(false));
     }
 }

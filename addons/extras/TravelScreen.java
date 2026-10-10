@@ -8,9 +8,10 @@ import java.util.Set;
 
 /** Shared compact panel in the Holy Lois look (Ui), with vanilla keyboard/escape behaviour. */
 abstract class TravelScreen extends Screen {
-    /** Yes-actions are green, cancel and destructive ones red, like a traffic light; everything else stays neutral. */
+    /** Yes-actions are green, destructive ones red; Cancel and everything else stay neutral so the risky choice stands out
+     *  (owner 2026-10-10: a red Cancel next to a red Delete read as two dangerous buttons). */
     private static final Set<String> CONFIRM = Set.of("confirm", "create", "accept", "invite", "request_travel", "rally_set");
-    private static final Set<String> DANGER = Set.of("delete", "disband", "leave", "confirm_delete", "cancel");
+    private static final Set<String> DANGER = Set.of("delete", "disband", "leave", "confirm_delete");
     int left,top,panelWidth,panelHeight;
     TravelScreen(String key){super(text(key));}
     static Component text(String key,Object...args){return Component.translatable("holylois.travel."+key,args);}

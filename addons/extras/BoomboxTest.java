@@ -7,6 +7,9 @@ public final class BoomboxTest {
         if (!PackCheck.older("1.7.4", "1.7.5") || PackCheck.older("1.7.5", "1.7.5") || PackCheck.older("1.10.0", "1.9.9") || !PackCheck.older("1.7", "1.7.1"))
             throw new AssertionError("pack version compare");
         if (Boombox.range(1) != 16f || Boombox.range(10) != 48f || Boombox.range(5) <= Boombox.range(4) || Boombox.range(99) != 48f) throw new AssertionError("boombox range 16 to 48");
+        if (BoomboxInEar.weight(2) != 1 || BoomboxInEar.weight(9) != 0 || Math.abs(BoomboxInEar.weight(5.5) - 0.5) > 1e-9
+            || BoomboxInEar.weight(4) <= BoomboxInEar.weight(6) || !BoomboxInEar.music("boombox") || !BoomboxInEar.music("music_discs")
+            || BoomboxInEar.music("goat_horns") || BoomboxInEar.music(null)) throw new AssertionError("boombox music moves into the ears from 8 to 3 blocks");
         var mods = ModCheck.parse("{\"mode\":\"enforce\",\"exempt\":[\"Owner\"],\"allowed\":[\"fabricloader\",\"sodium\",\"holylois-extras\"]}");
         var verdict = ModCheck.check(mods, java.util.List.of("fabricloader", "sodium", "xray", "meteor-client"));
         if (!verdict.unknown().equals(new java.util.TreeSet<>(java.util.List.of("meteor-client", "xray"))) || !verdict.missing().equals(new java.util.TreeSet<>(java.util.List.of("holylois-extras")))

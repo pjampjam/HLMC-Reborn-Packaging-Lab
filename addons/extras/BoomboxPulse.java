@@ -30,6 +30,14 @@ public final class BoomboxPulse {
 
     /** Audio is arriving for this boombox (then notes follow the beat instead of the random ambient notes). */
     public static boolean live(BlockPos pos) { return levels.containsKey(pos); }
+
+    /** Boombox or disc music reached you in the last two seconds (the cinematic then starts after one idle minute). */
+    public static boolean musicNearby() {
+        long now = System.currentTimeMillis();
+        for (var level : levels.values()) if (now - level.at() < 2000) return true;
+        for (var level : heldLevels.values()) if (now - level.at() < 2000) return true;
+        return false;
+    }
     private static ItemStack cone;
     private static final ItemStackRenderState state = new ItemStackRenderState();
     private static boolean broken;
@@ -76,14 +84,28 @@ public final class BoomboxPulse {
         if (broken || model == null || heldLevels.isEmpty() || mc.level == null
             || !(holder instanceof net.minecraft.client.renderer.entity.state.AvatarRenderState avatar)) return;
         var entity = mc.level.getEntity(avatar.id);
-        if (entity == null) return;
-        var heard = heldLevels.get(entity.getUUID());
-        if (heard == null || System.currentTimeMillis() - heard.at() > 400) return;
+        if (entity != null) heldCones(entity.getUUID(), model, pose, collector, light);
+    }
+
+    /** First person: the boombox in your own hand pulses too (FirstPersonBoomboxMixin captures its pose the same way). */
+    public static void submitFirstPerson(PoseStack pose, net.minecraft.client.renderer.SubmitNodeCollector collector, int light) {
+        var model = captured; captured = null;
+        var mc = Minecraft.getInstance();
+        if (broken || model == null || heldLevels.isEmpty() || mc.player == null) return;
+        heldCones(mc.player.getUUID(), model, pose, collector, light);
+    }
+    /** Frames in which the cones of your own held boombox were drawn, from the body or the vanilla hand (gametest). */
+    public static int ownCones;
+
+    private static boolean heldCones(java.util.UUID id, PoseStack.Pose model, PoseStack pose, net.minecraft.client.renderer.SubmitNodeCollector collector, int light) {
+        var mc = Minecraft.getInstance();
+        var heard = heldLevels.get(id);
+        if (heard == null || System.currentTimeMillis() - heard.at() > 400) return false;
         try {
             if (cone == null) { cone = new ItemStack(Items.STICK); cone.set(DataComponents.ITEM_MODEL, Identifier.fromNamespaceAndPath("holylois", "boombox_cone")); }
-            float last = heldShown.getOrDefault(entity.getUUID(), 0f), target = heard.value();
+            float last = heldShown.getOrDefault(id, 0f), target = heard.value();
             float value = target > last ? last + (target - last) * 0.6f : last + (target - last) * 0.15f;
-            heldShown.put(entity.getUUID(), value);
+            heldShown.put(id, value);
             mc.getItemModelResolver().updateForTopItem(state, cone, ItemDisplayContext.NONE, mc.level, null, 0);
             for (float side : new float[]{-3.5f, 3.5f}) {
                 pose.pushPose();
@@ -95,7 +117,9 @@ public final class BoomboxPulse {
                 state.submit(pose, collector, light, OverlayTexture.NO_OVERLAY, 0);
                 pose.popPose();
             }
-        } catch (RuntimeException | LinkageError error) { broken = true; org.slf4j.LoggerFactory.getLogger("HolyLois").warn("Boombox pulse off", error); }
+            if (mc.player != null && id.equals(mc.player.getUUID())) ownCones++;
+            return true;
+        } catch (RuntimeException | LinkageError error) { broken = true; org.slf4j.LoggerFactory.getLogger("HolyLois").warn("Boombox pulse off", error); return false; }
     }
 
     /** A note at the carrying hand on each beat of a held boombox. */
@@ -111,6 +135,16 @@ public final class BoomboxPulse {
                 if (!main && !player.getOffhandItem().is(Boombox.ITEM)) break;
                 // The hand side of the body: right for a right-handed main hand.
                 boolean right = (player.getMainArm() == net.minecraft.world.entity.HumanoidArm.RIGHT) == main;
+                if (player == mc.player && mc.options.getCameraType().isFirstPerson()) {
+                    // In first person the hip is out of view: the note rises in front of the carrying hand instead.
+                    var camera = mc.gameRenderer.mainCamera();
+                    var look = camera.forwardVector(); var left = camera.leftVector();
+                    double side = right ? -0.45 : 0.45;
+                    var eye = camera.position();
+                    mc.level.addParticle(net.minecraft.core.particles.ParticleTypes.NOTE, eye.x + look.x() * 0.9 + left.x() * side,
+                        eye.y + look.y() * 0.9 - 0.35, eye.z + look.z() * 0.9 + left.z() * side, (beats++ % 25) / 24.0, 0, 0);
+                    break;
+                }
                 double yaw = Math.toRadians(player.yBodyRot), sideways = right ? -0.4 : 0.4;
                 double x = player.getX() + Math.cos(yaw) * sideways, z = player.getZ() + Math.sin(yaw) * sideways;
                 mc.level.addParticle(net.minecraft.core.particles.ParticleTypes.NOTE, x, player.getY() + 0.75, z, (beats++ % 25) / 24.0, 0, 0);

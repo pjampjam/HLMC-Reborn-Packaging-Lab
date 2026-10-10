@@ -27,6 +27,14 @@ public final class BoomboxPlugin implements VoicechatPlugin {
         registration.registerEvent(de.maxhenkel.voicechat.api.events.ClientReceiveSoundEvent.EntitySound.class, event -> {
             if (!event.getId().equals(event.getEntityId())) BoomboxPulse.heardHeld(event.getEntityId(), event.getRawAudio());
         });
+        // Your own held boombox: voice chat plays it to you as a plain (static) sound under the channel's random id, not as an
+        // entity sound, so without this your own cones and notes never moved. Group voices use player ids and are skipped.
+        registration.registerEvent(de.maxhenkel.voicechat.api.events.ClientReceiveSoundEvent.StaticSound.class, event -> {
+            var mc = net.minecraft.client.Minecraft.getInstance();
+            var me = mc.player;
+            if (me == null || mc.level == null || mc.level.getPlayerByUUID(event.getId()) != null) return;
+            if (me.getMainHandItem().is(Boombox.ITEM) || me.getOffhandItem().is(Boombox.ITEM)) BoomboxPulse.heardHeld(me.getUUID(), event.getRawAudio());
+        });
         registration.registerEvent(VoicechatServerStoppedEvent.class, event -> {
             Boombox.stopAll();
             Boombox.voice = null;

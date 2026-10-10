@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "holylois-extras",
-  "version": "1.7.0",
+  "version": "1.7.1",
   "name": "Holy Lois",
   "provides": [
     "holylois"

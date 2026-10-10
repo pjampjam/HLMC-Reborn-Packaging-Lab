@@ -139,7 +139,7 @@
   "holylois.loading.apply": "Применение ресурсов...",
   "holylois.loading.failed": "Не удалось загрузить ресурсы: зайди снова",
   "item.holylois.holy_lootbox": "Holy Lootbox",
-  "item.holylois.holy_lootbox.inside": "Внутри что-то хорошее",
-  "item.holylois.holy_lootbox.open": "Нажмите %s с ним в руке, чтобы открыть",
-  "item.holylois.holy_lootbox.tier": "Уровень %s - подарок для %s"
+  "item.holylois.holy_lootbox.inside": "Ежедневный подарок Holy Lois",
+  "item.holylois.holy_lootbox.open": "%s, чтобы открыть",
+  "item.holylois.holy_lootbox.tier": "Подарок уровня %s для %s"
 }

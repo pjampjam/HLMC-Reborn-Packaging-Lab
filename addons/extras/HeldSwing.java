@@ -12,7 +12,7 @@ import java.util.Map;
 
 /**
  * A carried boombox (and a lantern, round 5) hangs from its handle and swings like a pendulum (owner round 4): it lags behind when you start, stop or
- * turn, sways a little with your steps and settles when you stand. Mostly side to side; simulated per tick, drawn between ticks.
+ * turn, sways a little with your steps and settles when you stand. The boombox only side to side (owner 2026-10-10); simulated per tick.
  */
 public final class HeldSwing {
     private HeldSwing() {}
@@ -75,6 +75,7 @@ public final class HeldSwing {
         if (p == null) { FishLook.swingZ = 0; FishLook.swingX = 0; return; }
         float t = Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(false);
         FishLook.swingZ = Mth.lerp(t, p.lastSide, p.side);
-        FishLook.swingX = Mth.lerp(t, p.lastTilt, p.tilt);
+        // Gripped by its handle bar, a boombox can only rock side to side; the forward tilt is for lanterns hanging free.
+        FishLook.swingX = 0;
     }
 }

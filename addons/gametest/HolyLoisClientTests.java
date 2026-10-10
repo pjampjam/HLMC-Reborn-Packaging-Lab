@@ -331,6 +331,18 @@ public final class HolyLoisClientTests implements FabricClientGameTest {
         context.runOnClient(client -> client.gui.setScreen(new holylois.boombox.HomesScreen(homes)));
         context.waitTicks(5);
         context.takeScreenshot("23-homes");
+        // Delete confirmation: only the destructive button is red, Cancel stays neutral (owner 2026-10-10).
+        context.runOnClient(client -> {
+            try {
+                var screen = client.gui.screen();
+                var type = holylois.boombox.HomesScreen.class;
+                var edit = type.getDeclaredField("edit"); edit.setAccessible(true); edit.setInt(screen, holylois.boombox.TravelIntent.DELETE);
+                var old = type.getDeclaredField("old"); old.setAccessible(true); old.set(screen, "Base");
+                var confirm = type.getDeclaredMethod("confirmDelete"); confirm.setAccessible(true); confirm.invoke(screen);
+            } catch (ReflectiveOperationException error) { throw new RuntimeException(error); }
+        });
+        context.waitTicks(5);
+        context.takeScreenshot("23-homes-delete-confirm");
         context.runOnClient(client -> client.gui.setScreen(new holylois.boombox.PartyScreen()));
         context.waitTicks(5);
         context.takeScreenshot("24-party");
@@ -891,12 +903,12 @@ public final class HolyLoisClientTests implements FabricClientGameTest {
         context.runOnClient(client -> { client.options.setCameraType(net.minecraft.client.CameraType.THIRD_PERSON_FRONT); client.player.setXRot(15); });
         context.waitTicks(20);
         context.takeScreenshot("43-lootbox-held");
-        // The tooltip says there is something inside and which key opens it (the player's own Use binding).
+        // The tooltip says what it is and which key opens it (the player's own Use binding).
         String tip = context.computeOnClient(client -> String.join(" | ", client.player.getMainHandItem()
             .getTooltipLines(net.minecraft.world.item.Item.TooltipContext.of(client.level), client.player,
                 net.minecraft.world.item.TooltipFlag.NORMAL).stream().map(net.minecraft.network.chat.Component::getString).toList()));
         log("lootbox tooltip: " + tip);
-        check(tip.contains("Something good is inside") && tip.contains("in your hand to open"), "the lootbox tooltip explains how to open it");
+        check(tip.contains("Daily gift from Holy Lois") && tip.contains(" to open"), "the lootbox tooltip says what it is and which key opens it");
         context.runOnClient(client -> { client.options.setCameraType(net.minecraft.client.CameraType.FIRST_PERSON); client.player.setXRot(30); });
         context.waitTicks(10);
         context.takeScreenshot("43-lootbox-first-person");
@@ -968,7 +980,19 @@ public final class HolyLoisClientTests implements FabricClientGameTest {
         int notes = context.computeOnClient(client -> (int) field(holylois.boombox.BoomboxPulse.class, "beats"));
         log("held boombox notes: " + notes);
         check(notes > 3, "a held boombox pops notes on the beat (" + notes + ")");
-        context.runOnClient(client -> client.options.setCameraType(net.minecraft.client.CameraType.FIRST_PERSON));
+        // First person (owner 2026-10-10): the boombox in your own hand pulses and its notes rise in view.
+        context.runOnClient(client -> { client.options.setCameraType(net.minecraft.client.CameraType.FIRST_PERSON); client.player.setXRot(65); });
+        int conesBefore = context.computeOnClient(client -> holylois.boombox.BoomboxPulse.ownCones);
+        for (int t = 0; t <= 60; t++) {
+            int frame = t;
+            context.runOnClient(client -> holylois.boombox.BoomboxPulse.heardHeld(me, music(frame)));
+            context.waitTicks(1);
+        }
+        context.takeScreenshot("17-boombox-held-first-person-playing");
+        int cones = context.computeOnClient(client -> holylois.boombox.BoomboxPulse.ownCones) - conesBefore;
+        int firstNotes = context.computeOnClient(client -> (int) field(holylois.boombox.BoomboxPulse.class, "beats")) - notes;
+        log("first-person boombox: " + cones + " cone frames, " + firstNotes + " notes");
+        check(cones > 10 && firstNotes > 2, "the boombox in your own hand pulses and pops notes in first person (" + cones + ", " + firstNotes + ")");
         server.runCommand("clear @a");
     }
 
