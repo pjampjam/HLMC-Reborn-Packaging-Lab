@@ -20,7 +20,8 @@
     "FishDeathMessageMixin",
     "FishHandsClickMixin",
     "FishHandsSlotMixin",
-    "FishHandsSwapMixin"
+    "FishHandsSwapMixin",
+    "InvisibleFrameDropMixin"
   ],
   "client": [
     "LiteminerScrollMixin",

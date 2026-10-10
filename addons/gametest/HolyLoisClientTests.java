@@ -63,6 +63,7 @@ public final class HolyLoisClientTests implements FabricClientGameTest {
             run(failed, "boombox held notes", context, world, HolyLoisClientTests::boomboxHeldNotes);
             run(failed, "lantern swing", context, world, HolyLoisClientTests::lanternSwing);
             run(failed, "holy lootbox", context, world, HolyLoisClientTests::holyLootbox);
+            run(failed, "invisible frame keeps its frame", context, world, HolyLoisClientTests::invisibleFrameDrops);
             run(failed, "armor 3d", context, world, HolyLoisClientTests::armor3d);
             run(failed, "r over a fillet", context, world, HolyLoisClientTests::rOverFillet);
             run(failed, "offhand swap spam", context, world, HolyLoisClientTests::offhandSwapSpam);
@@ -953,6 +954,31 @@ public final class HolyLoisClientTests implements FabricClientGameTest {
         context.runOnClient(client -> { client.options.setCameraType(net.minecraft.client.CameraType.FIRST_PERSON); client.player.setXRot(0); });
         server.runCommand("clear @a");
         check(loaded, "3D Armor is loaded");
+    }
+
+    /** Punching dungeon loot out of an invisible item frame drops the item but never the frame; a normal frame still drops itself. */
+    private static void invisibleFrameDrops(ClientGameTestContext context, TestSingleplayerContext world) {
+        var server = world.getServer();
+        server.runCommand("kill @e[type=item]");
+        server.runCommand("fill 40 -61 40 44 -59 40 stone");
+        server.runCommand("summon item_frame 41 -60 41 {Facing:3b,Invisible:1b,Tags:[\"holylois_frame_test\"],Item:{id:\"minecraft:diamond\",count:1}}");
+        server.runCommand("summon item_frame 43 -60 41 {Facing:3b,Tags:[\"holylois_frame_test\"],Item:{id:\"minecraft:emerald\",count:1}}");
+        context.waitTicks(5);
+        for (int hit = 0; hit < 2; hit++) {
+            server.runOnServer(s -> {
+                var player = s.getPlayerList().getPlayers().getFirst();
+                for (var frame : s.overworld().getEntities((net.minecraft.world.entity.Entity) null, new net.minecraft.world.phys.AABB(39, -62, 39, 45, -57, 43), e -> e instanceof net.minecraft.world.entity.decoration.ItemFrame && e.entityTags().contains("holylois_frame_test")))
+                    frame.hurtServer(s.overworld(), s.overworld().damageSources().playerAttack(player), 1);
+            });
+            context.waitTicks(5);
+        }
+        String drops = server.computeOnServer(s -> String.join(",", s.overworld().getEntities((net.minecraft.world.entity.Entity) null,
+            new net.minecraft.world.phys.AABB(39, -62, 39, 45, -57, 43), e -> e instanceof net.minecraft.world.entity.item.ItemEntity).stream()
+            .map(e -> net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(((net.minecraft.world.entity.item.ItemEntity) e).getItem().getItem()).getPath()).sorted().toList()));
+        log("frame drops: " + drops);
+        check(drops.contains("diamond") && drops.contains("emerald"), "both framed items drop when punched out (" + drops + ")");
+        check(drops.split("item_frame", -1).length - 1 == 1, "only the visible frame drops itself, the invisible one never does (" + drops + ")");
+        server.runCommand("kill @e[type=item]");
     }
 
     /** 20 ms of a fake track at 48 kHz: a loud low kick every fourth frame over a quiet bed. */
