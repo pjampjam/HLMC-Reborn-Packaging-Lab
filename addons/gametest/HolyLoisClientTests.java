@@ -65,6 +65,7 @@ public final class HolyLoisClientTests implements FabricClientGameTest {
             run(failed, "holy lootbox", context, world, HolyLoisClientTests::holyLootbox);
             run(failed, "invisible frame keeps its frame", context, world, HolyLoisClientTests::invisibleFrameDrops);
             run(failed, "offhand boombox is not placed", context, world, HolyLoisClientTests::offhandBoomboxStays);
+            run(failed, "death loot goes back to its slots", context, world, HolyLoisClientTests::deathLootBackToSlots);
             run(failed, "armor 3d", context, world, HolyLoisClientTests::armor3d);
             run(failed, "r over a fillet", context, world, HolyLoisClientTests::rOverFillet);
             run(failed, "offhand swap spam", context, world, HolyLoisClientTests::offhandSwapSpam);
@@ -1044,6 +1045,70 @@ public final class HolyLoisClientTests implements FabricClientGameTest {
     }
 
     /** Punching dungeon loot out of an invisible item frame drops the item but never the frame; a normal frame still drops itself. */
+    /** Death loot picked up again lands in its old slots (hotbar, main, armor, off-hand); a slot taken since gets the normal pickup. */
+    private static void deathLootBackToSlots(ClientGameTestContext context, TestSingleplayerContext world) {
+        var server = world.getServer();
+        server.runCommand("kill @e[type=item]");
+        server.runCommand("clear @a");
+        server.runCommand("tp @a 120 -60 120");
+        world.getConnection().waitForChunksRender();
+        server.runOnServer(s -> {
+            var inventory = s.getPlayerList().getPlayers().getFirst().getInventory();
+            inventory.setItem(0, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.TORCH, 5));
+            inventory.setItem(4, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.DIAMOND_SWORD));
+            inventory.setItem(20, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.BREAD, 10));
+            inventory.setItem(39, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.IRON_HELMET));
+            inventory.setItem(40, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.SHIELD));
+        });
+        server.runCommand("kill @a");
+        context.waitForScreen(DeathScreen.class);
+        context.waitTicks(20);
+        int remembered = server.computeOnServer(s -> holylois.boombox.DeathSlots.remembered());
+        context.clickScreenButton("deathScreen.respawn");
+        var screens = new java.util.LinkedHashSet<String>();
+        boolean faded = false;
+        for (int t = 0; t < 60 && !faded; t++) {
+            screens.add(context.computeOnClient(client -> client.gui.screen() == null ? "none" : client.gui.screen().getClass().getSimpleName()));
+            faded = context.computeOnClient(client -> holylois.auth.PanoramaFade.fading());
+            context.waitTicks(1);
+        }
+        log("respawn screens: " + screens + ", faded " + faded);
+        context.waitFor(client -> client.player != null && client.player.isAlive(), 600);
+        check(!faded, "respawning after death shows no panorama fade (owner 2026-10-10)");
+        // Something new in the old torch slot: the torches must then take the normal pickup.
+        server.runOnServer(s -> s.getPlayerList().getPlayers().getFirst().getInventory().setItem(0, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.DIRT)));
+        server.runCommand("tp @a 120 -60 120");
+        world.getConnection().waitForChunksRender();
+        // The stacks keep their death-throw speed and scatter, so the player touches each one directly (the same playerTouch a walk-over runs).
+        context.waitTicks(50);
+        server.runOnServer(s -> {
+            var player = s.getPlayerList().getPlayers().getFirst();
+            for (var item : s.overworld().getEntities((net.minecraft.world.entity.Entity) null, player.getBoundingBox().inflate(32), e -> e instanceof net.minecraft.world.entity.item.ItemEntity))
+                item.playerTouch(player);
+        });
+        context.waitTicks(5);
+        log("death loot items left: " + server.computeOnServer(s -> String.join(",", s.overworld().getEntities((net.minecraft.world.entity.Entity) null,
+            s.getPlayerList().getPlayers().getFirst().getBoundingBox().inflate(64), e -> e instanceof net.minecraft.world.entity.item.ItemEntity).stream()
+            .map(e -> ((net.minecraft.world.entity.item.ItemEntity) e).getItem() + "@" + e.blockPosition().toShortString() + " delay=" + ((net.minecraft.world.entity.item.ItemEntity) e).hasPickUpDelay()).toList()))
+            + " player@" + server.computeOnServer(s -> s.getPlayerList().getPlayers().getFirst().blockPosition().toShortString() + " " + s.getPlayerList().getPlayers().getFirst().gameMode.getGameModeForPlayer()));
+        String slots = server.computeOnServer(s -> {
+            var inventory = s.getPlayerList().getPlayers().getFirst().getInventory();
+            var parts = new java.util.ArrayList<String>();
+            for (int i = 0; i < inventory.getContainerSize(); i++) {
+                var stack = inventory.getItem(i);
+                if (!stack.isEmpty()) parts.add(i + "=" + net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(stack.getItem()).getPath() + "x" + stack.getCount());
+            }
+            return String.join(",", parts);
+        });
+        log("death loot: remembered " + remembered + ", after pickup " + slots);
+        check(remembered >= 5, "every dropped stack remembered its slot (" + remembered + ")");
+        var list = java.util.Arrays.asList(slots.split(","));
+        check(list.contains("4=diamond_swordx1") && list.contains("20=breadx10") && list.contains("39=iron_helmetx1") && list.contains("40=shieldx1"),
+            "sword, bread, helmet and shield are back in their slots (" + slots + ")");
+        check(list.contains("0=dirtx1") && slots.contains("torchx5") && !list.contains("0=torchx5"), "the torches took the normal pickup around the dirt (" + slots + ")");
+        server.runCommand("clear @a");
+    }
+
     private static void invisibleFrameDrops(ClientGameTestContext context, TestSingleplayerContext world) {
         var server = world.getServer();
         server.runCommand("kill @e[type=item]");
@@ -1076,7 +1141,7 @@ public final class HolyLoisClientTests implements FabricClientGameTest {
         return audio;
     }
 
-    /** Held boombox playing, seen from the front (F5): notes pop at the carrying hand on the beat. */
+    /** Held boombox playing, seen from the front (F5): notes hop out from the carrying hand on the beat, sized by loudness. */
     private static void boomboxHeldNotes(ClientGameTestContext context, TestSingleplayerContext world) {
         var server = world.getServer();
         server.runCommand("clear @a");
@@ -1093,7 +1158,10 @@ public final class HolyLoisClientTests implements FabricClientGameTest {
         int notes = context.computeOnClient(client -> (int) field(holylois.boombox.BoomboxPulse.class, "beats"));
         log("held boombox notes: " + notes);
         check(notes > 3, "a held boombox pops notes on the beat (" + notes + ")");
-        // First person (owner 2026-10-10): the boombox in your own hand pulses and its notes rise in view.
+        float size = context.computeOnClient(client -> holylois.boombox.BoomboxPulse.lastScale);
+        log("held boombox note size: " + size);
+        check(size > 0.6f && size <= 1.45f, "loud music draws bigger notes (" + size + ")");
+        // First person (owner 2026-10-10): the boombox in your own hand pulses, but throws no notes into your view.
         context.runOnClient(client -> { client.options.setCameraType(net.minecraft.client.CameraType.FIRST_PERSON); client.player.setXRot(65); });
         int conesBefore = context.computeOnClient(client -> holylois.boombox.BoomboxPulse.ownCones);
         for (int t = 0; t <= 60; t++) {
@@ -1105,7 +1173,7 @@ public final class HolyLoisClientTests implements FabricClientGameTest {
         int cones = context.computeOnClient(client -> holylois.boombox.BoomboxPulse.ownCones) - conesBefore;
         int firstNotes = context.computeOnClient(client -> (int) field(holylois.boombox.BoomboxPulse.class, "beats")) - notes;
         log("first-person boombox: " + cones + " cone frames, " + firstNotes + " notes");
-        check(cones > 10 && firstNotes > 2, "the boombox in your own hand pulses and pops notes in first person (" + cones + ", " + firstNotes + ")");
+        check(cones > 10 && firstNotes == 0, "the boombox in your own hand pulses without notes in first person (" + cones + ", " + firstNotes + ")");
         server.runCommand("clear @a");
     }
 

@@ -122,32 +122,50 @@ public final class BoomboxPulse {
         } catch (RuntimeException | LinkageError error) { broken = true; org.slf4j.LoggerFactory.getLogger("HolyLois").warn("Boombox pulse off", error); return false; }
     }
 
-    /** A note at the carrying hand on each beat of a held boombox. */
+    /**
+     * One note hopping out of a speaker on the beat: thrown along (sx, sz) and up, then slowed by the note's own friction.
+     * Louder music throws it further and draws it bigger. Skipped with Particles: Minimal.
+     */
+    private static void hop(Minecraft mc, double x, double y, double z, double sx, double sz, float loud) {
+        if (mc.options.particles().get() == net.minecraft.server.level.ParticleStatus.MINIMAL) return;
+        var note = mc.particleEngine.createParticle(net.minecraft.core.particles.ParticleTypes.NOTE, x, y, z, (beats++ % 25) / 24.0, 0, 0);
+        if (note == null) return;
+        double push = 0.07 + loud * 0.13;
+        note.setParticleSpeed(sx * push, 0.07 + loud * 0.07, sz * push);
+        lastScale = 0.55f + loud * 0.9f;
+        note.scale(lastScale);
+        note.setLifetime(12);
+    }
+
+    /** Size of the last note (gametest). */
+    public static float lastScale;
+
+    /** Last speaker that threw a note, so the beats alternate left and right. */
+    private static final Map<Object, Boolean> lastSide = new ConcurrentHashMap<>();
+
+    /** Notes hop out sideways from the carrying hand on each beat of a held boombox (not in your own first-person view). */
     private static void heldNotes(Minecraft mc) {
         long now = System.currentTimeMillis();
         for (var entry : heldLevels.entrySet()) {
             var id = entry.getKey();
-            if (now - entry.getValue().at() > 400) { heldLevels.remove(id); heldShown.remove(id); heldFinders.remove(id); heldBeat.remove(id); continue; }
+            if (now - entry.getValue().at() > 400) { heldLevels.remove(id); heldShown.remove(id); heldFinders.remove(id); heldBeat.remove(id); lastSide.remove(id); continue; }
             if (heldBeat.remove(id) == null || mc.level == null) continue;
             for (var player : mc.level.players()) {
                 if (!player.getUUID().equals(id)) continue;
                 boolean main = player.getMainHandItem().is(Boombox.ITEM);
                 if (!main && !player.getOffhandItem().is(Boombox.ITEM)) break;
+                // Owner 2026-10-10: notes in your own first-person view only got in the way of the hand.
+                if (player == mc.player && mc.options.getCameraType().isFirstPerson()) break;
                 // The hand side of the body: right for a right-handed main hand.
                 boolean right = (player.getMainArm() == net.minecraft.world.entity.HumanoidArm.RIGHT) == main;
-                if (player == mc.player && mc.options.getCameraType().isFirstPerson()) {
-                    // In first person the hip is out of view: the note rises in front of the carrying hand instead.
-                    var camera = mc.gameRenderer.mainCamera();
-                    var look = camera.forwardVector(); var left = camera.leftVector();
-                    double side = right ? -0.45 : 0.45;
-                    var eye = camera.position();
-                    mc.level.addParticle(net.minecraft.core.particles.ParticleTypes.NOTE, eye.x + look.x() * 0.9 + left.x() * side,
-                        eye.y + look.y() * 0.9 - 0.35, eye.z + look.z() * 0.9 + left.z() * side, (beats++ % 25) / 24.0, 0, 0);
-                    break;
-                }
                 double yaw = Math.toRadians(player.yBodyRot), sideways = right ? -0.4 : 0.4;
-                double x = player.getX() + Math.cos(yaw) * sideways, z = player.getZ() + Math.sin(yaw) * sideways;
-                mc.level.addParticle(net.minecraft.core.particles.ParticleTypes.NOTE, x, player.getY() + 0.75, z, (beats++ % 25) / 24.0, 0, 0);
+                double rx = Math.cos(yaw), rz = Math.sin(yaw);
+                // Out away from the body on the hand's side, a little forward or back in turn.
+                boolean front = !lastSide.getOrDefault(id, false); lastSide.put(id, front);
+                double fx = -Math.sin(yaw) * (front ? 0.35 : -0.35), fz = Math.cos(yaw) * (front ? 0.35 : -0.35);
+                double out = right ? -1 : 1;
+                hop(mc, player.getX() + rx * sideways, player.getY() + 0.75, player.getZ() + rz * sideways,
+                    rx * out + fx, rz * out + fz, heldShown.getOrDefault(id, entry.getValue().value()));
                 break;
             }
         }
@@ -173,19 +191,22 @@ public final class BoomboxPulse {
         for (var entry : levels.entrySet()) {
             var pos = entry.getKey();
             var heard = entry.getValue();
-            if (now - heard.at() > 400) { levels.remove(pos); shown.remove(pos); beatFinders.remove(pos); pendingBeat.remove(pos); continue; }
+            if (now - heard.at() > 400) { levels.remove(pos); shown.remove(pos); beatFinders.remove(pos); pendingBeat.remove(pos); lastSide.remove(pos); continue; }
             var block = level.getBlockState(pos);
             if (!block.is(Boombox.BLOCK) || !block.getValue(BoomboxBlock.PLAYING) || pos.distToCenterSqr(camera) > 48 * 48) continue;
             // Fast attack, slower release, like a speaker cone.
             float last = shown.getOrDefault(pos, 0f), target = heard.value();
             float value = target > last ? last + (target - last) * 0.6f : last + (target - last) * 0.15f;
             shown.put(pos, value);
-            // A note on each beat found by the audio thread.
-            if (pendingBeat.remove(pos) != null) {
-                level.addParticle(net.minecraft.core.particles.ParticleTypes.NOTE, pos.getX() + 0.3 + level.getRandom().nextDouble() * 0.4,
-                    pos.getY() + 0.8, pos.getZ() + 0.3 + level.getRandom().nextDouble() * 0.4, (beats++ % 25) / 24.0, 0, 0);
-            }
             Direction facing = block.getValue(BoomboxBlock.FACING);
+            // On each beat found by the audio thread a note hops out of one speaker, left and right in turn: sideways and a bit forward.
+            if (pendingBeat.remove(pos) != null) {
+                boolean left = !lastSide.getOrDefault(pos, false); lastSide.put(pos, left);
+                Direction out = left ? facing.getCounterClockWise() : facing.getClockWise();
+                double cx = pos.getX() + 0.5 + facing.getStepX() * 0.26 + out.getStepX() * 3.5 / 16;
+                double cz = pos.getZ() + 0.5 + facing.getStepZ() * 0.26 + out.getStepZ() * 3.5 / 16;
+                hop(mc, cx, pos.getY() + 3.5 / 16, cz, out.getStepX() + facing.getStepX() * 0.4, out.getStepZ() + facing.getStepZ() * 0.4, value);
+            }
             int light = LightCoordsUtil.pack(level.getBrightness(LightLayer.BLOCK, pos), level.getBrightness(LightLayer.SKY, pos));
             mc.getItemModelResolver().updateForTopItem(state, cone, ItemDisplayContext.NONE, level, null, 0);
             for (float side : new float[]{-3.5f, 3.5f}) {

@@ -21,7 +21,12 @@ public final class PanoramaFade {
     private static long started;
     private static boolean capturing;
 
+    /** The world was entered on this connection: a later loading screen (respawn, portal) closes without the fade (owner 2026-10-10). */
+    private static boolean entered;
+
     static void register() {
+        net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents.JOIN.register((handler, sender, mc) -> entered = false);
+        net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents.DISCONNECT.register((handler, mc) -> entered = false);
         HudElementRegistry.addLast(Identifier.fromNamespaceAndPath("holylois", "entry_fade"), (g, delta) -> {
             if (texture == null) return;
             float t = (System.currentTimeMillis() - started) / (float) LENGTH;
@@ -43,14 +48,16 @@ public final class PanoramaFade {
     public static boolean holdsClose(net.minecraft.client.gui.screens.Screen current, net.minecraft.client.gui.Gui gui) {
         var mc = Minecraft.getInstance();
         if (closing || mc.level == null || mc.player == null) return false;
-        if (!(current instanceof net.minecraft.client.gui.screens.LevelLoadingScreen) && !(current instanceof HolyLoisAuthScreen)) return false;
+        boolean loading = current instanceof net.minecraft.client.gui.screens.LevelLoadingScreen;
+        if (!loading && !(current instanceof HolyLoisAuthScreen)) return false;
+        if (loading && entered && !capturing) return false;
         if (capturing) {
             // A capture that never came back must not keep the screen forever.
             if (System.currentTimeMillis() - captureAt < 1500) return true;
             capturing = false;
             return false;
         }
-        capturing = true; captureAt = System.currentTimeMillis();
+        capturing = true; captureAt = System.currentTimeMillis(); entered = true;
         Runnable close = () -> { closing = true; try { if (gui.screen() == current) gui.setScreen(null); } finally { closing = false; } };
         try {
             net.minecraft.client.Screenshot.takeScreenshot(mc.gameRenderer.mainRenderTarget(), image -> mc.execute(() -> {

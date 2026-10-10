@@ -134,7 +134,7 @@ final class Claims {
         if (bought + count > config.maxBought) { player.sendSystemMessage(line("You can buy at most " + config.maxBought + " extra chunks (you have " + bought + ").", ChatFormatting.RED)); return 0; }
         long cost = cost(config, bought, count);
         if (!Economy.withdraw(player.level().getServer(), id, cost)) {
-            player.sendSystemMessage(line("That costs " + cost + " coins and you have " + Economy.balance(player.level().getServer(), id) + ". Sell on /ah or claim /daily.", ChatFormatting.RED));
+            player.sendSystemMessage(line("That costs " + cost + " coins and you have " + Economy.balance(player.level().getServer(), id) + ". Earn more with /sell or /ah; daily coins arrive when you log in.", ChatFormatting.RED));
             return 0;
         }
         data.bought.put(id, bought + count); save(); refresh(player);
