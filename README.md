@@ -1,6 +1,6 @@
 # Holy Lois: Reborn launcher and add-ons
 
-Launcher1.3.2 installs and updates the signed Holy Lois pack for Minecraft26.3. Choose a player name or a Minecraft account, install, then Play. Current pack/server1.8.3 fixes launcher setup scrolling, name selection, private account requests, login floating disconnects, R sorting and chest runestone transfers.
+Launcher 1.4.0 installs and updates the signed Holy Lois pack for Minecraft 26.3. Pick how you play (I own Minecraft, or Play with a name), install, then Play. One button follows the state (Install, Update, Repair, Play), the account card shows your skin head, and the main screen keeps the most used keys and commands in view. Built-in pack: 1.9.0.
 
 [Download the launcher](https://github.com/pjampjam/HLMC-Reborn-Packaging-Lab/releases/latest/download/HolyLoisReborn.exe). [Player guide](https://github.com/pjampjam/HLMC-Reborn/blob/main/PLAYER-GUIDE.md). [Admin guide](https://github.com/pjampjam/HLMC-Reborn/blob/main/ADMIN-GUIDE.md).
 
@@ -10,7 +10,7 @@ R over an item shows its recipe; R over an empty slot sorts without opening a re
 
 ## Build
 
-Use the .NET10 SDK on Windows and run `./build.ps1 -Version 1.3.2`. Add `-Package` for the release EXE. Sources under `addons/` target the pinned Fabric26.3 APIs; their server build scripts compile against the installed libraries and run the relevant checks. Do not ship private preview/probe mods.
+Use the .NET10 SDK on Windows and run `./build.ps1 -Version 1.4.0`. Add `-Package` for the release EXE. Sources under `addons/` target the pinned Fabric26.3 APIs; their server build scripts compile against the installed libraries and run the relevant checks. Do not ship private preview/probe mods.
 
 ## Release integrity
 
@@ -20,4 +20,4 @@ The Windows app has no Authenticode certificate; SmartScreen may show Unknown pu
 
 ## Later work
 
-Broader homes/party/rally interfaces, equipment, notification design and panorama entry flow remain the next planned feature batch. This source snapshot matches the tested1.3.2/1.8.3 hotfix.
+Slipped items (/played, party HUD default, login before the world and more) are tracked for the next batch. This source snapshot matches the tested launcher 1.4.0 with pack 1.9.0.

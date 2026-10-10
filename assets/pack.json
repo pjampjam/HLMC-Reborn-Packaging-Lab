@@ -1,11 +1,18 @@
 {
   "schema": 1,
-  "version": "1.8.3",
+  "version": "1.9.0",
   "minecraft": "26.3",
   "fabric": "0.19.5",
   "java": 25,
   "server": "79.76.40.155:25565",
   "files": [
+    {
+      "path": "mods/3d-armor-0.9.4.2-mod.jar",
+      "url": "https://cdn.modrinth.com/data/XhxKIfGG/versions/ap0X7Uod/3d-armor-0.9.4.2-mod.jar",
+      "size": 306454,
+      "sha256": "c2f2cf8fd2d7a276e63af47fc178faf44c7966a567342863fb94b9e1e45edfd4",
+      "policy": "managed"
+    },
     {
       "path": "mods/AdvancementPlaques-26.3-fabric-1.7.3.jar",
       "url": "https://cdn.modrinth.com/data/9NM0dXub/versions/CWKBEIsY/AdvancementPlaques-26.3-fabric-1.7.3.jar",
@@ -21,10 +28,10 @@
       "policy": "managed"
     },
     {
-      "path": "mods/AmbientSounds_FABRIC_v6.3.6_mc26.3.jar",
-      "url": "https://cdn.modrinth.com/data/fM515JnW/versions/Rpue6AYp/AmbientSounds_FABRIC_v6.3.6_mc26.3.jar",
-      "size": 84821608,
-      "sha256": "6827f0a7b3abdbf5e0f5012c40a4b9ee1ad5d8c844c2cd85af9c119a2b034eaa",
+      "path": "mods/AmbientSounds_FABRIC_v6.3.10_mc26.3.jar",
+      "url": "https://cdn.modrinth.com/data/fM515JnW/versions/T9Nl4OKj/AmbientSounds_FABRIC_v6.3.10_mc26.3.jar",
+      "size": 84824816,
+      "sha256": "5505a777b64762a1094cc5ecbb41df0306cd2831f8df3327cbfe2a02ba45be85",
       "policy": "managed"
     },
     {
@@ -35,10 +42,10 @@
       "policy": "managed"
     },
     {
-      "path": "mods/architectury-fabric-22.0.3.jar",
-      "url": "https://cdn.modrinth.com/data/lhGA9TYQ/versions/gAI51C1M/architectury-fabric-22.0.3.jar",
+      "path": "mods/architectury-fabric-22.0.4.jar",
+      "url": "https://cdn.modrinth.com/data/lhGA9TYQ/versions/WYttntbU/architectury-fabric-22.0.4.jar",
       "size": 622449,
-      "sha256": "3b93647fecee390effe2c2a96575a026efb712597855240325435b2b060a89ea",
+      "sha256": "99dc6e8950b3665595298328384e5f86b7b6341556dc8183282aea7007e552de",
       "policy": "managed"
     },
     {
@@ -49,10 +56,10 @@
       "policy": "managed"
     },
     {
-      "path": "mods/chatanimation-fabric-1.3.3+mc26.3.jar",
-      "url": "https://cdn.modrinth.com/data/DnNYdJsx/versions/zbvXFs0t/chatanimation-fabric-1.3.3%2Bmc26.3.jar",
-      "size": 431862,
-      "sha256": "a4c44eeaecaabddbf650f293d5dbe4a244daf4a5e864cd242b53ced6d18844fb",
+      "path": "mods/chatanimation-fabric-1.3.4+mc26.3.jar",
+      "url": "https://cdn.modrinth.com/data/DnNYdJsx/versions/dXVWAQA6/chatanimation-fabric-1.3.4%2Bmc26.3.jar",
+      "size": 432262,
+      "sha256": "d70c9d2d4a51cf9dcc57daeb48059ace0aa527708b1bebd5cb828e732ac803d3",
       "policy": "managed"
     },
     {
@@ -112,6 +119,13 @@
       "policy": "managed"
     },
     {
+      "path": "mods/elytra_physics-fabric-2.6.3_mc26.3.jar",
+      "url": "https://cdn.modrinth.com/data/jfvCMH0K/versions/gWeGx7Ew/elytra_physics-fabric-2.6.3_mc26.3.jar",
+      "size": 481083,
+      "sha256": "40de7830aa5b9a87ba42faf5330144819502b0b41d7271f4189f07ba532b3c5c",
+      "policy": "managed"
+    },
+    {
       "path": "mods/EnchantmentDescriptions-fabric-MC26.3-26.3.0.2.jar",
       "url": "https://cdn.modrinth.com/data/UVtY3ZAC/versions/uZf2qbql/EnchantmentDescriptions-fabric-MC26.3-26.3.0.2.jar",
       "size": 81219,
@@ -126,24 +140,24 @@
       "policy": "managed"
     },
     {
-      "path": "mods/entity_model_features-3.3.8-26.3-fabric.jar",
-      "url": "https://cdn.modrinth.com/data/4I1XuqiY/versions/kdDVwkgV/entity_model_features-3.3.8-26.3-fabric.jar",
-      "size": 650559,
-      "sha256": "455bdd9872e6237ab30fd4112c25be1577b57c3a51237787900c7df526250679",
+      "path": "mods/entity_model_features-3.3.11-26.3-fabric.jar",
+      "url": "https://cdn.modrinth.com/data/4I1XuqiY/versions/N7d5LddE/entity_model_features-3.3.11-26.3-fabric.jar",
+      "size": 664472,
+      "sha256": "a73ce8463f8ae342cd9428e0b9298bb2d265083d732703cfc12f8f2ef335e3c1",
       "policy": "managed"
     },
     {
-      "path": "mods/entity_texture_features-7.2.4-26.3-fabric.jar",
-      "url": "https://cdn.modrinth.com/data/BVzZfTc1/versions/Hs3N31ud/entity_texture_features-7.2.4-26.3-fabric.jar",
-      "size": 776755,
-      "sha256": "288c4e44276078fa1ce2a13d5814e848699766568b4ba72a60c71e249c5e7b9d",
+      "path": "mods/entity_texture_features-7.2.5-26.3-fabric.jar",
+      "url": "https://cdn.modrinth.com/data/BVzZfTc1/versions/O8J3sxxp/entity_texture_features-7.2.5-26.3-fabric.jar",
+      "size": 792734,
+      "sha256": "22c72cb53e97779b1fea82741fa7932e2b43e44dc3b7c21c772affe46568a56d",
       "policy": "managed"
     },
     {
-      "path": "mods/entityculling-fabric-1.11.2-mc26.3.jar",
-      "url": "https://cdn.modrinth.com/data/NNAgCjsB/versions/F4loCvYt/entityculling-fabric-1.11.2-mc26.3.jar",
-      "size": 1508273,
-      "sha256": "3ff36c560bc35b5b3ebe09aa4520fae438dfa34c6cd8e5fdf481aac1181fade0",
+      "path": "mods/entityculling-fabric-1.11.3-mc26.3.jar",
+      "url": "https://cdn.modrinth.com/data/NNAgCjsB/versions/X1g3VhTx/entityculling-fabric-1.11.3-mc26.3.jar",
+      "size": 1508547,
+      "sha256": "d2f80514ee3382b1fa7afda4df762df50743226e3cd320b829ee507357aeafbc",
       "policy": "managed"
     },
     {
@@ -154,10 +168,10 @@
       "policy": "managed"
     },
     {
-      "path": "mods/fabric-api-0.161.0+26.3.jar",
-      "url": "https://cdn.modrinth.com/data/P7dR8mSH/versions/bNnaTiuM/fabric-api-0.161.0%2B26.3.jar",
-      "size": 2620967,
-      "sha256": "86f16178a3cecc887a85a4cfe9a79d92fa7341d8f39b5951a4d6ad800ab657a6",
+      "path": "mods/fabric-api-0.162.0+26.3.jar",
+      "url": "https://cdn.modrinth.com/data/P7dR8mSH/versions/v2j28coa/fabric-api-0.162.0%2B26.3.jar",
+      "size": 1772377,
+      "sha256": "8626c189b702f466800b1c8ddac6203cf8a1e0bdaee75a5f9a33b18c2baa81b1",
       "policy": "managed"
     },
     {
@@ -175,10 +189,10 @@
       "policy": "managed"
     },
     {
-      "path": "mods/FarmersDelight-26.3-3.6.27+refabricated.jar",
-      "url": "https://cdn.modrinth.com/data/7vxePowz/versions/hTNvMewX/FarmersDelight-26.3-3.6.27%2Brefabricated.jar",
-      "size": 3486296,
-      "sha256": "07aa1346c23010c5f40405ce63cb8a793f5c246cff331aa892ef9dfdae523f17",
+      "path": "mods/FarmersDelight-26.3-3.6.28+refabricated.jar",
+      "url": "https://cdn.modrinth.com/data/7vxePowz/versions/Zdr0cHIz/FarmersDelight-26.3-3.6.28%2Brefabricated.jar",
+      "size": 3486887,
+      "sha256": "236b3d0068b9bf9a5272b41d3aa8f80042a9ef86a4698c7dc6dd1e2c5dcf1823",
       "policy": "managed"
     },
     {
@@ -224,17 +238,17 @@
       "policy": "managed"
     },
     {
-      "path": "mods/holylois-auth-ui-1.0.6+26.3.jar",
-      "url": "https://github.com/pjampjam/HLMC-Reborn/releases/download/pack-v1.8.3/holylois-auth-ui-1.0.6+26.3.jar",
-      "size": 29758,
-      "sha256": "dd66e0047e00f220d0b56faf3e3446cc35c80098fbbe35d15d243d11794464b1",
+      "path": "mods/holylois-auth-ui-1.1.0+26.3.jar",
+      "url": "https://github.com/pjampjam/HLMC-Reborn/releases/download/pack-v1.9.0/holylois-auth-ui-1.1.0+26.3.jar",
+      "size": 6539316,
+      "sha256": "1eac09eec01803204fb057fa3ff4f5f24414b48fa78e9bcf0e93f41435c8ba2b",
       "policy": "managed"
     },
     {
-      "path": "mods/holylois-extras-1.6.3+26.3.jar",
-      "url": "https://github.com/pjampjam/HLMC-Reborn/releases/download/pack-v1.8.3/holylois-extras-1.6.3+26.3.jar",
-      "size": 424161,
-      "sha256": "3c78fc5387f3ac0a75f242724a5e0a9df9175cb88a3081d6fafc5f62f13f2706",
+      "path": "mods/holylois-extras-1.7.0+26.3.jar",
+      "url": "https://github.com/pjampjam/HLMC-Reborn/releases/download/pack-v1.9.0/holylois-extras-1.7.0+26.3.jar",
+      "size": 710416,
+      "sha256": "f29fbaab2ada360bf20d83d2eed1514a814469a174187bb0cb3d1923ba86bc55",
       "policy": "managed"
     },
     {
@@ -301,6 +315,13 @@
       "policy": "managed"
     },
     {
+      "path": "mods/ji-afk-cinematic-26.3-2.3.2.jar",
+      "url": "https://cdn.modrinth.com/data/NYveE6yC/versions/7BvkctiX/ji-afk-cinematic-26.3-2.3.2.jar",
+      "size": 296788,
+      "sha256": "766b0c93e6851e6eb1d5012c6343649d91b0cb5a1f0d5f25458266ab62c349a8",
+      "policy": "managed"
+    },
+    {
       "path": "mods/konfig-fabric-0.9.0+26.3.jar",
       "url": "https://cdn.modrinth.com/data/pp7kIrlM/versions/GoZd8Dpx/konfig-fabric-0.9.0%2B26.3.jar",
       "size": 1488645,
@@ -350,10 +371,17 @@
       "policy": "managed"
     },
     {
-      "path": "mods/mcw-holidays-1.1.2-mc26.3fabric.jar",
-      "url": "https://cdn.modrinth.com/data/rH20L2Lp/versions/qvlKsLBm/mcw-holidays-1.1.2-mc26.3fabric.jar",
-      "size": 984934,
-      "sha256": "95d1c7934a76885e699c1113c5b0c3e0edb3ae6baec4c7e86508cca99381e2b5",
+      "path": "mods/mcw-holidays-1.1.3-mc26.3fabric.jar",
+      "url": "https://cdn.modrinth.com/data/rH20L2Lp/versions/s54o5rUj/mcw-holidays-1.1.3-mc26.3fabric.jar",
+      "size": 1025154,
+      "sha256": "e472f5acf50d9ffae340f22cb41303d261344b68cf423a7d2fe43d75e06bc33d",
+      "policy": "managed"
+    },
+    {
+      "path": "mods/modernfix-5.27.20-build.2.jar",
+      "url": "https://cdn.modrinth.com/data/TjSm1wrD/versions/pa9cAfYg/modernfix-5.27.20-build.2.jar",
+      "size": 1168784,
+      "sha256": "f340fff04132ae9b60eae494d2de4cd177d436da8c0e525d6bd8f5b15ed141b5",
       "policy": "managed"
     },
     {
@@ -371,17 +399,31 @@
       "policy": "managed"
     },
     {
-      "path": "mods/nemos_enchantments-26.3-1.12.jar",
-      "url": "https://cdn.modrinth.com/data/DxSJUAv8/versions/XdYcne0f/nemos_enchantments-26.3-1.12.jar",
-      "size": 80007,
-      "sha256": "2ad0110ece06ce7b4e1c427dbb1df861b03c69c3aac240959705ab2b9ccbe689",
+      "path": "mods/MouseTweaks-fabric-mc26.3-2.31.jar",
+      "url": "https://cdn.modrinth.com/data/aC3cM3Vq/versions/LeMuMhLv/MouseTweaks-fabric-mc26.3-2.31.jar",
+      "size": 74569,
+      "sha256": "7fa35df568c870c45fd144dc9a54139459ded823615dda32bc09d9025831e655",
       "policy": "managed"
     },
     {
-      "path": "mods/open-parties-and-claims-fabric-26.3-0.31.6.jar",
-      "url": "https://cdn.modrinth.com/data/gF3BGWvG/versions/1SiR1p7h/open-parties-and-claims-fabric-26.3-0.31.6.jar",
-      "size": 1892693,
-      "sha256": "e32ba2775ad61a614222f823369fa4208372d487f97578a76087c9e9d6464428",
+      "path": "mods/nemos_enchantments-26.3-1.13.1.jar",
+      "url": "https://cdn.modrinth.com/data/DxSJUAv8/versions/IzlIOBJn/nemos_enchantments-26.3-1.13.1.jar",
+      "size": 120378,
+      "sha256": "8af8ad20d6d0f8f8ed0c7788031ffd8bb755f8db07d5b06a5d1f7982a2ece7e2",
+      "policy": "managed"
+    },
+    {
+      "path": "mods/notenoughanimations-fabric-1.12.6-mc26.3.jar",
+      "url": "https://cdn.modrinth.com/data/MPCX6s5C/versions/EhSk2OTD/notenoughanimations-fabric-1.12.6-mc26.3.jar",
+      "size": 1863579,
+      "sha256": "81539e3bb8d222ae3ed3046677ffe466dd6898ec2b75b78f8eb26cb1a43be0c8",
+      "policy": "managed"
+    },
+    {
+      "path": "mods/open-parties-and-claims-fabric-26.3-0.32.8.jar",
+      "url": "https://cdn.modrinth.com/data/gF3BGWvG/versions/r4qdHbjN/open-parties-and-claims-fabric-26.3-0.32.8.jar",
+      "size": 1937364,
+      "sha256": "513dc4b77bd6499d97c9ac6b3e7d77e2fe03e794c90ba4e5dbff98cc36069edd",
       "policy": "managed"
     },
     {
@@ -406,17 +448,17 @@
       "policy": "managed"
     },
     {
-      "path": "mods/puzzleslib-v26.3.9-mc26.3.x+fabric.jar",
-      "url": "https://cdn.modrinth.com/data/QAGBst4M/versions/r8taBxu6/puzzleslib-v26.3.9-mc26.3.x%2Bfabric.jar",
-      "size": 1100133,
-      "sha256": "a9a2d95b08b147ab1b0942b61d8a2ed5376ed22c70c069f5714a6d46e1c53a7f",
+      "path": "mods/puzzleslib-v26.3.13-mc26.3.x+fabric.jar",
+      "url": "https://cdn.modrinth.com/data/QAGBst4M/versions/rINxzqi2/puzzleslib-v26.3.13-mc26.3.x%2Bfabric.jar",
+      "size": 1092416,
+      "sha256": "11e5586f2aca7735714ff4a8357c4c1fca141fb8392a3aff38c8fd76dcb5eaf5",
       "policy": "managed"
     },
     {
-      "path": "mods/RoughlyEnoughItems-26.3.823.jar",
-      "url": "https://cdn.modrinth.com/data/nfn13YXA/versions/ePn2dRJ1/RoughlyEnoughItems-26.3.823.jar",
-      "size": 2421403,
-      "sha256": "7d69284c21af1fd95fb1da44ba80edaac60f4c74dca241a8364dd019f3158224",
+      "path": "mods/RoughlyEnoughItems-26.3.824.jar",
+      "url": "https://cdn.modrinth.com/data/nfn13YXA/versions/rKsAE6bX/RoughlyEnoughItems-26.3.824.jar",
+      "size": 2421605,
+      "sha256": "18e03267249f61b7cc1418be3824ae5da4a12d9e713fc989481b6a87efafee12",
       "policy": "managed"
     },
     {
@@ -427,10 +469,10 @@
       "policy": "managed"
     },
     {
-      "path": "mods/runeforged-fabric-26.3-0.2.3.jar",
-      "url": "https://cdn.modrinth.com/data/Co8e7VJI/versions/XVjILglK/runeforged-fabric-26.3-0.2.3.jar",
-      "size": 1769195,
-      "sha256": "cc251d29d8bd3116f5bc5a78fbf86813d22b1a61aec28d070b03bb35a7a1eac8",
+      "path": "mods/runeforged-fabric-26.3-0.2.4.jar",
+      "url": "https://cdn.modrinth.com/data/Co8e7VJI/versions/r4nr7lFy/runeforged-fabric-26.3-0.2.4.jar",
+      "size": 1769157,
+      "sha256": "93ca541e373e591d70e2dace90a1ce4944f36e71ce5b8eaeb826bf01a999eca5",
       "policy": "managed"
     },
     {
@@ -469,6 +511,13 @@
       "policy": "managed"
     },
     {
+      "path": "mods/spark-1.10.187-fabric.jar",
+      "url": "https://cdn.modrinth.com/data/l6YH9Als/versions/e3hsPc1o/spark-1.10.187-fabric.jar",
+      "size": 3838499,
+      "sha256": "3fc00663caa542b1e78333730609b4eb2568326628e3666a3938ad58cbc9acc6",
+      "policy": "managed"
+    },
+    {
       "path": "mods/status-effect-bars-1.0.12.jar",
       "url": "https://cdn.modrinth.com/data/x02cBj9Y/versions/aAXJqboy/status-effect-bars-1.0.12.jar",
       "size": 44942,
@@ -490,24 +539,24 @@
       "policy": "managed"
     },
     {
-      "path": "mods/xaerominimap-fabric-26.3-26.5.3.jar",
-      "url": "https://cdn.modrinth.com/data/1bokaNcj/versions/YPkAliDt/xaerominimap-fabric-26.3-26.5.3.jar",
-      "size": 2229348,
-      "sha256": "82e67ef23a68c8560753669d9bee2af4e29c91c7d75c99afd502a4ba0bbe51a0",
+      "path": "mods/xaerominimap-fabric-26.3-26.6.0.jar",
+      "url": "https://cdn.modrinth.com/data/1bokaNcj/versions/B2aG1aya/xaerominimap-fabric-26.3-26.6.0.jar",
+      "size": 2230141,
+      "sha256": "0cccafa29181e704bfc888c7063a19b29c82eb9883ec1a7d8f02c5ed8f931a3d",
       "policy": "managed"
     },
     {
-      "path": "mods/xaeroworldmap-fabric-26.3-1.46.4.jar",
-      "url": "https://cdn.modrinth.com/data/NcUtCpym/versions/UleMm8za/xaeroworldmap-fabric-26.3-1.46.4.jar",
-      "size": 1480980,
-      "sha256": "22d8748cf2ee1d92083f1713b9857d8ebf178c79199cd248e44d7bd6076887c8",
+      "path": "mods/xaeroworldmap-fabric-26.3-1.47.0.jar",
+      "url": "https://cdn.modrinth.com/data/NcUtCpym/versions/nz9xjzWi/xaeroworldmap-fabric-26.3-1.47.0.jar",
+      "size": 1485579,
+      "sha256": "2cd3cedde12121958bb3fc500b8cca3fecf6b9517287f74f00ab961531a546d8",
       "policy": "managed"
     },
     {
-      "path": "mods/zoomify-2.16.3+26.3.jar",
-      "url": "https://cdn.modrinth.com/data/w7ThoJFB/versions/bvz5KJLQ/zoomify-2.16.3%2B26.3.jar",
-      "size": 563038,
-      "sha256": "72c79c6e77c3e403748792c8173462c533de61bc3fde165bc9ae4064cf04ccdf",
+      "path": "mods/zoomify-2.17.0+mc26.3-universal.jar",
+      "url": "https://cdn.modrinth.com/data/w7ThoJFB/versions/RUBpNu00/zoomify-2.17.0%2Bmc26.3-universal.jar",
+      "size": 579146,
+      "sha256": "134edcc2992d2f6c3793746101dec1aba3ef02f046024fd280afb09094593027",
       "policy": "managed"
     },
     {
@@ -641,12 +690,53 @@
   ],
   "defaults": {
     "path": "defaults.zip",
-    "url": "https://github.com/pjampjam/HLMC-Reborn/releases/download/pack-v1.8.3/defaults.zip",
+    "url": "https://github.com/pjampjam/HLMC-Reborn/releases/download/pack-v1.9.0/defaults.zip",
     "size": 53046,
     "sha256": "fff4f18d365943e0f07707660965b81a97cc6b5d17b98e8dd97e92101509e847",
     "policy": "seed"
   },
   "history": [
+    {
+      "version": "1.9.0",
+      "date": "2026-10-09",
+      "summary": "Homes, parties, trophy fish you can see and a fresh new look.",
+      "added": [
+        "Open /homes to save, rename or visit your three starter homes.",
+        "Use /party or /group to manage your party and see your teammates' health on wide, easy-to-read bars.",
+        "Click a rally card with chat open to request travel to its author. They choose whether to accept.",
+        "Relic lanterns, the travel staff and the wanderer's circlet now have useful bonuses.",
+        "Trophy fish look as big as they weigh, from a hand-sized Rare to a huge Legendary, and take on their rarity colour: in your hand, on the ground, in frames and on the cutting board, with a rarity glow and the weight right on the inventory icon. Fish of 10 kg and more are lifted over your head with both hands, so the off hand stays free of anything else meanwhile.",
+        "New ultra-rare Mythic fish: 40 kg and up, a red name, and the whole server hears about it.",
+        "Legendary and Mythic names shimmer in chat, in tooltips and even in death messages when someone finishes you off with a fish.",
+        "Fish weigh by rarity: Rare 1-2.99 kg, Epic 3-19.99 kg, Legendary 20-40 kg. About one trophy in 250 comes up Shiny, with stronger effects, its own jingle and extra sparkles.",
+        "Rare catches get a personal card above the hotbar with a chime. Use /catchcards off to silence them.",
+        "Boomboxes work in water and stay on the same station after a meal. Six can be powered per chunk, with six audio streams across the server.",
+        "Armor now looks 3D on you and everyone else, dyes and trims included (3D Armor). Gameplay stays the same.",
+        "Saved skins return on rejoin; maps and statistics use your selected skin with clearer guides and layouts.",
+        "Celebration fireworks from events, daily gifts and secret codes look and sound the same but never hurt anyone.",
+        "The secret code of the day changes at midnight Riga time and needs 20 minutes of active play that day (new players: 2 hours in total first).",
+        "On the world map, right-click a player to send them a /tpa request; admin-only teleports stay hidden.",
+        "Your death marker on the map disappears by itself once all the items you dropped are picked up or gone.",
+        "Each kind of trophy fish does its own thing: effects when eaten (some bite back) and bonuses while held, all listed in the tooltip. Cooking keeps the stats and makes effects last longer. On the cutting board heavier fish give more slices over several cuts (the board shows how many cuts are left, and a half-cut fish fills you up less), and every slice keeps the rarity, the Shiny star and a share of the effects. Bigger fish fill you up more.",
+        "Fresh boombox: a flat icon in your inventory, a 3D boombox you carry at your hip by the handle that swings as you walk and turn, speakers that pulse with the music and notes that pop on the beat.",
+        "Entering a structure (villages, dungeons, Ancient Cities) shows its name; zone titles are colour-coded and easier to read.",
+        "Login screen, party panel, catch and reward cards and menus share a sharper black-and-gold Holy Lois look: yes-buttons are green, cancel and delete are red, menus fit their content, and the daily reward card fades in above the hotbar with the Holy Lootbox in sight all week.",
+        "Smoother animations: maps held up in front of you, food at your mouth while eating and lanterns that swing smoothly, in first and third person.",
+        "The AFK camera now starts a few seconds after you cast a line or when you are marked AFK, not after 30 seconds of standing still.",
+        "Chests no longer replay their closing animation when you look back at them.",
+        "Your party's marker through walls sits on their head, and elytra flight feels smoother.",
+        "Enter confirms login, register, home names and party invites; alt-tab no longer pauses the game.",
+        "Joining shows the resource download on the loading bar with a short status line instead of a corner popup.",
+        "Fish of Thieves tropical islands and fruit trees no longer appear in new land, so the world keeps its vanilla look.",
+        "Fishy Business counts Fish of Thieves fish too, and the illager camp achievement is now called Find an Illager Camp.",
+        "The way in is one smooth scene: our own panorama on the title screen, while connecting and behind the login form, then a soft fade into the world. The title screen has a Holy Lois: Reborn button that joins straight away.",
+        "Enter works in every form again, and Esc on the login screen asks whether to leave the server.",
+        "The day-7 Holy Lootbox is its own gold block with the Holy Lois logo, like the one on the website, and bursts open with gold sparks.",
+        "A boombox playing in your hand pumps its speakers and pops notes on the beat too, and lanterns in hand swing smoothly like the boombox."
+      ],
+      "removed": [],
+      "updated": []
+    },
     {
       "version": "1.8.3",
       "date": "2026-10-08",
@@ -952,16 +1042,6 @@
         "PageDown switches between the visible first-person body and the normal hand view.",
         "Inventory profile selectors and matching-item highlights are hidden; sorting stays available.",
         "Durability tooltips show remaining/max without enabling advanced tooltips."
-      ]
-    },
-    {
-      "version": "1.5.3",
-      "date": "2026-10-02",
-      "summary": "Continuous crafting starts disabled in new profiles.",
-      "added": [],
-      "removed": [],
-      "updated": [
-        "Inventory Profiles Next default: continuous crafting off."
       ]
     }
   ],
