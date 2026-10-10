@@ -35,10 +35,10 @@ public abstract class RodHandPoseMixin {
                 original.call(state, model, stack, arm, pose, collector, light);
                 holylois.boombox.BoomboxPulse.capture = false;
                 // The captured pose already swings; the cones must not swing a second time.
-                holylois.boombox.FishLook.swingX = 0; holylois.boombox.FishLook.swingZ = 0;
+                holylois.boombox.FishLook.swingX = 0; holylois.boombox.FishLook.swingZ = 0; holylois.boombox.FishLook.swingYaw = Float.NaN;
                 holylois.boombox.BoomboxPulse.submitHeld(state, pose, collector, light);
             } else original.call(state, model, stack, arm, pose, collector, light);
         }
-        finally { RenderedRodTip.end(previous); holylois.boombox.FishLook.carry = carry; holylois.boombox.FishLook.swingX = 0; holylois.boombox.FishLook.swingZ = 0; }
+        finally { RenderedRodTip.end(previous); holylois.boombox.FishLook.carry = carry; holylois.boombox.FishLook.swingX = 0; holylois.boombox.FishLook.swingZ = 0; holylois.boombox.FishLook.swingYaw = Float.NaN; }
     }
 }

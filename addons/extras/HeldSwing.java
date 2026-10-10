@@ -60,6 +60,9 @@ public final class HeldSwing {
         SWINGS.keySet().retainAll(seen);
     }
 
+    /** Gametest only: a fixed swing in degrees for every drawn boombox, or null for the simulation. */
+    public static Float testSide;
+
     /** Current swing of a player's boombox, degrees (tests). */
     public static float side(int id) { var p = SWINGS.get(id); return p == null ? 0 : p.side; }
     public static float tilt(int id) { var p = SWINGS.get(id); return p == null ? 0 : p.tilt; }
@@ -72,10 +75,13 @@ public final class HeldSwing {
     /** Sets FishLook.swingZ/swingX (degrees) for the boombox about to be drawn in this entity's hand. */
     public static void apply(LivingEntityRenderState state) {
         var p = state instanceof AvatarRenderState avatar ? SWINGS.get(avatar.id) : null;
-        if (p == null) { FishLook.swingZ = 0; FishLook.swingX = 0; return; }
-        float t = Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(false);
-        FishLook.swingZ = Mth.lerp(t, p.lastSide, p.side);
-        // Gripped by its handle bar, a boombox can only rock side to side; the forward tilt is for lanterns hanging free.
         FishLook.swingX = 0;
+        if (p == null && testSide == null) { FishLook.swingZ = 0; FishLook.swingYaw = Float.NaN; return; }
+        float t = Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(false);
+        float side = testSide != null ? testSide : Mth.lerp(t, p.lastSide, p.side);
+        // Out from the body and back in (owner 2026-10-10), about the body's forward axis: a negative side (pushed by moving
+        // right) lets the box lag out to the left, like a real weight on a handle. No forward tilt; that is for free lanterns.
+        FishLook.swingZ = -side;
+        FishLook.swingYaw = state.bodyRot;
     }
 }

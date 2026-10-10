@@ -15,6 +15,8 @@ public final class FishLook {
     public static boolean carry;
     /** Swing of a carried boombox around its handle, degrees (HeldSwing, set around ItemInHandLayer.submitArmWithItem). */
     public static float swingX, swingZ;
+    /** Set with swingZ for a boombox: the holder's body yaw, so the swing turns about the body's forward axis (out and in). */
+    public static float swingYaw = Float.NaN;
 
     /** The fish sprite runs corner to corner: turned this much around its face it lies level across the body. */
     public static final float CARRY_TURN = -45;

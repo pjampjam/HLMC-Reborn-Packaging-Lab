@@ -107,6 +107,15 @@ public final class BoomboxPulse {
             float value = target > last ? last + (target - last) * 0.6f : last + (target - last) * 0.15f;
             heldShown.put(id, value);
             mc.getItemModelResolver().updateForTopItem(state, cone, ItemDisplayContext.NONE, mc.level, null, 0);
+            // Where the two speakers are in the world right now, and which way they face: held notes come out of them.
+            var cam = mc.gameRenderer.mainCamera().position();
+            var at = new net.minecraft.world.phys.Vec3[2];
+            for (int i = 0; i < 2; i++) {
+                var v = model.pose().transformPosition(0.5f + (i == 0 ? -3.5f : 3.5f) / 16f, 3.5f / 16f, 4.5f / 16f, new org.joml.Vector3f());
+                at[i] = cam.add(v.x(), v.y(), v.z());
+            }
+            var front = model.pose().transformDirection(0, 0, -1, new org.joml.Vector3f()).normalize();
+            heldSpeakers.put(id, new Speakers(at[0], at[1], new net.minecraft.world.phys.Vec3(front.x(), front.y(), front.z()), System.currentTimeMillis()));
             for (float side : new float[]{-3.5f, 3.5f}) {
                 pose.pushPose();
                 pose.last().set(model);
@@ -140,6 +149,10 @@ public final class BoomboxPulse {
     /** Size of the last note (gametest). */
     public static float lastScale;
 
+    /** The two speaker cones of a held boombox in the world and the way its front faces, from the last frame it was drawn. */
+    public record Speakers(net.minecraft.world.phys.Vec3 left, net.minecraft.world.phys.Vec3 right, net.minecraft.world.phys.Vec3 front, long at) {}
+    public static final Map<java.util.UUID, Speakers> heldSpeakers = new ConcurrentHashMap<>();
+
     /** Last speaker that threw a note, so the beats alternate left and right. */
     private static final Map<Object, Boolean> lastSide = new ConcurrentHashMap<>();
 
@@ -148,7 +161,7 @@ public final class BoomboxPulse {
         long now = System.currentTimeMillis();
         for (var entry : heldLevels.entrySet()) {
             var id = entry.getKey();
-            if (now - entry.getValue().at() > 400) { heldLevels.remove(id); heldShown.remove(id); heldFinders.remove(id); heldBeat.remove(id); lastSide.remove(id); continue; }
+            if (now - entry.getValue().at() > 400) { heldLevels.remove(id); heldShown.remove(id); heldFinders.remove(id); heldBeat.remove(id); lastSide.remove(id); heldSpeakers.remove(id); continue; }
             if (heldBeat.remove(id) == null || mc.level == null) continue;
             for (var player : mc.level.players()) {
                 if (!player.getUUID().equals(id)) continue;
@@ -156,16 +169,22 @@ public final class BoomboxPulse {
                 if (!main && !player.getOffhandItem().is(Boombox.ITEM)) break;
                 // Owner 2026-10-10: notes in your own first-person view only got in the way of the hand.
                 if (player == mc.player && mc.options.getCameraType().isFirstPerson()) break;
-                // The hand side of the body: right for a right-handed main hand.
+                float loud = heldShown.getOrDefault(id, entry.getValue().value());
+                boolean first = !lastSide.getOrDefault(id, false); lastSide.put(id, first);
+                var speakers = heldSpeakers.get(id);
+                if (speakers != null && now - speakers.at() < 500) {
+                    // Out of one speaker cone, left and right in turn (owner 2026-10-10): forward out of the grille and off to its side.
+                    var cone = first ? speakers.left() : speakers.right();
+                    var away = cone.subtract(first ? speakers.right() : speakers.left()).normalize();
+                    var push = speakers.front().scale(0.8).add(away.scale(0.6));
+                    hop(mc, cone.x, cone.y, cone.z, push.x, push.z, loud);
+                    break;
+                }
+                // Not drawn this frame (out of view): about where the box hangs, on the hand's side, out from the body.
                 boolean right = (player.getMainArm() == net.minecraft.world.entity.HumanoidArm.RIGHT) == main;
-                double yaw = Math.toRadians(player.yBodyRot), sideways = right ? -0.4 : 0.4;
-                double rx = Math.cos(yaw), rz = Math.sin(yaw);
-                // Out away from the body on the hand's side, a little forward or back in turn.
-                boolean front = !lastSide.getOrDefault(id, false); lastSide.put(id, front);
-                double fx = -Math.sin(yaw) * (front ? 0.35 : -0.35), fz = Math.cos(yaw) * (front ? 0.35 : -0.35);
-                double out = right ? -1 : 1;
-                hop(mc, player.getX() + rx * sideways, player.getY() + 0.75, player.getZ() + rz * sideways,
-                    rx * out + fx, rz * out + fz, heldShown.getOrDefault(id, entry.getValue().value()));
+                double yaw = Math.toRadians(player.yBodyRot), sideways = right ? -0.45 : 0.45;
+                double rx = Math.cos(yaw), rz = Math.sin(yaw), out = right ? -1 : 1;
+                hop(mc, player.getX() + rx * sideways, player.getY() + 0.35, player.getZ() + rz * sideways, rx * out, rz * out, loud);
                 break;
             }
         }

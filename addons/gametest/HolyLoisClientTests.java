@@ -1182,12 +1182,39 @@ public final class HolyLoisClientTests implements FabricClientGameTest {
         int notes = context.computeOnClient(client -> (int) field(holylois.boombox.BoomboxPulse.class, "beats"));
         log("held boombox notes: " + notes);
         check(notes > 3, "a held boombox pops notes on the beat (" + notes + ")");
+        // Notes leave from the speakers (owner 2026-10-10): the cones sit low at the hand, not up at the hip.
+        String speakers = context.computeOnClient(client -> {
+            var at = holylois.boombox.BoomboxPulse.heldSpeakers.get(client.player.getUUID());
+            return at == null ? "none" : String.format(java.util.Locale.ROOT, "%.2f %.2f %.2f", at.left().y - client.player.getY(), at.right().y - client.player.getY(),
+                at.left().add(at.right()).scale(0.5).subtract(client.player.position()).horizontalDistance());
+        });
+        log("held speakers (height left, right, distance): " + speakers);
+        check(!speakers.equals("none"), "the held boombox reports its speaker positions");
+        if (!speakers.equals("none")) {
+            var parts = speakers.split(" ");
+            check(Double.parseDouble(parts[0]) < 0.7 && Double.parseDouble(parts[0]) > -0.1 && Double.parseDouble(parts[2]) < 1.2,
+                "the speakers hang low at the hand (" + speakers + ")");
+        }
+        // Swing direction: forced both ways, the speakers must move out and in from the body, not forward and back.
+        java.util.function.Function<Float, net.minecraft.world.phys.Vec3> swungTo = side -> {
+            context.runOnClient(client -> holylois.boombox.HeldSwing.testSide = side);
+            for (int t = 0; t < 6; t++) { int frame = t; context.runOnClient(client -> holylois.boombox.BoomboxPulse.heardHeld(me, music(frame))); context.waitTicks(1); }
+            return context.computeOnClient(client -> { var at = holylois.boombox.BoomboxPulse.heldSpeakers.get(client.player.getUUID()); return at.left().add(at.right()).scale(0.5); });
+        };
+        var out = swungTo.apply(25f); var in = swungTo.apply(-25f);
+        context.runOnClient(client -> holylois.boombox.HeldSwing.testSide = null);
+        double yaw = Math.toRadians(context.computeOnClient(client -> client.player.yBodyRot));
+        var delta = out.subtract(in);
+        double sideways = Math.abs(delta.x * -Math.cos(yaw) + delta.z * -Math.sin(yaw)), forward = Math.abs(delta.x * -Math.sin(yaw) + delta.z * Math.cos(yaw));
+        log(String.format(java.util.Locale.ROOT, "boombox swing: sideways %.3f, forward %.3f, up %.3f", sideways, forward, delta.y));
+        check(sideways > 0.05 && sideways > 3 * forward, "the boombox swings out from the body and back in, not forward (" + sideways + " vs " + forward + ")");
         float size = context.computeOnClient(client -> holylois.boombox.BoomboxPulse.lastScale);
         log("held boombox note size: " + size);
         check(size > 0.6f && size <= 1.45f, "loud music draws bigger notes (" + size + ")");
         // First person (owner 2026-10-10): the boombox in your own hand pulses, but throws no notes into your view.
         context.runOnClient(client -> { client.options.setCameraType(net.minecraft.client.CameraType.FIRST_PERSON); client.player.setXRot(65); });
         int conesBefore = context.computeOnClient(client -> holylois.boombox.BoomboxPulse.ownCones);
+        int notesBefore = context.computeOnClient(client -> (int) field(holylois.boombox.BoomboxPulse.class, "beats"));
         for (int t = 0; t <= 60; t++) {
             int frame = t;
             context.runOnClient(client -> holylois.boombox.BoomboxPulse.heardHeld(me, music(frame)));
@@ -1195,7 +1222,7 @@ public final class HolyLoisClientTests implements FabricClientGameTest {
         }
         context.takeScreenshot("17-boombox-held-first-person-playing");
         int cones = context.computeOnClient(client -> holylois.boombox.BoomboxPulse.ownCones) - conesBefore;
-        int firstNotes = context.computeOnClient(client -> (int) field(holylois.boombox.BoomboxPulse.class, "beats")) - notes;
+        int firstNotes = context.computeOnClient(client -> (int) field(holylois.boombox.BoomboxPulse.class, "beats")) - notesBefore;
         log("first-person boombox: " + cones + " cone frames, " + firstNotes + " notes");
         check(cones > 10 && firstNotes == 0, "the boombox in your own hand pulses without notes in first person (" + cones + ", " + firstNotes + ")");
         server.runCommand("clear @a");

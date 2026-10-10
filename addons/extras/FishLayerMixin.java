@@ -19,8 +19,16 @@ public abstract class FishLayerMixin {
         if (FishLook.swingZ != 0 || FishLook.swingX != 0) {
             // A carried boombox swings around its handle (model y 11.5 of 16) like a lantern on a walk.
             pose.translate(0.5f, 0.72f, 0.5f);
-            pose.rotate(com.mojang.math.Axis.ZP.rotationDegrees(FishLook.swingZ));
-            pose.rotate(com.mojang.math.Axis.XP.rotationDegrees(FishLook.swingX));
+            if (!Float.isNaN(FishLook.swingYaw)) {
+                // Boombox (owner 2026-10-10): it swings out from the body and back in, so it turns about the holder's forward axis
+                // in the world, whatever the arm and item transforms did to the model's own axes.
+                double yaw = Math.toRadians(FishLook.swingYaw);
+                var axis = new org.joml.Matrix3f(pose.normal()).invert().transform(new org.joml.Vector3f((float) -Math.sin(yaw), 0, (float) Math.cos(yaw)));
+                if (axis.lengthSquared() > 1e-8f) pose.rotate(new org.joml.Quaternionf().rotateAxis((float) Math.toRadians(FishLook.swingZ), axis.normalize()));
+            } else {
+                pose.rotate(com.mojang.math.Axis.ZP.rotationDegrees(FishLook.swingZ));
+                pose.rotate(com.mojang.math.Axis.XP.rotationDegrees(FishLook.swingX));
+            }
             pose.translate(-0.5f, -0.72f, -0.5f);
         }
         if (holylois.boombox.BoomboxPulse.capture) { holylois.boombox.BoomboxPulse.capture = false; holylois.boombox.BoomboxPulse.capture(pose); }
