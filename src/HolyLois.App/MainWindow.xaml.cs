@@ -141,7 +141,7 @@ public partial class MainWindow : ThemedWindow
         {
             var card = new StackPanel();
             var head = new TextBlock { FontSize = 14, FontWeight = FontWeights.SemiBold };
-            head.Inlines.Add(new System.Windows.Documents.Run(item.Version) { Foreground = (Brush)FindResource("Gold") });
+            head.Inlines.Add(new System.Windows.Documents.Run(item.Version) { Foreground = (Brush)FindResource("Text") });
             head.Inlines.Add(new System.Windows.Documents.Run("   " + item.Date) { Foreground = (Brush)FindResource("Muted"), FontWeight = FontWeights.Normal, FontSize = 12 });
             card.Children.Add(head);
             card.Children.Add(new TextBlock { Text = item.Summary, FontSize = 13, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 4, 0, 0) });
@@ -192,8 +192,8 @@ public partial class MainWindow : ThemedWindow
             var parts = line.Split('|', 2);
             var row = new Grid { Margin = new Thickness(0, 4, 0, 0) };
             row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto }); row.ColumnDefinitions.Add(new ColumnDefinition());
-            var badge = new Border { Background = (Brush)FindResource("GoldSoft"), CornerRadius = new CornerRadius(4), Padding = new Thickness(6, 1, 6, 1), Margin = new Thickness(0, 0, 8, 0), VerticalAlignment = VerticalAlignment.Top,
-                Child = new TextBlock { Text = parts[0], FontFamily = new FontFamily("Consolas"), FontSize = 12, Foreground = (Brush)FindResource("Gold") } };
+            var badge = new Border { Background = (Brush)FindResource("Control"), BorderBrush = (Brush)FindResource("Line"), BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(4), Padding = new Thickness(6, 1, 6, 1), Margin = new Thickness(0, 0, 8, 0), VerticalAlignment = VerticalAlignment.Top,
+                Child = new TextBlock { Text = parts[0], FontFamily = new FontFamily("Consolas"), FontSize = 12, Foreground = (Brush)FindResource("Text") } };
             var text = new TextBlock { Text = parts.Length > 1 ? parts[1] : "", FontSize = 12, Foreground = (Brush)FindResource("Muted"), TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center };
             Grid.SetColumn(text, 1); row.Children.Add(badge); row.Children.Add(text); card.Children.Add(row);
         }
@@ -212,7 +212,7 @@ public partial class MainWindow : ThemedWindow
     {
         var row = new Grid { Margin = new Thickness(0, 3, 0, 0) };
         row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(16) }); row.ColumnDefinitions.Add(new ColumnDefinition());
-        row.Children.Add(new TextBlock { Text = "•", FontSize = 12, Foreground = (Brush)FindResource("Gold") });
+        row.Children.Add(new TextBlock { Text = "•", FontSize = 12, Foreground = (Brush)FindResource("Muted") });
         var body = new TextBlock { Text = text, FontSize = 12 }; Grid.SetColumn(body, 1); row.Children.Add(body);
         return row;
     }
@@ -269,7 +269,7 @@ public partial class MainWindow : ThemedWindow
                 progressDetail = preparing ? T("Finishing") : feedback.Describe(p.CompletedBytes,p.TotalBytes); ProgressDetails.Text = progressDetail;
             });
             await Task.Run(() => context.InstallAsync(installProgress, cancellation.Token), cancellation.Token);
-            finished = true; StatusText.Text = T("Installed"); Progress.IsIndeterminate = false; Progress.Value = 100; Progress.Foreground = (Brush)FindResource("Gold"); ProgressDetails.Text = T("Ready");
+            finished = true; StatusText.Text = T("Installed"); Progress.IsIndeterminate = false; Progress.Value = 100; WorkPanel.Visibility = Visibility.Collapsed;
         }
         catch (OperationCanceledException) { StatusText.Text = T("Cancelled"); Progress.Foreground = (Brush)FindResource("Muted"); ProgressDetails.Text = T("Cancelled"); }
         catch (Exception ex) { StatusText.Text = Localize.Error(ex); Progress.Foreground = (Brush)FindResource("Danger"); ProgressDetails.Text = T("Error"); }

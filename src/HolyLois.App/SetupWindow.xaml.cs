@@ -63,7 +63,7 @@ public partial class SetupWindow : ThemedWindow
         foreach (var (column, title, text) in new[] { (0, string.Format(Localize.Text("FactSizeTitle"), megabytes), "FactSizeText"), (2, Localize.Text("FactUpdatesTitle"), "FactUpdatesText"), (4, Localize.Text("FactKeepTitle"), "FactKeepText") })
         {
             var fact = new StackPanel();
-            fact.Children.Add(new TextBlock { Text = title, FontSize = 14, FontWeight = FontWeights.SemiBold, Foreground = (Brush)FindResource("Gold") });
+            fact.Children.Add(new TextBlock { Text = title, FontSize = 14, FontWeight = FontWeights.SemiBold, Foreground = (Brush)FindResource("Text") });
             fact.Children.Add(new TextBlock { Text = Localize.Text(text), FontSize = 12, Foreground = (Brush)FindResource("Muted"), TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 3, 0, 0) });
             var card = new Border { Child = fact, Background = (Brush)FindResource("SurfaceRaised"), BorderBrush = (Brush)FindResource("Line"), BorderThickness = new Thickness(1), CornerRadius = (CornerRadius)FindResource("Radius"), Padding = new Thickness(12, 10, 12, 10) };
             Grid.SetColumn(card, column); Facts.Children.Add(card);
@@ -75,8 +75,8 @@ public partial class SetupWindow : ThemedWindow
         {
             var row = new Grid { Margin = new Thickness(0, 8, 0, 0) };
             row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(32) }); row.ColumnDefinitions.Add(new ColumnDefinition());
-            row.Children.Add(new Border { Width = 22, Height = 22, CornerRadius = new CornerRadius(11), Background = (Brush)FindResource("GoldSoft"), HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Top,
-                Child = new TextBlock { Text = (n + 1).ToString(), FontSize = 12, FontWeight = FontWeights.SemiBold, Foreground = (Brush)FindResource("Gold"), HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center } });
+            row.Children.Add(new Border { Width = 22, Height = 22, CornerRadius = new CornerRadius(11), Background = (Brush)FindResource("Control"), HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Top,
+                Child = new TextBlock { Text = (n + 1).ToString(), FontSize = 12, FontWeight = FontWeights.SemiBold, Foreground = (Brush)FindResource("Text"), HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center } });
             var text = new TextBlock { Text = steps[n], FontSize = 13, TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center };
             Grid.SetColumn(text, 1); row.Children.Add(text); NextSteps.Children.Add(row);
         }
