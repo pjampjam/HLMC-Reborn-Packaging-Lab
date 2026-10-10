@@ -8,6 +8,10 @@ using System.Windows.Media;
 
 namespace HolyLois.App;
 
+/// <summary>
+/// One dialog in four groups, most used first: player and launch, help and diagnostics, shortcuts, rules and privacy. Rare
+/// maintenance sits folded under Advanced, with Remove launcher last.
+/// </summary>
 public sealed class SettingsWindow : ThemedWindow
 {
     public SettingsWindow(ClientContext context)
@@ -15,14 +19,17 @@ public sealed class SettingsWindow : ThemedWindow
         Title = "Holy Lois: Reborn - Settings"; Width = 610; Height = 780; ResizeMode = ResizeMode.NoResize;
         WindowStartupLocation = WindowStartupLocation.CenterOwner; Background = (Brush)Application.Current.Resources["SurfaceRaised"]; FontFamily = new FontFamily("Segoe UI");
         var panel = new StackPanel { Margin = new Thickness(28,22,28,24) };
+        var root = panel;
         StackPanel location = new();
-        Text(Localize.Text("Settings"),27,true);
+        Text(Localize.Text("Settings"),27,true,false);
         Text(Localize.Text("SettingsIntro"));
+
+        Group("GroupPlay");
         var named = context.Settings.Launcher != "official";
         if (named)
         {
             Text(Localize.Text("PlayerName"),14,true);
-            var current = new TextBlock { Text = context.PlayerName ?? Localize.Text("NameNotSet"), FontSize = 17, FontWeight = FontWeights.SemiBold, Margin = new Thickness(0,8,0,0) };
+            var current = new TextBlock { Text = context.PlayerName ?? Localize.Text("NameNotSet"), FontSize = 17, FontWeight = FontWeights.SemiBold, Margin = new Thickness(0,6,0,0) };
             panel.Children.Add(current);
             Text(Localize.Text("NameWarningShort"),12);
             Action(Localize.Text("NameChange"), () => { new NameWindow(context).ShowModalResult(this); current.Text = context.PlayerName ?? Localize.Text("NameNotSet"); });
@@ -41,60 +48,71 @@ public sealed class SettingsWindow : ThemedWindow
         Text(Localize.Text("JoinOnStartInfo"),12);
         location.Visibility = context.UsesFastStart ? Visibility.Collapsed : Visibility.Visible;
         panel.Children.Add(location);
-        var outer = panel; panel = location;
+        panel = location;
         Text(Localize.Text("LauncherLocation"),14,true);
         var path = new TextBox { Text = context.DetectLauncher() ?? Localize.Text("NotDetected"), IsReadOnly = true, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0,8,0,10) }; panel.Children.Add(path);
         Action(Localize.Text("ChangeLauncher"), () => {
             var picker = new OpenFileDialog { Title = Localize.Text("ChooseExe"), Filter = "Launcher (*.exe;*.lnk)|*.exe;*.lnk", CheckFileExists = true };
             if (picker.ShowDialog(this) == true) { context.SetLauncher(picker.FileName); path.Text = context.DetectLauncher(); }
         });
-        panel = outer;
-        var visualPacks = context.OptionalVisualPacks.ToList();
-        if (visualPacks.Count > 0)
-        {
-            Text(Localize.Text("VisualOptions"),14,true);
-            Text(Localize.Text("VisualOptionsInfo"),12);
-            foreach (var pack in visualPacks)
-            {
-                var label = pack.Path.Contains("3D-Armor",StringComparison.OrdinalIgnoreCase) ? Localize.Text("VisualArmor") : Path.GetFileNameWithoutExtension(pack.Path);
-                var choice = new CheckBox { Content = label, IsChecked = context.IsVisualPackEnabled(pack), Margin = new Thickness(0,10,0,0) };
-                bool changing = false;
-                void Toggle() {
-                    if (changing) return;
-                    try { context.SetVisualPack(pack, choice.IsChecked == true); }
-                    catch (Exception error) {
-                        changing = true; choice.IsChecked = context.IsVisualPackEnabled(pack); changing = false;
-                        AppDialog.Show(this,Localize.Text("Error"),Localize.Error(error));
-                    }
-                }
-                choice.Checked += (_,_) => Toggle(); choice.Unchecked += (_,_) => Toggle();
-                panel.Children.Add(choice);
-            }
-        }
-        Text(Localize.Text("Reports"),14,true);
+        panel = root;
+
+        Group("GroupHelp");
         Text(Localize.Text("ReportsInfo"),12);
         var reportStatus = new TextBlock { TextWrapping = TextWrapping.Wrap, Foreground = (Brush)Application.Current.Resources["Muted"], Margin = new Thickness(0,8,0,0) };
         if (context.LastStart is { } last)
             reportStatus.Text = string.Format(Localize.Text("LastStart"), last.Started.ToLocalTime().ToString("g"), last.Mode == "fast start" ? Localize.Text("FastStart") : last.Mode)
                 + (last.Error is not null ? "  -  " + Localize.Text("LastStartFailed") : last.ExitCode is int code && code != 0 ? "  -  " + string.Format(Localize.Text("LastStartCrashed"), code) : "");
         var reportRow = new WrapPanel();
-        void ReportButton(string label, Func<string?> run, bool primary = false)
+        void ReportButton(string label, Func<string?> run)
         {
             var button = new Button { Content = label, Margin = new Thickness(0,8,8,0), FontSize = 13, Padding = new Thickness(14,8,14,8) };
-            if (primary) button.Style = (Style)Application.Current.Resources["PrimaryButton"];
             button.Click += (_, _) => { try { reportStatus.Text = run() ?? reportStatus.Text; } catch (Exception ex) { reportStatus.Text = Localize.Error(ex); } };
             reportRow.Children.Add(button);
         }
-        ReportButton(Localize.Text("ReportCopy"), () => ReportActions.Copy(context), true);
+        ReportButton(Localize.Text("ReportCopy"), () => ReportActions.Copy(context));
         ReportButton(Localize.Text("ReportSave"), () => ReportActions.Save(context));
         ReportButton("Discord", () => { ReportActions.OpenDiscord(); return null; });
         panel.Children.Add(reportRow); panel.Children.Add(reportStatus);
-        Text(Localize.Text("AppFiles"),14,true);
-        Action(Localize.Text("OpenAppFolder"), () => Process.Start(new ProcessStartInfo("explorer.exe") { UseShellExecute = true, ArgumentList = { LauncherStartup.InstallRoot } }));
-        Action(Localize.Text("CreateDesktop"), () => LauncherStartup.CreateShortcut(LauncherStartup.InstallRoot,true), !context.IsIsolated);
-        Action(Localize.Text("CreateStart"), () => LauncherStartup.CreateShortcut(LauncherStartup.InstallRoot,false), !context.IsIsolated);
+        Text(Localize.Text("ShaderHint"),12);
+        var graphicsRow = new WrapPanel();
+        var graphicsStatus = new TextBlock { TextWrapping = TextWrapping.Wrap, Foreground = (Brush)Application.Current.Resources["Muted"], Margin = new Thickness(0,8,0,0) };
+        void GraphicsButton(string label, Func<string?> run)
+        {
+            var button = new Button { Content = label, Margin = new Thickness(0,8,8,0), FontSize = 13, Padding = new Thickness(14,8,14,8) };
+            button.Click += (_, _) => { try { graphicsStatus.Text = run() ?? graphicsStatus.Text; } catch (Exception ex) { graphicsStatus.Text = Localize.Error(ex); } };
+            graphicsRow.Children.Add(button);
+        }
+        GraphicsButton(Localize.Text("ShaderOff"), () => { context.DisableShaders(); return Localize.Text("Disabled"); });
+        GraphicsButton(Localize.Text("Folder"), () => { Directory.CreateDirectory(context.Instance); Process.Start(new ProcessStartInfo("explorer.exe") { UseShellExecute = true, ArgumentList = { context.Instance } }); return null; });
+        panel.Children.Add(graphicsRow); panel.Children.Add(graphicsStatus);
+
+        Group("GroupShortcuts");
+        var shortcutRow = new WrapPanel();
+        foreach (var (label, desktop) in new[] { (Localize.Text("CreateDesktop"), true), (Localize.Text("CreateStart"), false) })
+        {
+            var button = new Button { Content = label, Margin = new Thickness(0,8,8,0), FontSize = 13, Padding = new Thickness(14,8,14,8), IsEnabled = !context.IsIsolated };
+            button.Click += (_, _) => { try { LauncherStartup.CreateShortcut(LauncherStartup.InstallRoot, desktop); } catch (Exception ex) { AppDialog.Show(this,Localize.Text("Error"),ex.Message); } };
+            shortcutRow.Children.Add(button);
+        }
+        panel.Children.Add(shortcutRow);
         Text(Localize.Text("SetupShortcutHint"),12);
-        Text(Localize.Text("Maintenance"),14,true);
+
+        Group("GroupRules");
+        var linkRow = new WrapPanel();
+        foreach (var (label, url) in new[] { (Localize.Text("RulesLink"), "https://holylois.com/rules"), (Localize.Text("PrivacyLink"), "https://holylois.com/privacy"), (Localize.Text("Website"), "https://holylois.com") })
+        {
+            var button = new Button { Content = label + "  ↗", Margin = new Thickness(0,8,8,0), FontSize = 13, Padding = new Thickness(14,8,14,8) };
+            button.Click += (_, _) => ClientContext.OpenUrl(url);
+            linkRow.Children.Add(button);
+        }
+        panel.Children.Add(linkRow);
+
+        // Rare maintenance, folded so it never competes with the everyday choices.
+        var advanced = new StackPanel();
+        panel.Children.Add(new Expander { Header = Localize.Text("GroupAdvanced"), Content = advanced, Margin = new Thickness(0,24,0,0), FontSize = 14 });
+        panel = advanced;
+        Action(Localize.Text("OpenAppFolder"), () => Process.Start(new ProcessStartInfo("explorer.exe") { UseShellExecute = true, ArgumentList = { LauncherStartup.InstallRoot } }));
         var cleanupStatus = new TextBlock { TextWrapping = TextWrapping.Wrap, Foreground = (Brush)Application.Current.Resources["Muted"], Margin = new Thickness(0,8,0,0) };
         Action(Localize.Text("CleanDownloads"), () => { _ = CleanDownloads(); }, !context.IsIsolated);
         panel.Children.Add(cleanupStatus);
@@ -116,6 +134,7 @@ public sealed class SettingsWindow : ThemedWindow
             if (File.Exists(receipt)) File.Move(receipt,SafePaths.Resolve(LauncherStartup.InstallRoot,"setup-completed.previous-" + DateTime.UtcNow.Ticks + ".json"));
             AppUpdates.ReleaseLock(); AppUpdates.Start(LauncherStartup.InstalledExe,["--show-setup","--skip-app-update-once"]).Dispose(); Application.Current.Shutdown();
         }, !context.IsIsolated);
+        Text(Localize.Text("KeepPersonalFiles"),12);
         Action(Localize.Text("UninstallApp"), () => {
             // Player names stay for a later reinstall unless the player asks to forget them.
             var forget = new CheckBox { Content = Localize.Text("ForgetNames"), IsChecked = false, Margin = new Thickness(0,0,0,18), Visibility = File.Exists(context.PlayersPath) ? Visibility.Visible : Visibility.Collapsed };
@@ -129,10 +148,16 @@ public sealed class SettingsWindow : ThemedWindow
                 try { await Task.Run(AppMaintenance.RequestRemoval); Application.Current.Shutdown(); }
                 catch (Exception ex) { busy.FinishAndClose(); IsEnabled = true; AppDialog.Show(this,Localize.Text("Error"),ex.Message); }
             }
-        }, !context.IsIsolated && LauncherStartup.IsInstalled);
-        Text(Localize.Text("KeepPersonalFiles"),12);
-        Content = new ScrollViewer { Content = panel, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled };
-        void Text(string text, int size = 13, bool strong = false) => panel.Children.Add(new TextBlock { Text = text, TextWrapping = TextWrapping.Wrap, FontSize = size, FontWeight = strong ? FontWeights.SemiBold : FontWeights.Normal, Foreground = (Brush)Application.Current.Resources[strong ? "Gold" : "Muted"], Margin = new Thickness(0,strong ? 16 : 8,0,0) });
+        }, !context.IsIsolated && LauncherStartup.IsInstalled, danger: true);
+        panel = root;
+        Content = new ScrollViewer { Content = root, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled };
+
+        void Group(string key)
+        {
+            panel.Children.Add(new Border { BorderBrush = (Brush)Application.Current.Resources["Line"], BorderThickness = new Thickness(0,1,0,0), Margin = new Thickness(0,22,0,0) });
+            panel.Children.Add(new TextBlock { Text = Localize.Text(key).ToUpperInvariant(), FontSize = 12, FontWeight = FontWeights.SemiBold, Foreground = (Brush)Application.Current.Resources["Muted"], Margin = new Thickness(0,14,0,0) });
+        }
+        void Text(string text, int size = 13, bool strong = false, bool gold = true) => panel.Children.Add(new TextBlock { Text = text, TextWrapping = TextWrapping.Wrap, FontSize = size, FontWeight = strong ? FontWeights.SemiBold : FontWeights.Normal, Foreground = (Brush)Application.Current.Resources[strong ? gold ? "Gold" : "Text" : "Muted"], Margin = new Thickness(0,strong ? 12 : 6,0,0) });
         void Choice(string title, string info, bool fast, bool selected)
         {
             var text = new StackPanel();
@@ -143,10 +168,10 @@ public sealed class SettingsWindow : ThemedWindow
             panel.Children.Add(radio);
         }
         void Save(System.Action change) { try { change(); } catch (Exception ex) { AppDialog.Show(this,Localize.Text("Error"),ex.Message); } }
-        void Action(string text, System.Action action, bool enabled = true)
+        void Action(string text, System.Action action, bool enabled = true, bool danger = false)
         {
             var button = new Button { Content = text, HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(0,8,0,0), IsEnabled = enabled, FontSize = 13, Padding = new Thickness(14,8,14,8) };
-            if (text == Localize.Text("UninstallApp")) button.Style = (Style)Application.Current.Resources["CancelButton"];
+            if (danger) button.Style = (Style)Application.Current.Resources["CancelButton"];
             button.Click += (_, _) => { try { action(); } catch (Exception ex) { AppDialog.Show(this,Localize.Text("Error"),ex.Message); } }; panel.Children.Add(button);
         }
     }

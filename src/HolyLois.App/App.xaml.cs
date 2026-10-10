@@ -73,19 +73,22 @@ public partial class App : Application
                 if(data is null || !context.IsIsolated)throw new ArgumentException("Setup verification requires an isolated folder.");
                 context.SelectLauncher("name");
                 foreach(var language in new[]{"en","ru","lv"})foreach(int height in new[]{780,600}){
-                    context.SetLanguage(language);var setup=new SetupWindow(context,data){Height=height};setup.EnsureChrome();setup.Show();setup.UpdateLayout();
+                    context.SetLanguage(language);var setup=new SetupWindow(context,data){Height=height};setup.EnsureChrome();setup.Show();setup.GoTo(1);setup.UpdateLayout();
                     var box=(System.Windows.Controls.TextBox)setup.FindName("SetupNameBox");box.Text="Notch";box.Focus();
                     var scroll=(System.Windows.Controls.ScrollViewer)setup.FindName("SetupScroll");
                     var wheel=new System.Windows.Input.MouseWheelEventArgs(System.Windows.Input.Mouse.PrimaryDevice,Environment.TickCount,-1200){RoutedEvent=System.Windows.Input.Mouse.PreviewMouseWheelEvent};box.RaiseEvent(wheel);setup.UpdateLayout();
                     if(!wheel.Handled || scroll.ScrollableHeight>0 && scroll.VerticalOffset<=0)throw new IOException("Name entry blocked setup scrolling.");
-                    scroll.ScrollToEnd();setup.UpdateLayout();
+                    Render(setup,data,$"setup-mode-{language}-{height}.png",780,height);
+                    setup.GoTo(2);setup.UpdateLayout();scroll.ScrollToEnd();setup.UpdateLayout();
                     foreach(string name in new[]{"DesktopChoice","StartChoice"}){
                         var control=(FrameworkElement)setup.FindName(name);var point=control.TranslatePoint(new Point(0,0),scroll);
                         if(point.Y<0 || point.Y+control.ActualHeight>scroll.ActualHeight)throw new IOException("Shortcut choice is outside the scroll viewport.");
                     }
-                    Render(setup,data,$"setup-scroll-{language}-{height}.png",780,height);setup.Close();
+                    var next=(FrameworkElement)setup.FindName("ContinueButton");var nextPoint=next.TranslatePoint(new Point(0,0),setup);
+                    if(nextPoint.Y+next.ActualHeight>height)throw new IOException("Finish button is outside the window.");
+                    Render(setup,data,$"setup-finish-{language}-{height}.png",780,height);setup.Close();
                 }
-                File.WriteAllText(Path.Combine(data,"setup-scroll-result.txt"),"EN/RU/LV setup: focused name wheel scroll reaches both shortcut choices at 780px and 600px height. Continue remains outside scrolling content.");Shutdown(0);return;
+                File.WriteAllText(Path.Combine(data,"setup-scroll-result.txt"),"EN/RU/LV setup steps at 780px and 600px: name wheel scroll works on the play step, both shortcut choices and the Finish button stay reachable on the last step.");Shutdown(0);return;
             }
             if (args.Contains("--verify-ui-polish")) {
                 if (data is null || !context.IsIsolated) throw new ArgumentException("UI polish verification requires an isolated folder.");
@@ -98,11 +101,13 @@ public partial class App : Application
                         foreach (var nested in Pictures(child)) yield return nested;
                     }
                 }
-                var pictures = Pictures(content).ToArray();
+                setup.GoTo(1); content.Measure(new Size(780,780)); content.Arrange(new Rect(0,0,780,780)); content.UpdateLayout();
+                var pictures = Pictures(content).Where(p => p.IsVisible).ToArray();
                 var nameFrame = (System.Windows.Controls.Border)setup.FindName("NamePicture");
-                if (pictures.Length != 1 || pictures.Any(p => p.Height != 155 || p.CornerRadius != new CornerRadius(6) || ((ImageBrush)p.Background).Stretch != Stretch.UniformToFill)
-                    || nameFrame.Height != 155 || nameFrame.CornerRadius != new CornerRadius(6)
-                    || Math.Abs(pictures[0].ActualWidth-nameFrame.ActualWidth) > 1) throw new IOException("Setup picture frames no longer match or preserve crop proportions. Picture count="+pictures.Length+", name width="+nameFrame.ActualWidth);
+                var accountFrame = (System.Windows.Controls.Border)setup.FindName("OfficialPicture");
+                if (pictures.Length != 2 || pictures.Any(p => p.Height != 155 || p.CornerRadius != new CornerRadius(6) || ((ImageBrush)p.Background).Stretch != Stretch.UniformToFill)
+                    || !pictures.Contains(nameFrame) || !pictures.Contains(accountFrame)
+                    || Math.Abs(accountFrame.ActualWidth-nameFrame.ActualWidth) > 1) throw new IOException("Setup picture frames no longer match or preserve crop proportions. Picture count="+pictures.Length+", name width="+nameFrame.ActualWidth);
                 setup.Close();
                 var marker = new System.Windows.Controls.Border { Width=40,Height=40,Background=Brushes.White };
                 var motionWindow = new ThemedWindow { Content=marker,Width=120,Height=120 }; motionWindow.Show();
@@ -111,7 +116,7 @@ public partial class App : Application
                 UiMotion.FadeIn(marker,0,false);
                 if (marker.HasAnimatedProperties || marker.Opacity != 1) throw new IOException("Reduced motion did not stop the fade immediately.");
                 motionWindow.Close();
-                File.WriteAllText(Path.Combine(data,"ui-polish-result.txt"),"Matching rounded 155px picture frames preserve proportions. Reveal feedback animates and reduced motion disables it immediately."); Shutdown(0); return;
+                File.WriteAllText(Path.Combine(data,"ui-polish-result.txt"),"Both play-mode pictures use matching rounded 155px frames that preserve proportions. Reveal feedback animates and reduced motion disables it immediately."); Shutdown(0); return;
             }
             if (args.Contains("--verify-modal-shutdown")) {
                 if (data is null || !context.IsIsolated) throw new ArgumentException("Modal shutdown verification requires an isolated folder.");
@@ -208,7 +213,7 @@ public partial class App : Application
             }
             if (args.Contains("--render-setup-preview")) {
                 if (data is null) throw new ArgumentException("Rendering requires an isolated folder.");
-                foreach (var language in new[] { "en", "ru", "lv" }) { context.SetLanguage(language); var setup = new SetupWindow(context, data); Render(setup,data,"setup-"+language+".png",780,780); }
+                foreach (var language in new[] { "en", "ru", "lv" }) for (var step = 0; step < 3; step++) { context.SetLanguage(language); if (step == 1) context.SelectLauncher("name"); var setup = new SetupWindow(context, data); setup.GoTo(step); Render(setup,data,$"setup-{language}-{step + 1}.png",780,780); }
                 Shutdown(0); return;
             }
             if (args.Contains("--verify-recovery")) {
@@ -242,6 +247,7 @@ public partial class App : Application
             }
             if (args.Contains("--render-ready-preview")) {
                 if (data is null || !context.CanPlay) throw new ArgumentException("Ready rendering requires an installed isolated fixture.");
+                if (context.Settings.Launcher != "official" && context.PlayerName is null) context.UsePlayerName("pjamtest");
                 await LauncherDiscovery.WarmAsync();
                 var window = new MainWindow(context); Render(window,data,"launcher-ready.png",1060,748);
                 Shutdown(0); return;

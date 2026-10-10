@@ -493,6 +493,15 @@ tests.Add(("Old Quick Play settings fall back to Standard and a leftover note is
     return Task.CompletedTask;
 }));
 
+tests.Add(("Skin heads come only from plain Mojang texture links in the stats feed", () => {
+    const string texture = "https://textures.minecraft.net/texture/0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+    var feed = "{\"heads\":{\"Steve\":\"" + texture + "\",\"Evil\":\"https://example.com/texture/cb72a30bf53a558e707fd166d5b79cf4\",\"Odd\":\"http://textures.minecraft.net/texture/cb72a30bf53a558e707fd166d5b79cf4\",\"Num\":5}}";
+    Check(SkinHeads.Find(feed, "steve")?.ToString() == texture, "A listed player's skin was not found case-insensitively.");
+    Check(SkinHeads.Find(feed, "Evil") is null && SkinHeads.Find(feed, "Odd") is null && SkinHeads.Find(feed, "Num") is null, "A non-Mojang or non-https texture link was accepted.");
+    Check(SkinHeads.Find(feed, "Nobody") is null && SkinHeads.Find("not json", "Steve") is null && SkinHeads.Find("{\"pack\":{}}", "Steve") is null, "A missing name or broken feed did not give no head.");
+    return Task.CompletedTask;
+}));
+
 tests.AddRange(SkPathTests.Create(root));
 tests.AddRange(FastStartTests.Create(root));
 foreach (var test in tests)

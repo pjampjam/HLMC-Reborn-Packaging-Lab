@@ -328,25 +328,5 @@ public sealed class ClientContext
         if (IsGameOrLauncherRunning(false)) throw new IOException("Close Minecraft before changing shader settings.");
         GraphicsRecovery.DisableShaders(Instance, SafePaths.Resolve(Root, "graphics-backup"));
     }
-    public IEnumerable<PackFile> OptionalVisualPacks => Manifest.Files.Where(f => f.AutoEnable == false && f.Path.StartsWith("resourcepacks/", StringComparison.Ordinal));
-    public bool IsVisualPackEnabled(PackFile pack)
-    {
-        var path = SafePaths.Resolve(Instance, "options.txt");
-        if (!File.Exists(path) || new FileInfo(path).Length > 1024 * 1024) return false;
-        try {
-            var line = File.ReadLines(path).SingleOrDefault(line => line.StartsWith("resourcePacks:", StringComparison.Ordinal));
-            return line is not null && (JsonSerializer.Deserialize<string[]>(line["resourcePacks:".Length..]) ?? []).Contains("file/" + Path.GetFileName(pack.Path), StringComparer.Ordinal);
-        } catch (Exception error) when (error is IOException or JsonException or InvalidOperationException) { return false; }
-    }
-    public void SetVisualPack(PackFile pack, bool enabled)
-    {
-        if (!OptionalVisualPacks.Contains(pack)) throw new IOException("This visual pack is not part of the current release.");
-        if (IsGameOrLauncherRunning(false)) throw new IOException(Localize.Text("VisualCloseGame"));
-        var options = SafePaths.Resolve(Instance, "options.txt");
-        if (!AtomicFiles.Matches(SafePaths.Resolve(Instance, pack.Path), pack) || !File.Exists(options)) throw new IOException(Localize.Text("VisualInstallFirst"));
-        var bytes = File.ReadAllBytes(options);
-        var updated = ResourcePackOptions.SetPack(bytes, Path.GetFileName(pack.Path), enabled);
-        if (!bytes.SequenceEqual(updated)) AtomicFiles.Write(options, updated);
-    }
     public static void OpenUrl(string url) => Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
 }

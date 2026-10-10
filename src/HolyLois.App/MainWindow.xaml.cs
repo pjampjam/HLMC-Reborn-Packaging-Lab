@@ -28,7 +28,7 @@ public partial class MainWindow : ThemedWindow
         progressClock.Tick += (_,_) => ProgressDetails.Text = progressDetail + "  -  " + T("WorkingTime") + " " + operationTime.Elapsed.ToString(@"m\:ss"); Localize.Apply(this, context.Settings.Language);
         LanguageChoice.SelectedIndex = context.Settings.Language == "en" ? 1 : context.Settings.Language == "lv" ? 2 : 0;
         Closing += OnClosing; 
-        UpdateStatus.Text = T("AutoCheck"); StatusText.Text = AppUpdates.Notice ?? T("StartHint");
+        UpdateStatus.Text = T("AutoCheck"); StatusText.Text = AppUpdates.Notice ?? "";
         // SKlauncher players move to fast start with the name they already play as; one note says how to go back.
         try
         {
@@ -61,53 +61,86 @@ public partial class MainWindow : ThemedWindow
         }
         finally { pinging = false; }
     }
+    /// <summary>What the left-rail button does right now: one action, chosen from the real state.</summary>
+    private enum Step { Install, Update, Repair, Play, Blocked }
+    private Step CurrentStep()
+    {
+        var receipt = Directory.Exists(context.Instance) ? context.Receipt : null;
+        if (receipt is null) return Step.Install;
+        if (receipt.Version != context.Manifest.Version) return Step.Update;
+        if (!context.CanPlay) return Step.Repair;
+        return PlayReady() ? Step.Play : Step.Blocked;
+    }
     private void Refresh()
     {
         // A settings action can shut down the app before its modal dialog returns.
         if (IsClosed || Dispatcher.HasShutdownStarted || Dispatcher.HasShutdownFinished) return;
         var sk = context.Settings.Launcher == "sk";
-        AppVersion.Text = T("App") + " " + AppUpdates.RunningVersion.ToString(3) + "";
-        WebsiteButton.Visibility = WebsiteUrl.Length > 0 ? Visibility.Visible : Visibility.Collapsed; LinkGrid.Columns = WebsiteUrl.Length > 0 ? 2 : 1; DiscordButton.Margin = new Thickness(0, 0, WebsiteUrl.Length > 0 ? 4 : 0, 0);
-        ReleaseLabel.Text = "Minecraft 26.3 / Fabric 0.19.5 / " + T("Version") + " " + context.Manifest.Version;
-        SizeLabel.Text = $"{context.Manifest.Files.Count(f => f.Path.StartsWith("mods/"))} {T("Mods")}  -  {context.Manifest.Files.Sum(f => f.Size) / 1048576:N0} MB";
-        // Two ways to play: a bought account (its own launcher) or a player name (fast start; SKlauncher folders count as names).
         var named = context.Settings.Launcher != "official"; var fast = context.UsesFastStart;
+        var player = context.PlayerName;
+        AppVersion.Text = T("App") + " " + AppUpdates.RunningVersion.ToString(3);
+        WebsiteButton.Visibility = WebsiteUrl.Length > 0 ? Visibility.Visible : Visibility.Collapsed; LinkGrid.Columns = WebsiteUrl.Length > 0 ? 2 : 1; DiscordButton.Margin = new Thickness(0, 0, WebsiteUrl.Length > 0 ? 4 : 0, 0);
+        var megabytes = context.Manifest.Files.Sum(f => f.Size) / 1048576;
+        HeaderTitle.Text = named && player is not null ? string.Format(T("WelcomeBack"), player) : T("PlayTitle");
+        ReleaseLabel.Text = $"Minecraft 26.3  -  {T("Version")} {context.Manifest.Version}  -  {context.Manifest.Files.Count(f => f.Path.StartsWith("mods/"))} {T("Mods")}  -  {megabytes:N0} MB";
+
+        // Left rail: gold for a step that still has to happen, green only when Play will work.
+        var step = CurrentStep(); var busy = cancellation is not null;
+        var actionable = step != Step.Blocked && !busy && !starting;
+        PrimaryAction.IsEnabled = actionable;
+        PrimaryAction.Style = (Style)FindResource(step == Step.Play ? "PlayButtonStyle" : step == Step.Blocked ? (object)typeof(Button) : "PrimaryButton");
+        var onAction = (Brush)FindResource(step == Step.Play ? "OnGreen" : step == Step.Blocked ? "Muted" : "OnGold");
+        PrimaryLabel.Foreground = PrimarySub.Foreground = onAction;
+        PrimaryLabel.Text = T(step switch { Step.Install => "BigInstall", Step.Update => "BigUpdate", Step.Repair => "BigRepair", _ => "Play" });
+        PrimarySub.Text = step is Step.Install or Step.Update ? $"{T("Version")} {context.Manifest.Version}  -  {megabytes:N0} MB"
+            : step == Step.Repair ? T("RepairSub") : fast ? T("FastStart") : sk ? "SKlauncher" : "Minecraft Launcher";
+        PrimaryHint.Text = busy ? T("WorkingHint") : T(step switch
+        {
+            Step.Install => "PlayInstallHint", Step.Update => "UpdateHint", Step.Repair => "RepairHint",
+            Step.Play => fast ? "PlayFastHint" : "PlayReadyHint",
+            _ => fast ? "PlayNameHint" : "PlayMissingLauncher",
+        });
+
+        // Readiness card: a title and one plain sentence per state, so "ready" never sits next to "install first".
+        PackStatus.Text = T(step switch { Step.Install => "NoPack", Step.Update => "NewPackTitle", Step.Repair => "NeedsRepair", Step.Play => "Ready", _ => "AlmostReady" });
+        StateHint.Text = step switch
+        {
+            Step.Install => string.Format(T("StateInstall"), megabytes),
+            Step.Update => T("UpdateReadyHint"),
+            Step.Repair => T("StateRepair"),
+            Step.Play => T("StateReady"),
+            _ => T(fast ? "PlayNameHint" : "PlayMissingLauncher"),
+        };
+        PackStatus.Foreground = (Brush)FindResource(step is Step.Play or Step.Blocked ? "Text" : "Gold");
+        StatusCard.BorderBrush = (Brush)FindResource(step is Step.Install or Step.Update or Step.Repair ? "Gold" : "Line");
+        VerifyButton.Visibility = step is Step.Play or Step.Blocked ? Visibility.Visible : Visibility.Collapsed;
+        StatusText.Visibility = string.IsNullOrEmpty(StatusText.Text) ? Visibility.Collapsed : Visibility.Visible;
+
+        // Account card: who plays and how; the two ways to play open only from "Change how you play" (or when nothing fits yet).
+        AccountEyebrow.Text = T(named ? "PlayingAs" : "YourAccount");
+        AccountTitle.Text = named ? player ?? T("NameNotSet") : T("AccountCard");
+        AccountMode.Text = named ? T("NameCard") + "  -  " + (fast ? T("FastStart") : "SKlauncher") : T("AccountModeHint");
+        ChangeNameButton.Visibility = named && player is not null ? Visibility.Visible : Visibility.Collapsed;
+        NameEntry.Visibility = named && player is null ? Visibility.Visible : Visibility.Collapsed;
+        if (player is null && NameBox.Text.Length == 0) NameBox.Text = context.SuggestedPlayerName() ?? "";
+        if (nameNote is null) { NameNote.Text = sk ? T("SkFolderNote") : ""; NameNote.Visibility = sk ? Visibility.Visible : Visibility.Collapsed; NameNote.Foreground = (Brush)FindResource("Muted"); }
+        ModeChooser.Visibility = choosing ? Visibility.Visible : Visibility.Collapsed;
+        ModeButton.Content = T(choosing ? "ModeDone" : "ModeChange");
         OfficialSelected.Visibility = named ? Visibility.Hidden : Visibility.Visible; SkSelected.Visibility = named ? Visibility.Visible : Visibility.Hidden;
         var neutral = (Brush)FindResource("Line"); var accent = (Brush)FindResource("Gold");
         OfficialCard.BorderBrush = named ? neutral : accent; SkCard.BorderBrush = named ? accent : neutral;
-        // The chosen way gets a warm tint as well as the gold outline and "Selected" label.
         var tint = (Brush)FindResource("GoldSoft"); var plain = (Brush)FindResource("Control");
         OfficialCard.Background = named ? plain : tint; SkCard.Background = named ? tint : plain;
         LinkSkButton.Visibility = Visibility.Collapsed; RebuildSkButton.Visibility = Visibility.Collapsed;
-        var player = context.PlayerName;
-        NamePanel.Visibility = named ? Visibility.Visible : Visibility.Collapsed;
-        NameShown.Visibility = player is null ? Visibility.Collapsed : Visibility.Visible; NameEntry.Visibility = player is null ? Visibility.Visible : Visibility.Collapsed;
-        NameText.Text = player ?? "";
-        if (player is null && NameBox.Text.Length == 0) NameBox.Text = context.SuggestedPlayerName() ?? "";
-        if (nameNote is null) { NameNote.Text = sk ? T("SkFolderNote") : ""; NameNote.Visibility = sk ? Visibility.Visible : Visibility.Collapsed; NameNote.Foreground = (Brush)FindResource("Muted"); }
         LauncherHint.Text = fast ? T(context.Settings.JoinServer ? "FastHintJoin" : "FastHintTitle")
-            : T(sk ? context.CanPlay ? "SkLinked" : context.RecoveredDeletedInstance ? "SkMissing" : "SkFirst" : "OfficialHint");
+            : T(sk ? context.CanPlay ? "SkLinked" : context.RecoveredDeletedInstance ? "SkMissing" : "SkFirst" : context.Settings.JoinServer ? "OfficialHintJoin" : "OfficialHint");
         var detected = fast ? null : context.DetectLauncher();
-        DetectionPanel.Visibility = fast ? Visibility.Collapsed : Visibility.Visible;
+        LauncherPanel.Visibility = fast ? Visibility.Collapsed : Visibility.Visible;
         LauncherActions.Visibility = !fast && detected is null ? Visibility.Visible : Visibility.Collapsed;
         DetectionPanel.BorderBrush = detected is null ? (Brush)FindResource("Line") : (Brush)FindResource("Success");
         DetectionHint.Text = !LauncherDiscovery.Ready ? T("Detecting") : detected is null ? T("NotDetected") : !sk && detected.StartsWith("shell:") ? T("DetectedStore") : T("Detected") + ": " + (sk ? "SKlauncher" : "Minecraft Launcher");
-        var receipt = Directory.Exists(context.Instance) ? context.Receipt : null;
-        var available = receipt is not null && receipt.Version != context.Manifest.Version;
-        PackStatus.Text = context.CanPlay ? T("Ready") : receipt is null ? T("NoPack") : T(available ? "NewPack" : "NeedsRepair");
-        InstallLabel.Text = receipt is null ? T("Install") : available ? T("Update") : T("Verify");
-        var packReady = context.CanPlay;
-        var ready = PlayReady();
-        PlayButton.IsEnabled = ready && cancellation is null && !starting;
-        // Gold marks the next required step; green appears only when Play will work.
-        InstallButton.Style = (Style)FindResource(packReady ? typeof(Button) : "PrimaryButton");
-        InstallLabel.Foreground = (Brush)FindResource(packReady ? "Text" : "OnGold");
-        PlayButton.Style = ready ? (Style)FindResource("PlayButtonStyle") : (Style)FindResource(typeof(Button));
-        PlayLabel.Foreground = (Brush)FindResource(ready ? "OnGreen" : "Text");
-        PlayLabel.Text = T("Play"); PlayLauncherLabel.Text = fast ? T("FastStart") : sk ? "SKlauncher" : "Minecraft Launcher";
-        PlayHint.Text = T(ready ? fast ? "PlayFastHint" : "PlayReadyHint" : !context.CanPlay ? "PlayInstallHint" : fast ? "PlayNameHint" : "PlayMissingLauncher");
-        PlayButton.Foreground = PlayLabel.Foreground; PlayLauncherLabel.Foreground = PlayLabel.Foreground; PlayButton.FontWeight = FontWeights.SemiBold;
-        RefreshNews(available);
+        RefreshHead(named ? player : null);
+        RefreshNews(step == Step.Update);
         // One card per release: gold version, summary, then one bullet per change so long notes stay readable.
         HistoryPanel.Children.Clear();
         foreach (var item in context.Manifest.History ?? [])
@@ -117,7 +150,7 @@ public partial class MainWindow : ThemedWindow
             head.Inlines.Add(new System.Windows.Documents.Run(item.Version) { Foreground = (Brush)FindResource("Gold") });
             head.Inlines.Add(new System.Windows.Documents.Run("   " + item.Date) { Foreground = (Brush)FindResource("Muted"), FontWeight = FontWeights.Normal, FontSize = 12 });
             card.Children.Add(head);
-            card.Children.Add(new TextBlock { Text = item.Summary, FontSize = 13, Margin = new Thickness(0, 4, 0, 0) });
+            card.Children.Add(new TextBlock { Text = item.Summary, FontSize = 13, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 4, 0, 0) });
             foreach (var (name, lines) in new[] { ("Added", item.Added), ("Updated", item.Updated), ("Removed", item.Removed) })
             {
                 if (lines.Length == 0) continue;
@@ -130,23 +163,39 @@ public partial class MainWindow : ThemedWindow
         if (HistoryPanel.Children.Count == 0) HistoryPanel.Children.Add(new TextBlock { Text = T("NoHistory") });
     }
     private bool PlayReady() => context.CanPlay && (context.UsesFastStart ? context.PlayerName is not null : context.DetectLauncher() is not null);
-    // The newest release at the top of the page; it turns gold with its own Update button while an update waits.
+    private bool choosing;
+    private string? headFor;
+    /// <summary>The player's selected skin head from the public stats feed; the Holy Lois mark until it loads, offline or for unknown names.</summary>
+    private async void RefreshHead(string? player)
+    {
+        if (player == headFor) return;
+        headFor = player; HeadImage.Source = null; HeadFallback.Visibility = Visibility.Visible;
+        if (player is null || context.IsIsolated) return;
+        var head = await LauncherArt.HeadAsync(player, CancellationToken.None);
+        if (IsClosed || headFor != player || head is null) return;
+        HeadImage.Source = head; HeadFallback.Visibility = Visibility.Collapsed;
+    }
+    // The newest release near the top: summary and three bullets; gold while that update still waits to be installed.
     private void RefreshNews(bool available)
     {
         var latest = context.Manifest.History?.FirstOrDefault();
         NewsCard.Visibility = latest is null ? Visibility.Collapsed : Visibility.Visible;
         if (latest is null) return;
-        NewsEyebrow.Text = available ? latest.Date : T("LatestNews") + "  -  " + latest.Version + "  -  " + latest.Date;
-        NewsTitle.Text = available ? string.Format(T("UpdateReady"), context.Manifest.Version) : latest.Summary;
+        NewsEyebrow.Text = (available ? string.Format(T("UpdateReady"), context.Manifest.Version) : T("LatestNews") + "  -  " + latest.Version) + "  -  " + latest.Date;
+        NewsTitle.Text = latest.Summary;
         NewsCard.BorderBrush = (Brush)FindResource(available ? "Gold" : "Line");
         NewsCard.Background = (Brush)FindResource(available ? "GoldSoft" : "SurfaceRaised");
-        NewsUpdateButton.Visibility = available ? Visibility.Visible : Visibility.Collapsed;
-        NewsUpdateButton.IsEnabled = cancellation is null;
         NewsHighlights.Children.Clear();
-        if (available) NewsHighlights.Children.Add(new TextBlock { Text = latest.Summary, FontSize = 13, Margin = new Thickness(0, 0, 0, 2) });
         foreach (var line in latest.Added.Concat(latest.Updated).Take(3)) NewsHighlights.Children.Add(Bullet(line));
-        if (available) NewsHighlights.Children.Add(new TextBlock { Text = T("UpdateReadyHint"), FontSize = 12, Foreground = (Brush)FindResource("Muted"), Margin = new Thickness(0, 9, 0, 0) });
     }
+    private void AllChanges_Click(object sender, RoutedEventArgs e) { HistoryExpander.IsExpanded = true; HistoryExpander.BringIntoView(); }
+    private void Mode_Click(object sender, RoutedEventArgs e) { choosing = !choosing; Refresh(); }
+    private async void Primary_Click(object sender, RoutedEventArgs e)
+    {
+        if (CurrentStep() == Step.Play) await PlayAsync();
+        else await RunInstallAsync();
+    }
+    private async void Verify_Click(object sender, RoutedEventArgs e) => await RunInstallAsync();
     private Grid Bullet(string text)
     {
         var row = new Grid { Margin = new Thickness(0, 3, 0, 0) };
@@ -159,11 +208,11 @@ public partial class MainWindow : ThemedWindow
     {
         if (context is null || LanguageChoice.SelectedItem is not ComboBoxItem item) return;
         var language = (string)item.Tag; context.SetLanguage(language); Localize.Apply(this, language);
-        if (HistoryPanel is not null) { Refresh(); UpdateStatus.Text = T("AutoCheck"); StatusText.Text = context.CanPlay ? T("Installed") : T("NoPack"); }
+        if (HistoryPanel is not null) { Refresh(); UpdateStatus.Text = T("AutoCheck"); StatusText.Text = ""; }
     }
-    private void Official_Click(object sender, RoutedEventArgs e) { context.SelectLauncher("official"); Refresh(); }
+    private void Official_Click(object sender, RoutedEventArgs e) { context.SelectLauncher("official"); choosing = false; Refresh(); }
     // An existing SKlauncher folder stays in use; everyone else gets the app's own game folder.
-    private void Sk_Click(object sender, RoutedEventArgs e) { if (context.Settings.Launcher != "sk") context.SelectLauncher("name"); Refresh(); }
+    private void Sk_Click(object sender, RoutedEventArgs e) { if (context.Settings.Launcher != "sk") context.SelectLauncher("name"); choosing = false; Refresh(); if (context.PlayerName is null) NameBox.Focus(); }
     private async void CheckUpdates_Click(object sender, RoutedEventArgs e) { await LauncherDiscovery.WarmAsync(); await CheckUpdates(); }
     private async Task CheckUpdates()
     {
@@ -178,7 +227,6 @@ public partial class MainWindow : ThemedWindow
         catch { UpdateStatus.Text = T("BadCheck"); }
         finally { checking = false; CheckUpdatesButton.IsEnabled = cancellation is null; }
     }
-    private async void Install_Click(object sender, RoutedEventArgs e) => await RunInstallAsync();
     public Task VerifyInstallAsync() => RunInstallAsync(false);
     private async Task RunInstallAsync(bool checkOnline = true)
     {
@@ -215,9 +263,19 @@ public partial class MainWindow : ThemedWindow
         catch (Exception ex) { StatusText.Text = Localize.Error(ex); Progress.Foreground = (Brush)FindResource("Danger"); ProgressDetails.Text = T("Error"); }
         finally { cancellation.Dispose(); cancellation = null; SetBusy(false); Refresh(); }
     }
-    private void SetBusy(bool busy) { Progress.IsIndeterminate = busy; if (busy) { operationTime.Restart(); progressClock.Start(); progressDetail = T("Checking"); Progress.Value = 0; Progress.Foreground = (Brush)FindResource("ActionGreen"); ProgressDetails.Visibility = Visibility.Visible; ProgressDetails.Text = T("Checking"); } if (!busy) { progressClock.Stop(); operationTime.Stop(); } SettingsButton.IsEnabled = !busy; LauncherActions.IsEnabled = !busy; LinkSkButton.IsEnabled = RebuildSkButton.IsEnabled = InstallButton.IsEnabled = NewsUpdateButton.IsEnabled = OfficialCard.IsEnabled = SkCard.IsEnabled = LanguageChoice.IsEnabled = !busy; CheckUpdatesButton.IsEnabled = !busy && !checking; PlayButton.IsEnabled = !busy && !starting && PlayReady(); NameSaveButton.IsEnabled = !busy; CancelButton.Visibility = busy ? Visibility.Visible : Visibility.Collapsed; }
+    private void SetBusy(bool busy)
+    {
+        Progress.IsIndeterminate = busy;
+        if (busy) { operationTime.Restart(); progressClock.Start(); progressDetail = T("Checking"); Progress.Value = 0; Progress.Foreground = (Brush)FindResource("ActionGreen"); WorkPanel.Visibility = Visibility.Visible; ProgressDetails.Text = T("Checking"); }
+        else { progressClock.Stop(); operationTime.Stop(); }
+        SettingsButton.IsEnabled = !busy; LauncherActions.IsEnabled = !busy;
+        LinkSkButton.IsEnabled = RebuildSkButton.IsEnabled = VerifyButton.IsEnabled = OfficialCard.IsEnabled = SkCard.IsEnabled = ModeButton.IsEnabled = ChangeNameButton.IsEnabled = LanguageChoice.IsEnabled = !busy;
+        CheckUpdatesButton.IsEnabled = !busy && !checking; PrimaryAction.IsEnabled = !busy && !starting && CurrentStep() != Step.Blocked; NameSaveButton.IsEnabled = !busy;
+        CancelButton.Visibility = busy ? Visibility.Visible : Visibility.Collapsed;
+        StatusText.Visibility = Visibility.Visible;
+    }
     private void Cancel_Click(object sender, RoutedEventArgs e) => cancellation?.Cancel();
-    private async void Play_Click(object sender, RoutedEventArgs e)
+    private async Task PlayAsync()
     {
         if (context.UsesFastStart) { await FastStartAsync(); return; }
         try
