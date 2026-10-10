@@ -8,7 +8,10 @@ public sealed record PackFile(string Path, string Url, long Size, string Sha256,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)] bool? AutoEnable = null);
 public sealed record PackManifest(int Schema, string Version, string Minecraft, string Fabric,
     int Java, string Server, PackFile[] Files, PackFile[] LoaderFiles, PackFile? Defaults = null, ReleaseNote[]? History = null, bool ApplyDefaultsOnUpdate = false);
-public sealed record ReleaseNote(string Version, string Date, string Summary, string[] Added, string[] Removed, string[] Updated);
+/// <summary>One release in the pack history: Added (new), Updated (shown as Changed), Fixed (launcher 1.4.2+, optional so older
+/// launchers still read manifests without it) and Removed.</summary>
+public sealed record ReleaseNote(string Version, string Date, string Summary, string[] Added, string[] Removed, string[] Updated,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string[]? Fixed = null);
 public sealed record InstalledReceipt(string Version, Dictionary<string, string> ManagedFiles);
 public sealed record InstallProgress(string Message, long CompletedBytes, long TotalBytes, int CompletedFiles, int TotalFiles);
 

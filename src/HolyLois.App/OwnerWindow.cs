@@ -72,7 +72,7 @@ public sealed class OwnerWindow : Window
     private async Task Prepare()
     {
         if(tested.IsChecked!=true){log.Text="Test the profile first, close Minecraft, then tick the test box.";return;}
-        if(Process.GetProcessesByName("javaw").Length>0 || Process.GetProcessesByName("java").Length>0){log.Text="Close Minecraft before preparing an update.";return;}
+        if(ClientContext.IsGameOrLauncherRunning(false)){log.Text="Close Minecraft before preparing an update.";return;}
         prepare.IsEnabled=publish.IsEnabled=false;
         try
         {

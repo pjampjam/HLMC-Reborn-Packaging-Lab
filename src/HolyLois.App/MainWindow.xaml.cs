@@ -145,7 +145,7 @@ public partial class MainWindow : ThemedWindow
             head.Inlines.Add(new System.Windows.Documents.Run("   " + item.Date) { Foreground = (Brush)FindResource("Muted"), FontWeight = FontWeights.Normal, FontSize = 12 });
             card.Children.Add(head);
             card.Children.Add(new TextBlock { Text = item.Summary, FontSize = 13, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 4, 0, 0) });
-            foreach (var (name, lines) in new[] { ("Added", item.Added), ("Updated", item.Updated), ("Removed", item.Removed) })
+            foreach (var (name, lines) in new[] { ("Added", item.Added), ("Updated", item.Updated), ("Fixed", item.Fixed ?? []), ("Removed", item.Removed) })
             {
                 if (lines.Length == 0) continue;
                 card.Children.Add(new TextBlock { Text = T(name), FontSize = 12, FontWeight = FontWeights.SemiBold, Foreground = (Brush)FindResource("Muted"), Margin = new Thickness(0, 9, 0, 1) });
@@ -180,7 +180,7 @@ public partial class MainWindow : ThemedWindow
         NewsCard.BorderBrush = (Brush)FindResource(available ? "Gold" : "Line");
         NewsCard.Background = (Brush)FindResource(available ? "GoldSoft" : "SurfaceRaised");
         NewsHighlights.Children.Clear();
-        foreach (var line in latest.Added.Concat(latest.Updated).Take(3)) NewsHighlights.Children.Add(Bullet(line));
+        foreach (var line in latest.Added.Concat(latest.Updated).Concat(latest.Fixed ?? []).Take(3)) NewsHighlights.Children.Add(Bullet(line));
     }
     /// <summary>A quick-reference card: a title, then "KEY|what it does" lines with the key in a gold badge.</summary>
     private StackPanel Quick(string title, string body)

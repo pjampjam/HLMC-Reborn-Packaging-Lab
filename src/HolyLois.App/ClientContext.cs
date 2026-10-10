@@ -268,9 +268,31 @@ public sealed class ClientContext
     {
         foreach (var name in includeLauncher ? new[] { "java", "javaw", "MinecraftLauncher", "Minecraft", "SKlauncher" } : new[] { "java", "javaw" })
         {
-            var processes = Process.GetProcessesByName(name); var running = processes.Length > 0;
-            foreach (var process in processes) process.Dispose(); if (running) return true;
+            var processes = Process.GetProcessesByName(name);
+            var running = false;
+            foreach (var process in processes) { running |= name is not ("java" or "javaw") || IsMinecraftJava(process); process.Dispose(); }
+            if (running) return true;
         }
+        return false;
+    }
+    /// <summary>
+    /// A Java process is Minecraft only when it has a Minecraft/Holy Lois window or has loaded LWJGL (the game's graphics library).
+    /// Other Java programs (build tools, IDEs, servers) never block an update (owner 2026-10-10: a Gradle helper kept it waiting).
+    /// </summary>
+    internal static bool IsMinecraftJava(Process process)
+    {
+        try
+        {
+            var title = process.MainWindowTitle;
+            if (title.StartsWith("Minecraft", StringComparison.Ordinal) || title.StartsWith("Holy Lois", StringComparison.Ordinal)) return true;
+        }
+        catch (InvalidOperationException) { }
+        try
+        {
+            foreach (ProcessModule module in process.Modules)
+                if (module.ModuleName.StartsWith("lwjgl", StringComparison.OrdinalIgnoreCase) || module.ModuleName.StartsWith("glfw", StringComparison.OrdinalIgnoreCase)) return true;
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception or NotSupportedException) { }
         return false;
     }
     /// <summary>Asks the game and the player's launcher to close (windows first), then ends the launchers that stay. Java is only closed through its Minecraft window.</summary>

@@ -40,6 +40,22 @@ public final class CinematicTweaks {
     /** Character shots only (100 %) while fishing or enclosed; otherwise the player's own setting. */
     public static int characterPercentage(int configured) { return fishing || enclosed() ? 100 : configured; }
 
+    /** Ji's CinematicManager.getState(), looked up once; null when the mod is missing or changed. */
+    private static java.lang.reflect.Method state;
+    private static boolean stateMissing;
+
+    /** The cinematic camera is running right now (Ji AFK Cinematic state CINEMATIC_ACTIVE). */
+    public static boolean playing() {
+        if (stateMissing) return false;
+        try {
+            if (state == null) state = Class.forName("com.ji.afkcinematic.cinematic.CinematicManager").getMethod("getState");
+            return "CINEMATIC_ACTIVE".equals(String.valueOf(state.invoke(null)));
+        } catch (ReflectiveOperationException | LinkageError | RuntimeException error) {
+            stateMissing = true;
+            return false;
+        }
+    }
+
     /** The local player's bobber is out (cast, waiting or a fish on it). */
     public static boolean hookOut() {
         var player = Minecraft.getInstance().player;

@@ -66,6 +66,7 @@ public final class HolyLoisClientTests implements FabricClientGameTest {
             run(failed, "invisible frame keeps its frame", context, world, HolyLoisClientTests::invisibleFrameDrops);
             run(failed, "offhand boombox is not placed", context, world, HolyLoisClientTests::offhandBoomboxStays);
             run(failed, "death loot goes back to its slots", context, world, HolyLoisClientTests::deathLootBackToSlots);
+            run(failed, "music in your ears during the cinematic", context, world, HolyLoisClientTests::musicInEarsDuringCinematic);
             run(failed, "armor 3d", context, world, HolyLoisClientTests::armor3d);
             run(failed, "r over a fillet", context, world, HolyLoisClientTests::rOverFillet);
             run(failed, "offhand swap spam", context, world, HolyLoisClientTests::offhandSwapSpam);
@@ -1045,6 +1046,29 @@ public final class HolyLoisClientTests implements FabricClientGameTest {
     }
 
     /** Punching dungeon loot out of an invisible item frame drops the item but never the frame; a normal frame still drops itself. */
+    /** Boombox music sits in your ears only while the cinematic camera runs, fading in and out over two seconds (owner 2026-10-10). */
+    private static void musicInEarsDuringCinematic(ClientGameTestContext context, TestSingleplayerContext world) {
+        var far = new net.minecraft.world.phys.Vec3(0, 0, 0);
+        java.util.function.Function<net.minecraft.client.Minecraft, Double> gap = client -> {
+            var at = holylois.boombox.BoomboxInEar.blend(far.add(client.player.position()).add(12, 0, 0), "boombox");
+            return at.distanceTo(client.gameRenderer.mainCamera().position());
+        };
+        double before = context.computeOnClient(gap::apply);
+        context.runOnClient(client -> { try { Class.forName("com.ji.afkcinematic.cinematic.CinematicManager").getMethod("toggleImmediate").invoke(null); } catch (ReflectiveOperationException e) { throw new RuntimeException(e); } });
+        context.waitTicks(50);
+        boolean playing = context.computeOnClient(client -> holylois.boombox.CinematicTweaks.playing());
+        double during = context.computeOnClient(gap::apply);
+        String voice = context.computeOnClient(client -> String.valueOf(holylois.boombox.BoomboxInEar.blend(client.player.position().add(12, 0, 0), "voice")
+            .distanceTo(client.player.position().add(12, 0, 0))));
+        context.runOnClient(client -> { try { Class.forName("com.ji.afkcinematic.cinematic.CinematicManager").getMethod("forceDeactivate").invoke(null); } catch (ReflectiveOperationException e) { throw new RuntimeException(e); } });
+        context.waitTicks(50);
+        double after = context.computeOnClient(gap::apply);
+        log("in-ear: before " + before + ", cinematic " + playing + " during " + during + ", after " + after + ", voice moved " + voice);
+        check(playing, "the cinematic camera started");
+        check(before > 8 && during < 0.5 && after > 8, "music is in your ears only while the cinematic runs (" + before + ", " + during + ", " + after + ")");
+        check(Double.parseDouble(voice) < 1e-9, "voices stay where they are");
+    }
+
     /** Death loot picked up again lands in its old slots (hotbar, main, armor, off-hand); a slot taken since gets the normal pickup. */
     private static void deathLootBackToSlots(ClientGameTestContext context, TestSingleplayerContext world) {
         var server = world.getServer();

@@ -8,6 +8,14 @@ var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "test-output"
 Directory.CreateDirectory(root);
 var tests = new List<(string Name, Func<Task> Run)>();
 var passed = 0;
+tests.Add(("Release history reads an optional fixed list and omits it when empty, so older launchers keep parsing", () => {
+    var with = JsonSerializer.Deserialize<ReleaseNote>("{\"version\":\"1.9.3\",\"date\":\"2026-10-11\",\"summary\":\"s\",\"added\":[],\"removed\":[],\"updated\":[\"c\"],\"fixed\":[\"f\"]}", JsonSettings.Options)!;
+    Check(with.Fixed is ["f"] && with.Updated is ["c"], "The fixed list was not read.");
+    var without = JsonSerializer.Deserialize<ReleaseNote>("{\"version\":\"1.9.1\",\"date\":\"2026-10-10\",\"summary\":\"s\",\"added\":[\"a\"],\"removed\":[],\"updated\":[]}", JsonSettings.Options)!;
+    Check(without.Fixed is null, "A history entry without fixed did not parse.");
+    Check(!JsonSerializer.Serialize(without, JsonSettings.Options).Contains("fixed"), "An empty fixed list was written; launcher 1.4.1 would reject the manifest.");
+    return Task.CompletedTask;
+}));
 tests.Add(("Body toggle migrates legacy defaults without stealing custom controls", () => {
     const string key = "key_key.firstperson.toggle";
     var old = Encoding.UTF8.GetBytes(key + ":key.keyboard.295\n");

@@ -41,6 +41,7 @@ public final class BoomboxClient implements ClientModInitializer {
         ChestReplay.register();
         PackLoadingBar.register();
         BoomboxPulse.register();
+        BoomboxInEar.register();
         Capture.register();
         RelicTooltips.register();
         BoomboxUseGuard.register();
