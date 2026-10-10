@@ -21,7 +21,7 @@ public sealed class SettingsWindow : ThemedWindow
         var panel = new StackPanel { Margin = new Thickness(28,22,28,24) };
         var root = panel;
         StackPanel location = new();
-        Text(Localize.Text("Settings"),27,true,false);
+        Text(Localize.Text("Settings"),27,true);
         Text(Localize.Text("SettingsIntro"));
 
         Group("GroupPlay");
@@ -164,7 +164,7 @@ public sealed class SettingsWindow : ThemedWindow
             System.ComponentModel.DependencyPropertyDescriptor.FromProperty(TextBlock.TextProperty, typeof(TextBlock)).AddValueChanged(status, (_, _) => status.Visibility = string.IsNullOrEmpty(status.Text) ? Visibility.Collapsed : Visibility.Visible);
             return status;
         }
-        void Text(string text, int size = 13, bool strong = false, bool gold = true) => panel.Children.Add(new TextBlock { Text = text, TextWrapping = TextWrapping.Wrap, FontSize = size, FontWeight = strong ? FontWeights.SemiBold : FontWeights.Normal, Foreground = (Brush)Application.Current.Resources[strong ? gold ? "Gold" : "Text" : "Muted"], Margin = new Thickness(0,strong ? 12 : 6,0,0) });
+        void Text(string text, int size = 13, bool strong = false) => panel.Children.Add(new TextBlock { Text = text, TextWrapping = TextWrapping.Wrap, FontSize = size, FontWeight = strong ? FontWeights.SemiBold : FontWeights.Normal, Foreground = (Brush)Application.Current.Resources[strong ? "Text" : "Muted"], Margin = new Thickness(0,strong ? 12 : 6,0,0) });
         void Choice(string title, string info, bool fast, bool selected)
         {
             var text = new StackPanel();
